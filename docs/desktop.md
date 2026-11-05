@@ -41,6 +41,37 @@ files. Download the `RetractionLab-windows-x64-Setup` artifact for the installer
 or `RetractionLab-windows-x64` for the portable archive. Compiler package URLs,
 hashes, executable hash, and version are recorded in the installer manifest.
 
+## First procedure session
+
+1. Open **Retraction Lab** from the Start menu. The Procedure laboratory opens
+   inside the native window.
+2. In the right inspector select **Protocols**, then **Gentle traction baseline**.
+   Keep protocol seed 2 and click **New protocol episode**, then **Run protocol**.
+   This is a scripted control experiment, not a learned policy.
+3. Create another protocol episode using **Arterial thermal contact** and run it.
+   Inspect the persistent injury, blood loss, event log and reward trace. The
+   **Bile-duct thermal contact** and **Held-jaw compression** protocols exercise
+   different response mechanisms. **Remote heat negative control** demonstrates
+   a completed intervention that does not imply successful retraction.
+4. Use the recording slider to inspect earlier saved frames. Playback displays
+   recorded states; it does not rewind or heal the live body. **Episode JSON**
+   or **Ctrl+E** saves the full selected history through a native dialog.
+5. To try the actual learned example, select **Policy learning**, choose
+   **Bundled reference**, then **New matched episode**. Select the trained
+   playback controller and use **Step** or **Run policy**. Seed 2 is a
+   development demonstration, not an independent performance test.
+
+For manual control choose **Grasper** or **Cautery**, focus the viewport/tool
+controls, then use the arrow buttons or keys and **Space** for grasp/pulse.
+**Escape** pauses playback. The XY node view remains available when 3D rendering
+is unavailable. Depth and surface shading are illustrative; the body state and
+injury values come from the documented portable model.
+
+The tool-response equations are available under **Help → Tissue response model**.
+Training updates a new policy from seeded simulator episodes; playing a saved
+policy keeps its weights fixed. Manual episode records are not silently used as
+training demonstrations. All measurements are synthetic research outputs.
+
 ## Local studies and exports
 
 Studies, procedure histories, policy checkpoints, and diagnostic logs live in
