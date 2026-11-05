@@ -1,0 +1,207 @@
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in chrome/test/chromeos/autotest
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in chrome/test/data
+
+License file not found for ../licenses.py SPECIAL_CASES entry for native_client>>native client. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+Errors in third_party/angle/third_party/EGL-Registry/README.chromium:
+ License file not found for third_party/angle/third_party/EGL-Registry/README.chromium>>Khronos EGL API and Extension Registry. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/angle/third_party/OpenCL-Docs/README.chromium:
+ License file not found for third_party/angle/third_party/OpenCL-Docs/README.chromium>>Khronos OpenCL API, OpenCL C, Extensions, SPIR-V Environment Specs, Ref page, and C++ for OpenCL doc sources.. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/angle/third_party/OpenCL-ICD-Loader/README.chromium:
+ License file not found for third_party/angle/third_party/OpenCL-ICD-Loader/README.chromium>>Khronos OpenCL ICD Loader. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/angle/third_party/OpenGL-Registry/README.chromium:
+ License file not found for third_party/angle/third_party/OpenGL-Registry/README.chromium>>Khronos OpenGL, OpenGL ES, and OpenGL ES-SC API and Extension Registry. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/angle/third_party/astc-encoder/README.chromium:
+ License file not found for third_party/angle/third_party/astc-encoder/README.chromium>>astc-encoder. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/angle/third_party/cpu_features/README.chromium:
+ License file not found for third_party/angle/third_party/cpu_features/README.chromium>>cpu_features. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/boringssl/src/third_party/googletest
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/boringssl/src/third_party/wycheproof_testvectors
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/breakpad/breakpad/src/third_party/curl
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/breakpad/breakpad/src/third_party/libdisasm
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/catapult
+
+Errors in third_party/catapult/common/py_trace_event/third_party/protobuf/README.chromium:
+ License file not found for third_party/catapult/common/py_trace_event/third_party/protobuf/README.chromium>>Protobuf. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/catapult/common/py_vulcanize/third_party/rjsmin/README.chromium:
+ couldn't find 'Name' line in README.chromium or licenses.py SPECIAL_CASES
+
+Errors in third_party/catapult/third_party/beautifulsoup4/README.chromium:
+ License file not found for third_party/catapult/third_party/beautifulsoup4/README.chromium>>BeautifulSoup. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/catapult/third_party/beautifulsoup4-4.9.3
+
+Errors in third_party/catapult/tracing/third_party/jszip/README.chromium:
+ License file not found for third_party/catapult/tracing/third_party/jszip/README.chromium>>JSZip. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/catapult/tracing/third_party/symbols/README.chromium:
+ License file not found for third_party/catapult/tracing/third_party/symbols/README.chromium>>symbols module from Chromium. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/crashpad/crashpad/third_party/lss/README.crashpad:
+ License file not found for third_party/crashpad/crashpad/third_party/lss/README.crashpad>>linux-syscall-support. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/crashpad/crashpad/third_party/zlib/README.crashpad:
+ License file not found for third_party/crashpad/crashpad/third_party/zlib/README.crashpad>>zlib. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/dawn/third_party/dxc
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/dawn/third_party/glfw
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/dawn/third_party/gn
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/devtools-frontend-internal/front_end/third_party
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/devtools-frontend/src/front_end/third_party
+
+Errors in third_party/devtools-frontend/src/third_party/i18n/README.chromium:
+ couldn't find 'License' line in README.chromium or licenses.py SPECIAL_CASES
+
+Errors in third_party/fuchsia-sdk/README.chromium:
+ License file not found for third_party/fuchsia-sdk/README.chromium>>Fuchsia SDK. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/google-closure-library/third_party/closure
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/libaom/source/libaom/third_party/SVT-AV1
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/libaom/source/libaom/third_party/fastfeat
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/libaom/source/libaom/third_party/googletest
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/libaom/source/libaom/third_party/libwebm
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/libaom/source/libaom/third_party/libyuv
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/libaom/source/libaom/third_party/vector
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/libaom/source/libaom/third_party/x86inc
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/libvpx/source/libvpx/third_party/googletest
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/libvpx/source/libvpx/third_party/libwebm
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/libvpx/source/libvpx/third_party/libyuv
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/libvpx/source/libvpx/third_party/x86inc
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/maldoca/src/third_party/chromium
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/maldoca/src/third_party/iree
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/maldoca/src/third_party/tensorflow_protos
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/maldoca/src/third_party/zlibwrapper
+
+Errors in third_party/openscreen/src/third_party/googleurl/README.chromium:
+ License file not found for third_party/openscreen/src/third_party/googleurl/README.chromium>>googleurl. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/openscreen/src/third_party/ninja
+
+Errors in third_party/openscreen/src/third_party/quiche/README.chromium:
+ License file not found for third_party/openscreen/src/third_party/quiche/README.chromium>>QUICHE. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/openscreen/src/third_party/valijson/README.chromium:
+ License file not found for third_party/openscreen/src/third_party/valijson/README.chromium>>Valijson. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/openxr/README.chromium:
+ License file not found for third_party/openxr/README.chromium>>JNIPP. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/openxr/README.chromium:
+ License file not found for third_party/openxr/README.chromium>>OpenXR SDK. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/openxr/README.chromium:
+ License file not found for third_party/openxr/README.chromium>>android-jni-wrappers. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/pdfium/third_party/agg23/README.pdfium:
+ License file not found for third_party/pdfium/third_party/agg23/README.pdfium>>Anti-Grain Geometry. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/pdfium/third_party/base
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/pdfium/third_party/bigint
+
+Errors in third_party/pdfium/third_party/freetype/README.pdfium:
+ License file not found for third_party/pdfium/third_party/freetype/README.pdfium>>FreeType. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/pdfium/third_party/fuchsia-sdk/README.chromium:
+ License file not found for third_party/pdfium/third_party/fuchsia-sdk/README.chromium>>Fuchsia SDK. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/pdfium/third_party/lcms/README.pdfium:
+ License file not found for third_party/pdfium/third_party/lcms/README.pdfium>>Little CMS. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/pdfium/third_party/libopenjpeg/README.pdfium:
+ License file not found for third_party/pdfium/third_party/libopenjpeg/README.pdfium>>OpenJPEG. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Errors in third_party/pdfium/third_party/libtiff/README.pdfium:
+ License file not found for third_party/pdfium/third_party/libtiff/README.pdfium>>LibTIFF. Either add a file named LICENSE, import upstream's COPYING if available, or add a 'License File:' line to README.chromium with the appropriate paths.
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/protobuf/third_party/utf8_range
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/quic_trace/src/third_party/fonts
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/quic_trace/src/third_party/glew
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/rust
+
+Errors in third_party/screen-ai/README.chromium:
+ couldn't find 'License' line in README.chromium or licenses.py SPECIAL_CASES
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/sentencepiece/src/third_party/darts_clone
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/sentencepiece/src/third_party/esaxx
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/skia/include/third_party/vulkan
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/skia/third_party/etc1
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/skia/third_party/expat
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/skia/third_party/harfbuzz
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/skia/third_party/wuffs
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/tflite_support/src/third_party/fft2d
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/webgpu-cts/src/standalone/third_party/jquery
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/webrtc/examples/androidapp/third_party/autobanh
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/webrtc/examples/objc/AppRTCMobile/third_party/SocketRocket
+
+Errors in third_party/webrtc/modules/third_party/fft/README.chromium:
+ couldn't find 'URL' line in README.chromium or licenses.py SPECIAL_CASES
+
+Errors in third_party/webrtc/modules/third_party/g711/README.chromium:
+ couldn't find 'URL' line in README.chromium or licenses.py SPECIAL_CASES
+
+Errors in third_party/webrtc/modules/third_party/g722/README.chromium:
+ couldn't find 'URL' line in README.chromium or licenses.py SPECIAL_CASES
+
+Errors in third_party/webrtc/rtc_base/third_party/base64/README.chromium:
+ couldn't find 'URL' line in README.chromium or licenses.py SPECIAL_CASES
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/wpt_tools/wpt/tools/third_party/atomicwrites
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/wpt_tools/wpt/tools/third_party/hpack
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/wpt_tools/wpt/tools/third_party/html5lib
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/wpt_tools/wpt/tools/third_party/hyperframe
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/wpt_tools/wpt/tools/third_party/pdf_js
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/wpt_tools/wpt/tools/third_party/pywebsocket3
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/wpt_tools/wpt/tools/third_party/six
+
+Error: missing third party metadata file or licenses.py SPECIAL_CASES entry in third_party/wpt_tools/wpt/tools/third_party/websockets
+

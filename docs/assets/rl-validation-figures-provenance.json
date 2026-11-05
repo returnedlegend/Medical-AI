@@ -1,0 +1,60 @@
+{
+  "format": "retraction-validation-figure-provenance-v1",
+  "validation_only": true,
+  "reserved_evaluation_used": false,
+  "simulator_executed": false,
+  "studies": [
+    {
+      "summary": "examples/rl-study-001-summary.json",
+      "summary_sha256": "38bd0f311189d95a8173e926fc82d5c9e319ff9919a60d05ef58929dcc4b8103",
+      "archive": "research-artifacts/rl-study-001-full.zip",
+      "archive_sha256": "6f45df0f6470d587314c1055e42e397b6baafe4dbc48dcad9e522f113eae6a8a",
+      "protocol_sha256": "17f887c5436a71c42ad5036484186d1056b2f25114c53125bad13e1ad35db28b",
+      "training_seeds": [
+        43,
+        44,
+        45,
+        46,
+        47
+      ],
+      "learned_runs": 10,
+      "validation_patients_per_seed": 30,
+      "unique_validation_patients": 150,
+      "controls_deduplicated_across_arms": true,
+      "physics_fingerprint": "99bcc146975fff6221c65ee927d4bc38373a18069e56ce8cd45bf7a75c984898"
+    },
+    {
+      "summary": "examples/rl-study-002-summary.json",
+      "summary_sha256": "19406bbc248d537bee9fb1662d4e807302ba85a994796894130a4577bc726ea8",
+      "archive": "research-artifacts/rl-study-002-full.zip",
+      "archive_sha256": "e8d711dc4e22395d6563093bebcfb3fc8dd02463d05b72c38a08872e447b389e",
+      "protocol_sha256": "e5282fdbe515ce0e8c50d111f211449f18f97ca2ae5519c7ff5fb60cc93902b3",
+      "training_seeds": [
+        101,
+        102,
+        103,
+        104,
+        105
+      ],
+      "learned_runs": 15,
+      "validation_patients_per_seed": 30,
+      "unique_validation_patients": 150,
+      "controls_deduplicated_across_arms": true,
+      "physics_fingerprint": "99bcc146975fff6221c65ee927d4bc38373a18069e56ce8cd45bf7a75c984898"
+    }
+  ],
+  "uncertainty": "Stored per-run Wilson/patient-bootstrap intervals and recorded hierarchical return intervals; no new fits or evaluations.",
+  "selection": "Every run is plotted; selected reference policies are not singled out.",
+  "renderer": {
+    "script_sha256": "5ed95139ed05fff72e2a85eccbc23c232e747be5ad34b9142ecce8d19a470267",
+    "matplotlib_version": "3.10.8",
+    "numpy_version": "2.3.5",
+    "png_dpi": 240
+  },
+  "outputs": {
+    "rl-validation-all-seeds.png": "3ecafec018b2f2e9a456be292518381b408d525faec1d6b7cd3612e5960d4353",
+    "rl-validation-all-seeds.svg": "9517371ac80f1c2a0f56781bd6bfc6af6c6cc94f66209691af226a84ca7ae544",
+    "rl-validation-paired-contrasts.png": "aeeff5a5f965438124ffb80e0631124ff0c1bddc04093776170dbf9958e1ad39",
+    "rl-validation-paired-contrasts.svg": "a06def6aa3e14e28b5c8490dae6ba608e44c46775b95569b13afe571594ee135"
+  }
+}

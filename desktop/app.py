@@ -28,6 +28,7 @@ DOCUMENTATION = (
     ("Numerical validation", "numerical-validation.md"),
     ("Reinforcement learning", "rl-training.md"),
     ("Policy validation study", "rl-study-001.md"),
+    ("Controller comparison study", "rl-study-002.md"),
     ("Analytic cohort model", "model.md"),
     ("Desktop application guide", "desktop.md"),
     ("SOFA integration", "sofa-integration.md"),
@@ -116,8 +117,10 @@ def main() -> int:
         def __init__(self):
             super().__init__()
             self.setWindowTitle("Retraction Lab — Research Workbench")
-            self.resize(1440, 960)
-            self.setMinimumSize(1000, 700)
+            available = app.primaryScreen().availableGeometry()
+            self.resize(min(1440, max(320, available.width() - 48)),
+                        min(960, max(240, available.height() - 64)))
+            self.setMinimumSize(min(1000, self.width()), min(700, self.height()))
             self.view = QWebEngineView(self)
             self.profile = QWebEngineProfile("retraction-desktop", self)
             self.profile.setPersistentStoragePath(str(data_directory / "web-profile"))

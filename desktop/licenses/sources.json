@@ -63,11 +63,30 @@
       "sha256": "886a0ead2d89030ee62dbff52b04e47ab91998341295bb9c56fb952b4e081c7a",
       "upstream_reference_url": "https://raw.githubusercontent.com/python/cpython/v3.12.15/LICENSE",
       "source_url": "https://github.com/astral-sh/python-build-standalone"
+    },
+    "CPython-3.12.10-LICENSE.txt": {
+      "source_url": "https://raw.githubusercontent.com/python/cpython/v3.12.10/LICENSE",
+      "sha256": "3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf"
+    },
+    "Chromium-third-party-notices.txt": {
+      "source_url": "https://github.com/qt/qtwebengine-chromium/tree/55749ed0af5869215b88007df0cba430746583ae/chromium",
+      "sha256": "2cbcd4754a00645d40b4f2665195dc90cf1d8765f554a6d33ba89cba30a3d7d7",
+      "generation_command": "python tools/licenses/licenses.py license_file OUTPUT.txt",
+      "generator_source": "chromium/tools/licenses/licenses.py",
+      "generator_sha256": "f0a00ae773320fba816d7363285a1fc3ed22211b3cfa9c15c862fc4f4a6c1d16",
+      "scope": "Additional verbatim notices selected by upstream Shipped==YES metadata; missing metadata is skipped by the upstream generator. This is not a complete attribution certification.",
+      "generation_diagnostics_file": "Chromium-notice-generation-log.txt"
+    },
+    "Chromium-notice-generation-log.txt": {
+      "source_url": "https://github.com/qt/qtwebengine-chromium/tree/55749ed0af5869215b88007df0cba430746583ae/chromium",
+      "sha256": "1794c5c0e5814cde4ac29aeb2ac4b232eda04b26972578d282202f8066270201",
+      "scope": "Retained upstream notice-generator diagnostics identifying omitted or missing metadata; not application runtime errors."
     }
   },
   "qt_webengine_chromium_gitlink": "55749ed0af5869215b88007df0cba430746583ae",
   "qt_webengine_chromium_source_url": "https://github.com/qt/qtwebengine-chromium/tree/55749ed0af5869215b88007df0cba430746583ae",
   "python_versions": [
+    "3.12.10",
     "3.12.14",
     "3.12.15"
   ]

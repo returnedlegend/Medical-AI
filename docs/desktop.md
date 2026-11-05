@@ -32,6 +32,15 @@ Windows Python and includes a packaged-application smoke test. A configured
 workflow is not evidence that a particular Windows build has run; use the
 artifact's build manifest, smoke JSON, and workflow outcome for that claim.
 
+The workflow first builds and exercises the application on Windows. A separate
+Ubuntu job assembles its installer with NSIS 3.11 from exact, SHA256-verified
+Debian packages; this packages the Windows executable without cross-compiling
+it. A fresh Windows job then installs that installer, checks the installed
+models, and verifies that uninstalling preserves saved databases and unrelated
+files. Download the `RetractionLab-windows-x64-Setup` artifact for the installer,
+or `RetractionLab-windows-x64` for the portable archive. Compiler package URLs,
+hashes, executable hash, and version are recorded in the installer manifest.
+
 ## Local studies and exports
 
 Studies, procedure histories, policy checkpoints, and diagnostic logs live in
@@ -87,6 +96,19 @@ application midway through analysis. Exact source hashes and the environment's
 physics fingerprint are bundled in `build-info.json` and the external manifest.
 The release check rejects a missing or modified reference policy. The desktop
 requirements include the pinned core dependency lock and exact packaging tools.
+
+To reproduce the installer's Linux assembly stage for an existing Windows
+bundle, run on a compatible Linux host with `dpkg-deb`:
+
+```bash
+python -m desktop.fetch_nsis --output-dir .build/verified-nsis
+export NSISDIR="$PWD/.build/verified-nsis/usr/share/nsis"
+python -m desktop.build_installer \
+  --bundle artifacts/desktop/windows/RetractionLab \
+  --work-dir .build/desktop/windows/installer \
+  --makensis .build/verified-nsis/usr/bin/makensis \
+  --compiler-provenance .build/verified-nsis/compiler-provenance.json
+```
 
 ## Development and checks
 

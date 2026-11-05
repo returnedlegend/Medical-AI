@@ -30,6 +30,7 @@ from retraction.environment import TissueRetractionEnv, normalize_env_config  # 
 
 MAX_INPUT_BYTES = 32 * 1024 * 1024
 MAX_TOTAL_INPUT_BYTES = 256 * 1024 * 1024
+MAX_BOOTSTRAP_INDEX_BYTES = 4 * 1024 * 1024
 FORMAT = "retraction-fixed-policy-evaluation-v1"
 
 
@@ -45,10 +46,15 @@ def timestamp():
     return datetime.now(timezone.utc).isoformat()
 
 
-def read_json_bounded(path: Path):
+def read_json_bounded(path: Path, *, remaining_bytes: int | None = None):
+    limit = MAX_INPUT_BYTES if remaining_bytes is None else min(MAX_INPUT_BYTES, remaining_bytes)
+    if limit < 0:
+        raise ValueError('Combined policy input size exceeds 256 MiB')
     with Path(path).open("rb") as stream:
-        content = stream.read(MAX_INPUT_BYTES + 1)
-    if len(content) > MAX_INPUT_BYTES:
+        content = stream.read(limit + 1)
+    if len(content) > limit:
+        if remaining_bytes is not None and remaining_bytes < MAX_INPUT_BYTES:
+            raise ValueError('Combined policy input size exceeds 256 MiB')
         raise ValueError(f"Input exceeds the 32 MiB limit: {path}")
     def reject_constant(value):
         raise ValueError(f"Nonfinite JSON constant: {value}")
@@ -90,10 +96,10 @@ def wilson_interval(successes: int, count: int) -> list[float]:
     return [max(0.0, center - half), min(1.0, center + half)]
 
 
-def _prepare_policy(label: str, path: Path):
+def _prepare_policy(label: str, path: Path, *, remaining_bytes: int | None = None):
     if not re.fullmatch(r"[a-z][a-z0-9_-]{0,63}", label):
         raise ValueError("Policy labels must be lowercase letters/digits/underscore/hyphen and start with a letter")
-    payload, raw = read_json_bounded(path)
+    payload, raw = read_json_bounded(path, remaining_bytes=remaining_bytes)
     run = payload.get("result") if isinstance(payload, dict) and "result" in payload else payload
     if not isinstance(run, dict) or not isinstance(run.get("checkpoint"), dict):
         raise ValueError("Provide a complete run or bundled reference JSON, not a bare checkpoint")
@@ -208,6 +214,38 @@ def aggregate(episodes):
             "mean_blood_loss_ml": math.fsum(row["blood_loss_ml"] for row in episodes) / count}
 
 
+def paired_return_contrasts(result_rows, *, bootstrap_seed, bootstrap_replicates):
+    """Share each bounded index batch across every paired controller contrast.
+
+    The default 128-patient/2,000-replicate call fits in one batch and retains
+    the original RNG call and arithmetic exactly. Larger calls retain the same
+    flat RNG stream while bounding both indices and indexed-return temporaries.
+    Only one scalar bootstrap mean per contrast/replicate is retained.
+    """
+    pairs = list(combinations(result_rows, 2))
+    if not pairs:
+        return []
+    returns = {name: np.asarray([row['return'] for row in value['episodes']], dtype=float)
+               for name, value in result_rows.items()}
+    count = len(next(iter(returns.values())))
+    if not count or any(len(values) != count for values in returns.values()):
+        raise ValueError('Paired bootstrap requires equal nonempty patient cohorts')
+    rows_per_batch = max(1, min(bootstrap_replicates,
+                               MAX_BOOTSTRAP_INDEX_BYTES // (count * np.dtype(np.int64).itemsize)))
+    samples = np.empty((len(pairs), bootstrap_replicates), dtype=float)
+    rng = np.random.default_rng(bootstrap_seed)
+    for start in range(0, bootstrap_replicates, rows_per_batch):
+        stop = min(start + rows_per_batch, bootstrap_replicates)
+        indices = rng.integers(0, count, size=(stop - start, count))
+        for position, (negative, positive) in enumerate(pairs):
+            differences = returns[positive] - returns[negative]
+            samples[position, start:stop] = differences[indices].mean(axis=1)
+    return [{'positive_controller': positive, 'negative_controller': negative,
+             'mean_return_difference': float((returns[positive] - returns[negative]).mean()),
+             'paired_patient_bootstrap_ci': np.quantile(samples[position], [.025, .975]).tolist()}
+            for position, (negative, positive) in enumerate(pairs)]
+
+
 def evaluate_fixed_policies(policy_paths: dict[str, Path], seeds: list[int], exclusion_seeds: list[int],
                             output_directory: Path, *, phase="development", baseline_rng_seed=99173,
                             bootstrap_seed=99174, bootstrap_replicates=2000, progress_callback=None):
@@ -223,9 +261,12 @@ def evaluate_fixed_policies(policy_paths: dict[str, Path], seeds: list[int], exc
         raise ValueError("Evaluation RNG seeds must be integers in [0, 2**32)")
     if type(bootstrap_replicates) is not int or not 100 <= bootstrap_replicates <= 10000:
         raise ValueError("bootstrap_replicates must be 100..10000")
-    prepared = [_prepare_policy(label, Path(path)) for label, path in sorted(policy_paths.items())]
-    if sum(len(policy["raw"]) for policy in prepared) > MAX_TOTAL_INPUT_BYTES:
-        raise ValueError("Combined policy input size exceeds 256 MiB")
+    prepared = []
+    remaining_bytes = MAX_TOTAL_INPUT_BYTES
+    for label, path in sorted(policy_paths.items()):
+        policy = _prepare_policy(label, Path(path), remaining_bytes=remaining_bytes)
+        prepared.append(policy)
+        remaining_bytes -= len(policy['raw'])
     used = set().union(*(policy["used_seeds"] for policy in prepared))
     if not used <= set(exclusion_seeds):
         raise ValueError("The exclusion manifest does not cover every policy's prior fitting/demo/validation patients")
@@ -273,6 +314,7 @@ def evaluate_fixed_policies(policy_paths: dict[str, Path], seeds: list[int], exc
                 "baseline_primitives": {"names": names, "actions": primitives.tolist()},
                 "scripted_controller_version": description["scripted_controller_version"],
                 "bootstrap": {"seed": bootstrap_seed, "replicates": bootstrap_replicates,
+                              "max_index_batch_bytes": MAX_BOOTSTRAP_INDEX_BYTES,
                               "method": "Paired patient percentile bootstrap; common resampled indices for every contrast; no multiple-comparison adjustment."},
                 "limitations": ["Synthetic unvalidated dynamics; no claim of clinical performance or generalization.",
                                 "Exclusion completeness across all prior studies is supplied by the caller; input-policy histories are explicitly checked.",
@@ -306,16 +348,8 @@ def evaluate_fixed_policies(policy_paths: dict[str, Path], seeds: list[int], exc
             expected = result_rows[controllers[0][0]]["episodes"][index]["patient"]
             if any(value["episodes"][index]["patient"] != expected for value in result_rows.values()):
                 raise RuntimeError("Paired patients have different initial anatomy")
-        rng = np.random.default_rng(bootstrap_seed)
-        indices = rng.integers(0, len(seeds), size=(bootstrap_replicates, len(seeds)))
-        contrasts = []
-        for negative, positive in combinations(result_rows, 2):
-            first = result_rows[positive]["episodes"]
-            second = result_rows[negative]["episodes"]
-            differences = np.array([a["return"] - b["return"] for a, b in zip(first, second)])
-            contrasts.append({"positive_controller": positive, "negative_controller": negative,
-                              "mean_return_difference": float(differences.mean()),
-                              "paired_patient_bootstrap_ci": np.quantile(differences[indices].mean(axis=1), [.025, .975]).tolist()})
+        contrasts = paired_return_contrasts(result_rows, bootstrap_seed=bootstrap_seed,
+                                            bootstrap_replicates=bootstrap_replicates)
         result = {"format": FORMAT, "completed_at": timestamp(), "phase": phase,
                   "protocol_sha256": sha256((output_directory / "protocol.json").read_bytes()),
                   "physics_fingerprint": description["physics_fingerprint"],

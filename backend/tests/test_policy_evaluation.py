@@ -4,6 +4,7 @@ from __future__ import annotations
 from copy import deepcopy
 import hashlib
 import importlib.util
+from itertools import combinations
 import json
 from pathlib import Path
 
@@ -176,6 +177,75 @@ def test_bounded_declarative_json_rejects_oversize_nonfinite_and_duplicate_keys(
         path.write_text(value)
         with pytest.raises(ValueError):
             evaluation.read_json_bounded(path)
+
+
+def test_cumulative_policy_budget_rejects_next_file_before_json_parsing(tmp_path, policy_input, monkeypatch):
+    path, used = policy_input
+    second = tmp_path / 'second.json'
+    second.write_bytes(b'{this file must never reach the JSON parser}')
+    monkeypatch.setattr(evaluation, 'MAX_TOTAL_INPUT_BYTES', path.stat().st_size + 10)
+    parsed_lengths = []
+    original = evaluation.json.loads
+    def track_parsing(contents, *args, **kwargs):
+        parsed_lengths.append(len(contents))
+        return original(contents, *args, **kwargs)
+    monkeypatch.setattr(evaluation.json, 'loads', track_parsing)
+    with pytest.raises(ValueError, match='Combined policy input size'):
+        evaluation.evaluate_fixed_policies({'first': path, 'second': second}, DEVELOPMENT_SEEDS, used, tmp_path / 'bounded')
+    assert parsed_lengths == [path.stat().st_size]
+    assert not (tmp_path / 'bounded').exists()
+
+
+def _synthetic_return_rows(count):
+    x = np.arange(count, dtype=float)
+    return {name: {'episodes': [{'return': float(value)} for value in values]}
+            for name, values in {'first': np.sin(x / 3), 'second': np.cos(x / 5) * 2,
+                                 'shifted': np.sin(x / 3) + 7, 'third': x % 11 - 4}.items()}
+
+
+def _original_unbatched_contrasts(rows, seed, replicates):
+    count = len(next(iter(rows.values()))['episodes'])
+    indices = np.random.default_rng(seed).integers(0, count, size=(replicates, count))
+    results = []
+    for negative, positive in combinations(rows, 2):
+        differences = np.array([a['return'] - b['return']
+                                for a, b in zip(rows[positive]['episodes'], rows[negative]['episodes'])])
+        results.append({'positive_controller': positive, 'negative_controller': negative,
+                        'mean_return_difference': float(differences.mean()),
+                        'paired_patient_bootstrap_ci': np.quantile(differences[indices].mean(axis=1), [.025, .975]).tolist()})
+    return results
+
+
+@pytest.mark.parametrize('index_budget', [4 * 1024 * 1024, 128 * 8 * 3])
+def test_batched_bootstrap_matches_original_exactly_and_uses_common_patient_draws(monkeypatch, index_budget):
+    rows = _synthetic_return_rows(128)
+    expected = _original_unbatched_contrasts(rows, seed=99174, replicates=2000)
+    monkeypatch.setattr(evaluation, 'MAX_BOOTSTRAP_INDEX_BYTES', index_budget)
+    actual = evaluation.paired_return_contrasts(rows, bootstrap_seed=99174, bootstrap_replicates=2000)
+    assert actual == expected
+    constant = next(row for row in actual if row['positive_controller'] == 'shifted'
+                    and row['negative_controller'] == 'first')
+    assert constant['paired_patient_bootstrap_ci'] == [7, 7]
+
+
+def test_largest_patient_cohort_draws_bootstrap_indices_in_bounded_batches(monkeypatch):
+    rows = _synthetic_return_rows(10000)
+    original = evaluation.np.random.default_rng
+    requested = []
+    class RecordingRng:
+        def __init__(self, seed):
+            self.inner = original(seed)
+        def integers(self, *args, **kwargs):
+            result = self.inner.integers(*args, **kwargs)
+            requested.append(result.shape)
+            assert result.nbytes <= evaluation.MAX_BOOTSTRAP_INDEX_BYTES
+            return result
+    monkeypatch.setattr(evaluation.np.random, 'default_rng', RecordingRng)
+    result = evaluation.paired_return_contrasts(rows, bootstrap_seed=99174, bootstrap_replicates=100)
+    assert len(result) == 6
+    assert len(requested) > 1
+    assert sum(shape[0] for shape in requested) == 100
+    assert all(shape[1] == 10000 for shape in requested)
 
 
 def test_cli_executes_development_patients_and_writes_real_completion(tmp_path, policy_input):

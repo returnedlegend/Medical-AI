@@ -17,7 +17,8 @@ def nsis_literal(value: str) -> str:
     return value.replace("$", "$$").replace('"', '$\\"')
 
 
-def build_installer(bundle: Path, output: Path, work: Path, version: str, makensis: Path | None = None) -> Path:
+def build_installer(bundle: Path, output: Path, work: Path, version: str, makensis: Path | None = None,
+                    compiler_provenance: Path | None = None) -> Path:
     if not re.fullmatch(r"\d+\.\d+\.\d+", version):
         raise ValueError("Installer version must contain three numeric components")
     if not (bundle / "RetractionLab.exe").is_file():
@@ -29,6 +30,13 @@ def build_installer(bundle: Path, output: Path, work: Path, version: str, makens
     compiler_version = subprocess.check_output([compiler, f"{switch}VERSION"], text=True).strip()
     if not compiler_version.startswith("v3.11"):
         raise RuntimeError(f"NSIS 3.11 is required, found {compiler_version}")
+    compiler_hash = hashlib.sha256(Path(compiler).read_bytes()).hexdigest()
+    provenance = None
+    if compiler_provenance:
+        provenance = json.loads(compiler_provenance.read_text(encoding="utf-8"))
+        if (provenance.get("compiler_sha256") != compiler_hash
+                or provenance.get("compiler_version") != compiler_version):
+            raise RuntimeError("Compiler provenance does not match the executed compiler")
     work.mkdir(parents=True, exist_ok=True)
     # The compiler may compress for several minutes. Keep its payload immutable
     # even if another build later replaces the portable application directory.
@@ -58,6 +66,8 @@ def build_installer(bundle: Path, output: Path, work: Path, version: str, makens
         if result.returncode and os.environ.get("GITHUB_STEP_SUMMARY"):
             with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as handle:
                 handle.write("\n### Installer compilation failed\n\n```text\n" + (result.stdout + result.stderr)[-12000:] + "\n```\n")
+            message = (result.stdout + result.stderr)[-6000:].replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+            print(f"::error title=Installer compilation failed::{message}")
         result.check_returncode()
         partial.replace(installer)
     finally:
@@ -70,7 +80,11 @@ def build_installer(bundle: Path, output: Path, work: Path, version: str, makens
         data.update(installer=installer.name, installer_sha256=checksum,
                     installer_type="NSIS amd64 Unicode per-user; no administrator elevation", installer_signed=False,
                     installer_compiler_version=compiler_version,
-                    installer_compiler_sha256=hashlib.sha256(Path(compiler).read_bytes()).hexdigest())
+                    installer_compiler_sha256=compiler_hash,
+                    installer_recipe_sha256={path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                                             for path in (Path(__file__), script)})
+        if provenance:
+            data["installer_compiler_provenance"] = provenance
         manifest.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     return installer
 
@@ -80,11 +94,12 @@ def main() -> None:
     parser.add_argument("--bundle", type=Path, required=True)
     parser.add_argument("--makensis", type=Path)
     parser.add_argument("--work-dir", type=Path, required=True)
+    parser.add_argument("--compiler-provenance", type=Path)
     args = parser.parse_args()
     bundle = args.bundle.resolve()
     output = bundle.parent
     manifest = json.loads((output / "build-manifest.json").read_text(encoding="utf-8"))
-    print(build_installer(bundle, output, args.work_dir, manifest["version"], args.makensis))
+    print(build_installer(bundle, output, args.work_dir, manifest["version"], args.makensis, args.compiler_provenance))
 
 
 if __name__ == "__main__":

@@ -65,57 +65,6 @@ jobs:
           if ($process.ExitCode -ne 0) { throw "Native application exited $($process.ExitCode)" }
           $result = Get-Content $evidence -Raw | ConvertFrom-Json
           if ($result.status -ne 'passed' -or -not $result.packaged) { throw 'Native smoke evidence did not pass' }
-      - name: Install pinned NSIS compiler
-        shell: pwsh
-        run: |
-          # Same exact upstream binary and checksum as Microsoft's NSIS 3.11
-          # WinGet manifest, fetched through SourceForge's binary endpoint.
-          try {
-            $setup = Join-Path $env:RUNNER_TEMP 'nsis-3.11-setup.exe'
-            Invoke-WebRequest 'https://downloads.sourceforge.net/project/nsis/NSIS%203/3.11/nsis-3.11-setup.exe' -OutFile $setup
-            $expected = '38D49F8FE09B1C332B01D0940E57B7258F4447733643273A01C59959AD9D3B0A'
-            if ((Get-FileHash $setup -Algorithm SHA256).Hash -ne $expected) { throw 'NSIS compiler checksum mismatch' }
-            $process = Start-Process -FilePath $setup -ArgumentList '/S' -Wait -PassThru
-            if ($process.ExitCode -ne 0) { throw "NSIS installation exited $($process.ExitCode)" }
-          } catch {
-            @('### NSIS setup failed', '```text', $_.Exception.Message, $_.ScriptStackTrace, '```') | Add-Content $env:GITHUB_STEP_SUMMARY
-            $message = $_.Exception.Message.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
-            Write-Output "::error title=NSIS compiler acquisition failed::$message"
-            throw
-          }
-      - name: Assemble Windows installer
-        run: python -m desktop.build_installer --bundle artifacts/desktop/windows/RetractionLab --work-dir .build/desktop/windows/installer --makensis "C:\Program Files (x86)\NSIS\makensis.exe"
-      - name: Check installer, installed models and safe uninstallation
-        shell: pwsh
-        run: |
-          $install = Join-Path $env:RUNNER_TEMP 'Retraction Lab Install'
-          $data = Join-Path $env:RUNNER_TEMP 'Retraction Lab Persistent Studies'
-          $evidence = Join-Path $env:RUNNER_TEMP 'retraction-installed-diagnose.json'
-          $setup = Get-ChildItem 'artifacts/desktop/windows/*-Setup.exe' | Select-Object -First 1
-          if (-not $setup) { throw 'Setup.exe was not produced' }
-          $process = Start-Process -FilePath $setup.FullName -ArgumentList "/S /D=$install" -PassThru
-          if (-not $process.WaitForExit(180000)) { $process.Kill($true); throw 'Installation timed out' }
-          if ($process.ExitCode -ne 0) { throw "Installer exited $($process.ExitCode)" }
-          $program = Join-Path $install 'RetractionLab.exe'
-          if (-not (Test-Path $program)) { throw 'Installed executable missing' }
-          $process = Start-Process -FilePath $program -ArgumentList @('--diagnose', "`"$evidence`"", '--data-dir', "`"$data`"") -PassThru
-          if (-not $process.WaitForExit(180000)) { $process.Kill($true); throw 'Installed model diagnosis timed out' }
-          if ($process.ExitCode -ne 0) { throw "Installed diagnosis exited $($process.ExitCode)" }
-          $result = Get-Content $evidence -Raw | ConvertFrom-Json
-          if ($result.status -ne 'passed' -or -not $result.packaged) { throw 'Installed models did not pass' }
-          $database = Join-Path $data 'runs.sqlite3'
-          $before = (Get-FileHash $database -Algorithm SHA256).Hash
-          Set-Content (Join-Path $install 'keep-me.txt') 'unrelated file'
-          Set-Content (Join-Path $install '_internal/keep-me.txt') 'unrelated nested file'
-          $process = Start-Process -FilePath (Join-Path $install 'Uninstall.exe') -ArgumentList '/S' -PassThru
-          if (-not $process.WaitForExit(90000)) { $process.Kill($true); throw 'Uninstaller timed out' }
-          $deadline = (Get-Date).AddSeconds(60)
-          while ((Test-Path $program) -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 200 }
-          if (Test-Path $program) { throw 'Uninstaller left the application executable' }
-          if (-not (Test-Path (Join-Path $install 'keep-me.txt'))) { throw 'Uninstaller deleted an unrelated file' }
-          if (-not (Test-Path (Join-Path $install '_internal/keep-me.txt'))) { throw 'Uninstaller deleted an unrelated nested file' }
-          if ((Get-FileHash $database -Algorithm SHA256).Hash -ne $before) { throw 'Uninstallation changed persistent studies' }
-          @{ status = 'passed'; per_user_install = $true; installed_models = $true; studies_preserved = $true; unrelated_files_preserved = $true } | ConvertTo-Json | Set-Content (Join-Path $env:RUNNER_TEMP 'retraction-installer-smoke.json')
       - name: Upload Windows application and checksums
         if: always()
         uses: actions/upload-artifact@v4
@@ -125,8 +74,6 @@ jobs:
             artifacts/desktop/windows/RetractionLab-windows-x64.zip
             artifacts/desktop/windows/RetractionLab-windows-x64.zip.sha256
             artifacts/desktop/windows/build-manifest.json
-            artifacts/desktop/windows/*-Setup.exe
-            artifacts/desktop/windows/*-Setup.exe.sha256
           retention-days: 14
       - name: Preserve desktop smoke evidence
         if: always()
@@ -151,3 +98,109 @@ jobs:
               @("### $name", '```json', $json, '```') | Add-Content $env:GITHUB_STEP_SUMMARY
             }
           }
+
+  assemble-installer:
+    runs-on: ubuntu-24.04
+    needs: windows-desktop
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: RetractionLab-windows-x64
+          path: artifacts/desktop/windows
+      - name: Verify and extract the genuinely Windows-built application
+        run: |
+          python - <<'PY'
+          import hashlib, json, pathlib, zipfile
+          output = pathlib.Path('artifacts/desktop/windows')
+          manifest = json.loads((output / 'build-manifest.json').read_text())
+          archive = output / 'RetractionLab-windows-x64.zip'
+          if hashlib.sha256(archive.read_bytes()).hexdigest() != manifest['archive_sha256']:
+              raise SystemExit('Windows application archive checksum mismatch')
+          with zipfile.ZipFile(archive) as bundle:
+              bundle.extractall(output)
+          PY
+      - name: Fetch and verify exact Debian NSIS 3.11 compiler
+        run: python -m desktop.fetch_nsis --output-dir .build/verified-nsis
+      - name: Assemble the Windows installer
+        env:
+          NSISDIR: ${{ github.workspace }}/.build/verified-nsis/usr/share/nsis
+        run: >-
+          python -m desktop.build_installer
+          --bundle artifacts/desktop/windows/RetractionLab
+          --work-dir .build/desktop/windows/installer
+          --makensis .build/verified-nsis/usr/bin/makensis
+          --compiler-provenance .build/verified-nsis/compiler-provenance.json
+      - name: Upload installer and verified compiler provenance
+        uses: actions/upload-artifact@v4
+        with:
+          name: RetractionLab-windows-x64-Setup
+          path: |
+            artifacts/desktop/windows/*-Setup.exe
+            artifacts/desktop/windows/*-Setup.exe.sha256
+            artifacts/desktop/windows/build-manifest.json
+          retention-days: 14
+
+  windows-installer:
+    runs-on: windows-latest
+    needs: assemble-installer
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: RetractionLab-windows-x64-Setup
+          path: artifacts/desktop/windows
+      - name: Check installer, installed models and safe uninstallation
+        shell: pwsh
+        run: |
+          try {
+            $install = Join-Path $env:RUNNER_TEMP 'Retraction Lab Install'
+            $data = Join-Path $env:RUNNER_TEMP 'Retraction Lab Persistent Studies'
+            $evidence = Join-Path $env:RUNNER_TEMP 'retraction-installed-diagnose.json'
+            $setup = Get-ChildItem 'artifacts/desktop/windows/*-Setup.exe' | Select-Object -First 1
+            if (-not $setup) { throw 'Setup.exe was not produced' }
+            $process = Start-Process -FilePath $setup.FullName -ArgumentList "/S /D=$install" -PassThru
+            if (-not $process.WaitForExit(180000)) { $process.Kill($true); throw 'Installation timed out' }
+            if ($process.ExitCode -ne 0) { throw "Installer exited $($process.ExitCode)" }
+            $program = Join-Path $install 'RetractionLab.exe'
+            if (-not (Test-Path $program)) { throw 'Installed executable missing' }
+            $process = Start-Process -FilePath $program -ArgumentList @('--diagnose', "`"$evidence`"", '--data-dir', "`"$data`"") -PassThru
+            if (-not $process.WaitForExit(180000)) { $process.Kill($true); throw 'Installed model diagnosis timed out' }
+            if ($process.ExitCode -ne 0) { throw "Installed diagnosis exited $($process.ExitCode)" }
+            $result = Get-Content $evidence -Raw | ConvertFrom-Json
+            if ($result.status -ne 'passed' -or -not $result.packaged) { throw 'Installed models did not pass' }
+            $before = @{}
+            Get-ChildItem $data -Recurse -Filter '*.sqlite3' | ForEach-Object { $before[$_.FullName] = (Get-FileHash $_.FullName -Algorithm SHA256).Hash }
+            if ($before.Count -lt 3) { throw 'Expected cohort, learning and procedure study databases' }
+            Set-Content (Join-Path $install 'keep-me.txt') 'unrelated file'
+            Set-Content (Join-Path $install '_internal/keep-me.txt') 'unrelated nested file'
+            $process = Start-Process -FilePath (Join-Path $install 'Uninstall.exe') -ArgumentList '/S' -PassThru
+            if (-not $process.WaitForExit(90000)) { $process.Kill($true); throw 'Uninstaller timed out' }
+            $deadline = (Get-Date).AddSeconds(60)
+            while ((Test-Path $program) -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 200 }
+            if (Test-Path $program) { throw 'Uninstaller left the application executable' }
+            if (-not (Test-Path (Join-Path $install 'keep-me.txt'))) { throw 'Uninstaller deleted an unrelated file' }
+            if (-not (Test-Path (Join-Path $install '_internal/keep-me.txt'))) { throw 'Uninstaller deleted an unrelated nested file' }
+            foreach ($database in $before.Keys) {
+              if (-not (Test-Path $database) -or (Get-FileHash $database -Algorithm SHA256).Hash -ne $before[$database]) { throw 'Uninstallation changed persistent studies' }
+            }
+            @{ status = 'passed'; per_user_install = $true; installed_models = $true; studies_preserved = $true; unrelated_files_preserved = $true } | ConvertTo-Json | Set-Content (Join-Path $env:RUNNER_TEMP 'retraction-installer-smoke.json')
+          } catch {
+            $message = $_.Exception.Message.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Installed Windows application check failed::$message"
+            throw
+          }
+      - name: Preserve installed application evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer-smoke-evidence
+          path: |
+            ${{ runner.temp }}/retraction-installed-diagnose.json
+            ${{ runner.temp }}/retraction-installer-smoke.json
+            ${{ runner.temp }}/Retraction Lab Persistent Studies/logs/
+          retention-days: 14
