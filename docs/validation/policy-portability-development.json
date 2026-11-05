@@ -1,0 +1,180 @@
+{
+  "format": "retraction-development-portability-v1",
+  "development_only": true,
+  "cases": 15,
+  "exact_matches": 15,
+  "all_equal": true,
+  "differences": [],
+  "report_sha256": [
+    "424eb7ea36d956c8f71dbd457c3f5d07b2fabca3ffc49bd5a9e64a5dca439207",
+    "5df32564128f87d1c39a47e0b6e13ffd28ba49da9b820984c622592dc09f5429"
+  ],
+  "platforms": [
+    {
+      "platform": "linux",
+      "python": "3.12.14",
+      "numpy": "2.3.5"
+    },
+    {
+      "platform": "win32",
+      "python": "3.12.15",
+      "numpy": "2.3.5"
+    }
+  ],
+  "physics_fingerprint": "99bcc146975fff6221c65ee927d4bc38373a18069e56ce8cd45bf7a75c984898",
+  "limitations": [
+    "Fifteen development cases do not establish equivalence for every patient or platform.",
+    "Windows Python under Wine is distinct from native Windows GUI and installer validation."
+  ],
+  "execution_note": "Linux CPython and actual Windows CPython under Wine in the cloud environment. Native Windows application and installer checks are separate GitHub CI evidence.",
+  "policies": {
+    "v1": {
+      "file": "stateful-policy-1.1.json",
+      "sha256": "b3d0df3723d05366cf50a57bc538b3759208356686f867ea39d5a2dac6bcb573"
+    },
+    "v2": {
+      "file": "stateful-policy-1.1-study-002.json",
+      "sha256": "ce754bbbd95f83d1b580345ce208ecdf91f96860a1bd0a4ec9a2bdb994fedb69"
+    },
+    "v3": {
+      "file": "stateful-policy-1.1-study-003-v3.json",
+      "sha256": "1b7e0f0f53bd5f55821fc118d9f5174c5879586cee2362c271dc077c2b8f657b"
+    }
+  },
+  "source_sha256": {
+    "environment.py": "be5bfeb9a50fd66b6f1477b0e8d9926cb30406c8f3ba24fbc33fb74056992427",
+    "tissue.py": "220c34760a7990648841a1e3a40aaad621d8cd0da12d7ea900bcbb3d94763fe1",
+    "learning.py": "d5b0f04cd60f6699ac8e2032017af21021f6524fba9d59bc680f5ebf835b7b7d",
+    "tabular.py": "86baad383202d3504d9123d025d021b1940e5f9feb1cc6108827ee29583365bc"
+  },
+  "seeds": [
+    2,
+    17,
+    42,
+    74,
+    100
+  ],
+  "total_steps_per_platform": 1840,
+  "episodes": [
+    {
+      "policy": "v1",
+      "seed": 2,
+      "steps": 101,
+      "outcome": "success",
+      "return": 16.406194127721953,
+      "trajectory_sha256": "ea89bdeb621fe08e81a671ccd47d6afe247d388aa2dc6a09bc2514c7aea2bad0"
+    },
+    {
+      "policy": "v1",
+      "seed": 17,
+      "steps": 94,
+      "outcome": "success",
+      "return": 16.490079368826173,
+      "trajectory_sha256": "1ad0651eef7f59b1faa477a8e9a6a64a9fd0ef0abee04e80d8ce43f75e635961"
+    },
+    {
+      "policy": "v1",
+      "seed": 42,
+      "steps": 200,
+      "outcome": "time_limit",
+      "return": -0.8958864379044729,
+      "trajectory_sha256": "ac4398911c5734eb116208f0efb7107fd79eca2a9c441a06930c2fcbb8969c7f"
+    },
+    {
+      "policy": "v1",
+      "seed": 74,
+      "steps": 124,
+      "outcome": "success",
+      "return": 15.943387044627201,
+      "trajectory_sha256": "be1b9be1d6f2b301722aa7d7d8f140f26a6476f1bf9720710254aa8cd2914ac4"
+    },
+    {
+      "policy": "v1",
+      "seed": 100,
+      "steps": 81,
+      "outcome": "success",
+      "return": 16.62785554627916,
+      "trajectory_sha256": "7b1b8a33e774bd80efc477c65d9515d3265a1544207bad457e8c19cb11350479"
+    },
+    {
+      "policy": "v2",
+      "seed": 2,
+      "steps": 108,
+      "outcome": "success",
+      "return": 16.328145478492946,
+      "trajectory_sha256": "8b0f4743e59c2452f933b2e56a437dc9482f7e63a96eb493d2c7bb71eee95ec2"
+    },
+    {
+      "policy": "v2",
+      "seed": 17,
+      "steps": 95,
+      "outcome": "success",
+      "return": 16.467154794759253,
+      "trajectory_sha256": "d36fea8471b9ba199c2bc303df00a1f0d59787c97df26c3a2eb1833b8ea832b0"
+    },
+    {
+      "policy": "v2",
+      "seed": 42,
+      "steps": 200,
+      "outcome": "time_limit",
+      "return": -1.7136958155839677,
+      "trajectory_sha256": "bf6f2024c3d61c3a053e81c0c904afdb64aff82cbcc9c2ec3e92c547db626201"
+    },
+    {
+      "policy": "v2",
+      "seed": 74,
+      "steps": 139,
+      "outcome": "success",
+      "return": 16.013066885642896,
+      "trajectory_sha256": "c0304e55d333b0f5efd4e4f91923120efe06ecbc2f4445ca20975ea603a4f7a3"
+    },
+    {
+      "policy": "v2",
+      "seed": 100,
+      "steps": 82,
+      "outcome": "success",
+      "return": 16.60356457407048,
+      "trajectory_sha256": "fecb8c05edf0eca136c7d5b13459258922e63984fc788dcc6d6dd7b596261d08"
+    },
+    {
+      "policy": "v3",
+      "seed": 2,
+      "steps": 105,
+      "outcome": "success",
+      "return": 16.360962475306422,
+      "trajectory_sha256": "71762dda61648e9aa59af067c313db28b252fb9fab9f35d2171df62c999b3ae5"
+    },
+    {
+      "policy": "v3",
+      "seed": 17,
+      "steps": 94,
+      "outcome": "success",
+      "return": 16.47723756756105,
+      "trajectory_sha256": "29bbd7c57eaa27477fb178cf8c3da4db4076f032e12c39a909ae528c350bac93"
+    },
+    {
+      "policy": "v3",
+      "seed": 42,
+      "steps": 200,
+      "outcome": "time_limit",
+      "return": -0.8410672344094177,
+      "trajectory_sha256": "0e690c48b727f81f80e91482cdc7a3cf1d1bcfe766faa8ccffbea3f2c5f988a9"
+    },
+    {
+      "policy": "v3",
+      "seed": 74,
+      "steps": 135,
+      "outcome": "success",
+      "return": 15.820779779330534,
+      "trajectory_sha256": "409388dbdbd8db4ac5c2ff89d536350b6f45be7010c5664b39a781cc406d535d"
+    },
+    {
+      "policy": "v3",
+      "seed": 100,
+      "steps": 82,
+      "outcome": "success",
+      "return": 16.507701871100952,
+      "trajectory_sha256": "a0013a8cfe63616a2097d9a9ba0cfdccea6e42552d09f3690039b6bfdf09e679"
+    }
+  ]
+}

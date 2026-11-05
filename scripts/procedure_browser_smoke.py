@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 import re
 import shutil
+from urllib.parse import urlparse
 from playwright.sync_api import sync_playwright, expect
 
 
@@ -90,6 +91,91 @@ def main():
             assert response.ok, f"{path}: {response.status} {response.text()}"
             return response.json()
 
+        creation_writes = []
+
+        def record_creation_write(request):
+            if request.method in ("POST", "DELETE"):
+                creation_writes.append((request.method, urlparse(request.url).path))
+
+        page.on("request", record_creation_write)
+        page.get_by_label("Procedure random seed", exact=True).fill("2")
+        dev_initial = click_response(
+            page.get_by_role("button", name="New episode", exact=True), "/sessions"
+        )
+        assert dev_initial["seed"] == 2
+        expect(
+            page.get_by_role("log", name="Procedure event timeline", exact=True)
+        ).to_contain_text(dev_initial["id"][:8])
+        expect(page.locator(".mini-trace .trace-range").first).to_contain_text(
+            "1 samples"
+        )
+        initial_events = page.locator(".event-log > div").count()
+        initial_trace_labels = page.locator(
+            ".mini-trace .trace-range"
+        ).all_text_contents()
+        failure = {"pending": True}
+
+        def fail_replacement_once(route):
+            if route.request.method == "POST" and failure["pending"]:
+                failure["pending"] = False
+                route.fulfill(
+                    status=503,
+                    content_type="application/json",
+                    body=json.dumps({"detail": "Injected replacement episode outage"}),
+                )
+            else:
+                route.continue_()
+
+        context.route("**/api/procedure/sessions", fail_replacement_once)
+        with page.expect_response(
+            lambda response: response.request.method == "DELETE"
+        ) as closed:
+            with page.expect_response(
+                lambda response: response.request.method == "POST"
+                and urlparse(response.url).path == "/api/procedure/sessions"
+            ) as failed_replacement:
+                page.get_by_role("button", name="New episode", exact=True).click()
+        assert closed.value.ok and closed.value.json()["status"] == "closed"
+        assert failed_replacement.value.status == 503
+        expect(page.get_by_role("alert")).to_contain_text(
+            "Injected replacement episode outage"
+        )
+        expect(page.locator(".viewport-caption")).to_contain_text("closed")
+        expect(
+            page.get_by_label("Saved episode", exact=True).locator("option:checked")
+        ).to_contain_text("closed")
+        for label in ("Move instrument right", "Step", "Handoff"):
+            expect(page.get_by_role("button", name=label, exact=True)).to_be_disabled()
+        assert page.locator(".event-log > div").count() == initial_events
+        assert (
+            page.locator(".mini-trace .trace-range").all_text_contents()
+            == initial_trace_labels
+        )
+        persisted_closed = context.request.get(
+            f"{args.base_url}/api/procedure/sessions/{dev_initial['id']}"
+        ).json()
+        assert persisted_closed["status"] == "closed"
+        assert not context.request.get(
+            f"{args.base_url}/api/procedure/sessions/{dev_initial['id']}/transitions"
+        ).json()["transitions"]
+        writes_before_retry = len(creation_writes)
+        page.wait_for_timeout(500)
+        assert len(creation_writes) == writes_before_retry
+        page.screenshot(
+            path=str(args.output_dir / "closed-after-replacement-failure.png"),
+            full_page=True,
+        )
+        retried = click_response(
+            page.get_by_role("button", name="New episode", exact=True), "/sessions"
+        )
+        assert retried["seed"] == 2 and retried["status"] == "active"
+        assert sum(method == "DELETE" for method, _ in creation_writes) == 1
+        context.unroute("**/api/procedure/sessions", fail_replacement_once)
+        page.remove_listener("request", record_creation_write)
+        checks.append(
+            "close-before-create failure preserves truthful read-only state and history; explicit retry creates once without duplicate events"
+        )
+        # Resume the suite with its established development seed2.
         initial = click_response(
             page.get_by_role("button", name="New episode", exact=True), "/sessions"
         )
@@ -273,6 +359,30 @@ def main():
         )
         checks.append(
             "keyboard selection, grasp and motion work; handoff records an actual terminal decision"
+        )
+        terminal_deletes = []
+
+        def record_terminal_delete(request):
+            if request.method == "DELETE":
+                terminal_deletes.append(request.url)
+
+        page.on("request", record_terminal_delete)
+        click_response(
+            page.get_by_role("button", name="New episode", exact=True), "/sessions"
+        )
+        page.remove_listener("request", record_terminal_delete)
+        assert not terminal_deletes
+        terminal_record = context.request.get(
+            f"{args.base_url}/api/procedure/sessions/{handoff['id']}"
+        ).json()
+        assert terminal_record["status"] == "terminated"
+        expect(
+            page.get_by_label("Saved episode", exact=True).locator(
+                f'option[value="{handoff["id"]}"]'
+            )
+        ).to_contain_text("terminated")
+        checks.append(
+            "switching from a terminal episode preserves its displayed and durable terminal status"
         )
         reset = click_response(
             page.get_by_role("button", name="Reset", exact=True), "/reset"

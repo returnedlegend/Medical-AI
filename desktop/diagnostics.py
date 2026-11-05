@@ -52,6 +52,9 @@ def diagnose(output: Path, data_directory: Path | None = None) -> int:
         if not lock.tryLock(0):
             raise RuntimeError("Another Retraction Lab window is using this study directory. Close it before running diagnosis.")
         evidence["checks"]["private_study_lock"] = True
+        from desktop.notices import verify_pinned_notices
+        verified_notices = verify_pinned_notices(resource_root() / "desktop" / "licenses")
+        evidence["checks"]["license_notice_provenance"] = {"verified": True, "files": len(verified_notices)}
         server = LocalServer(directory)
         if evidence["packaged"]:
             build = json.loads((resource_root() / "build-info.json").read_text(encoding="utf-8"))

@@ -1,0 +1,223 @@
+{
+  "created_at": "2026-11-05T17:50:35.180841+00:00",
+  "purpose": "Frozen exploratory paired V2 versus V3 representation/numeric-convention comparison; no physical/reward changes",
+  "entries": [
+    {
+      "arm": "tabular_v2",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 201,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v2",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v2",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 202,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v2",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v2",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 203,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v2",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v2",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 204,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v2",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v2",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 205,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v2",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v3",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 201,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v3",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v3",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 202,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v3",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v3",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 203,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v3",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v3",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 204,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v3",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v3",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 205,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v3",
+        "environment": {}
+      }
+    }
+  ],
+  "source_sha256": {
+    "learning.py": "d5b0f04cd60f6699ac8e2032017af21021f6524fba9d59bc680f5ebf835b7b7d",
+    "tabular.py": "86baad383202d3504d9123d025d021b1940e5f9feb1cc6108827ee29583365bc",
+    "environment.py": "be5bfeb9a50fd66b6f1477b0e8d9926cb30406c8f3ba24fbc33fb74056992427",
+    "tissue.py": "220c34760a7990648841a1e3a40aaad621d8cd0da12d7ea900bcbb3d94763fe1"
+  },
+  "physics_fingerprint": "99bcc146975fff6221c65ee927d4bc38373a18069e56ce8cd45bf7a75c984898",
+  "model_version": "tissue-retraction-1.1",
+  "selection_require_zero_severe_harm": true,
+  "selection_rule": "Among runs with zero observed severe injury on validation, choose highest validation success; tie-break lower mean maximum injury, then higher mean return. This eligibility is not proof of safety. If none qualify, export no policy. Reserved final patients are excluded from all selection.",
+  "per_arm_candidate_rule": "Also export the best zero-observed-severe-injury candidate within each arm under the identical ranking, labeled validation-selected; never use final outcomes to choose or tune candidates.",
+  "design_sha256": "194d10825ef24c0f759325793c84e4ba1592c07bae5f35807a54433cded77a35",
+  "preflight": {
+    "reserved_final_patient_count": 128,
+    "reserved_final_overlap": 0,
+    "cross_run_fit_validation_overlap": 0,
+    "prior_fit_or_validation_overlap": 0,
+    "validation_patients_per_training_seed": 30,
+    "validation_patients_paired_across_both_arms": true
+  },
+  "limitations": [
+    "Illustrative unvalidated tissue/reward assumptions",
+    "V3 remains partial/reactive despite more explicit critical-injury/acceptance features",
+    "Five training seeds per arm with optimistic validation selection",
+    "Raw public float32 observations have finite precision; integer micro-unit comparison is an explicit policy convention",
+    "No reserved final patient was run for this protocol"
+  ]
+}

@@ -6,8 +6,45 @@ import hashlib
 import importlib.metadata
 import json
 from pathlib import Path
+import platform
 import re
 import shutil
+import sys
+
+
+def verify_pinned_notices(directory: Path) -> dict[str, str]:
+    """Check verbatim source notices before they enter a distributed bundle."""
+    sources = json.loads((directory / "sources.json").read_text(encoding="utf-8"))
+    verified = {}
+    for name, metadata in sources["files"].items():
+        path = directory / name
+        if path.parent.resolve() != directory.resolve():
+            raise RuntimeError(f"Pinned license notice must be a direct file: {name}")
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        if digest != metadata["sha256"]:
+            raise RuntimeError(f"Pinned license notice checksum mismatch: {name}")
+        verified[name] = digest
+    return verified
+
+
+def collect_interpreter_notice(directory: Path, source: Path, version: str) -> dict | None:
+    """Keep installed-runtime notices separate from byte-pinned upstream text."""
+    if not source.is_file():
+        return None
+    directory.mkdir(parents=True, exist_ok=True)
+    target = directory / f"CPython-{version}-installed-LICENSE.txt"
+    shutil.copy2(source, target)
+    provenance = {
+        "schema": "retraction-installed-interpreter-notice-v1",
+        "python_version": version,
+        "implementation": platform.python_implementation(),
+        "platform": sys.platform,
+        "source_distribution": "LICENSE.txt from the installed build interpreter's base directory",
+        "file": target.name,
+        "sha256": hashlib.sha256(target.read_bytes()).hexdigest(),
+    }
+    (directory / "installed-interpreter-notice.json").write_text(json.dumps(provenance, indent=2) + "\n", encoding="utf-8")
+    return provenance
 
 
 def collect_notices(destination: Path) -> None:

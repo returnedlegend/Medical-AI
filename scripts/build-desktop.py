@@ -90,11 +90,15 @@ def main():
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(distrust_certificate, destination)
     sys.path.insert(0, str(snapshot))
-    from desktop.notices import collect_notices
-    collect_notices(snapshot / "desktop" / "licenses" / "python-packages")
+    from desktop.notices import collect_interpreter_notice, collect_notices, verify_pinned_notices
+    license_directory = snapshot / "desktop" / "licenses"
+    verify_pinned_notices(license_directory)
+    collect_notices(license_directory / "python-packages")
     python_license = Path(sys.base_prefix) / "LICENSE.txt"
-    if python_license.is_file():
-        shutil.copy2(python_license, snapshot / "desktop" / "licenses" / f"CPython-{platform.python_version()}-LICENSE.txt")
+    collect_interpreter_notice(license_directory, python_license, platform.python_version())
+    verified_notices = verify_pinned_notices(license_directory)
+    (license_directory / "pinned-notices-verification.json").write_text(
+        json.dumps({"schema": "retraction-pinned-notices-v1", "files": verified_notices}, indent=2) + "\n", encoding="utf-8")
     try:
         git = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True)
         dirty = subprocess.run(["git", "status", "--porcelain"], cwd=root, capture_output=True, text=True)

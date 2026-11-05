@@ -37,6 +37,8 @@ The research agents are experimental. Some development runs learned to hand off 
 
 The [all-seed validation figures](docs/validation-figures.md) retain unsuccessful runs and compare assisted and unassisted learners with their controls. The [second paired study](docs/rl-study-002.md) preserves all fifteen checkpoints and does not establish superiority of its revised encoder.
 
+The [third paired study](docs/rl-study-003.md) preserves all ten V2/V3 runs, including a severe-injury outcome and zero-success runs. Its larger representation did not demonstrate improved performance. These studies contain 105,000 recorded online training episodes on paired synthetic seed streams, not that many independent patients.
+
 ## Cohort experiments and real-physics diagnostics
 
 The cohort module retains seeded patient distributions, exhaustive 75-strategy sweeps, training-selected shared strategies, held-out personalization benefit, force-probe prediction/calibration, subgroup analysis, threshold sensitivity, and JSON/CSV/research-report exports. Its analytic exposure model is described in [model.md](docs/model.md).

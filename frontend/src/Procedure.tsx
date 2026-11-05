@@ -559,12 +559,21 @@ export default function Procedure() {
     setBusy(true);
     setError("");
     inFlight.current = true;
+    const previous = current.current;
     try {
-      if (!reset && current.current?.status === "active")
-        await request(
-          `/procedure/sessions/${current.current.id}?expected_revision=${current.current.revision}`,
+      if (!reset && previous?.status === "active") {
+        const closed = await request<Episode>(
+          `/procedure/sessions/${previous.id}?expected_revision=${previous.revision}`,
           { method: "DELETE" },
         );
+        if (token !== generation.current) return;
+        current.current = closed;
+        setSession(closed);
+        setSessions((old) => [
+          closed,
+          ...old.filter((record) => record.id !== closed.id),
+        ]);
+      }
       const data = await request<Episode>(
         matched && training
           ? `/learning/runs/${training.id}/session`
@@ -587,21 +596,20 @@ export default function Procedure() {
         },
       );
       if (token === generation.current) {
-        const previous = current.current?.id;
-        if (previous)
+        if (reset && previous)
           setSessions((old) =>
             old.map((s) =>
-              s.id === previous ? { ...s, status: "closed" } : s,
+              s.id === previous.id ? { ...s, status: "closed" } : s,
             ),
           );
         accept(data, true);
         if (matched) setController("trained");
       }
     } catch (e) {
-      setError(errorMessage(e));
+      if (token === generation.current) setError(errorMessage(e));
     } finally {
       inFlight.current = false;
-      setBusy(false);
+      if (token === generation.current) setBusy(false);
     }
   };
   const step = useCallback(
