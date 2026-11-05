@@ -54,6 +54,8 @@ A native lock prevents a second window from accidentally recovering or modifying
 the first window's active work. The local service also requires an unpredictable
 per-launch session header supplied only by the embedded window. The service is
 bound to loopback, and the embedded page blocks external HTTP navigation.
+When closing during a calculation, the window remains visible with a shutdown
+status until its active computations finish and studies are safely saved.
 
 Use the interface's export controls to save procedure episodes, training results,
 cohort JSON, cohort CSV, and reports through the native Save dialog. The File menu

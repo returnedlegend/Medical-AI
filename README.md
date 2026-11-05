@@ -10,7 +10,7 @@ The portable procedure engine is a **stateful mechanistic surrogate**, not valid
 
 The primary target is a self-contained **Windows x64 `.exe`**, with a per-user installer and a portable ZIP. Python, Node, and a separate browser are not required to run the packaged application. The native Qt window starts its own private authenticated local backend and stores studies in the operating system's user-data directory.
 
-The [Windows desktop workflow](https://github.com/returnedlegend/Medical-AI/actions/workflows/desktop.yml) builds the executable and records packaged checks. Download its `RetractionLab-windows-x64` artifact after a successful run, then run the included installer or extract the portable package and launch `RetractionLab.exe`. Keep the portable application's supporting files together. See [desktop installation and build details](docs/desktop.md) for exact artifact names, verification, and platform limits.
+The [Windows desktop workflow](https://github.com/returnedlegend/Medical-AI/actions/workflows/desktop.yml) builds the executable and records packaged checks. After a successful run, download `RetractionLab-windows-x64-Setup` for the single `.exe` installer, or `RetractionLab-windows-x64` for the portable ZIP. Run the installer, or extract the complete portable package and launch `RetractionLab.exe`. Keep the portable application's supporting files together. See [desktop installation and build details](docs/desktop.md) for verification and platform limits.
 
 Local build outputs live under ignored `artifacts/desktop/`; compiled runtimes and patient/session data are not committed to GitHub. The development log distinguishes locally built Windows PE files, Wine checks, and native Windows CI results rather than assuming they are equivalent.
 
@@ -35,11 +35,15 @@ The Gymnasium environment exposes reset/step/observation/reward/termination. Pol
 
 The research agents are experimental. Some development runs learned to hand off or caused substantial harm rather than solving the task; these outcomes are retained and documented. A successful scripted baseline, a supervised demonstration component, and a trained RL policy are different results. See [the training reference](docs/rl-training.md) and [the complete five-seed study](docs/rl-study-001.md). The bundled policy is explicitly validation-selected; its displayed score is not an untouched-test or clinical-safety estimate.
 
+The [all-seed validation figures](docs/validation-figures.md) retain unsuccessful runs and compare assisted and unassisted learners with their controls. The [second paired study](docs/rl-study-002.md) preserves all fifteen checkpoints and does not establish superiority of its revised encoder.
+
 ## Cohort experiments and real-physics diagnostics
 
 The cohort module retains seeded patient distributions, exhaustive 75-strategy sweeps, training-selected shared strategies, held-out personalization benefit, force-probe prediction/calibration, subgroup analysis, threshold sensitivity, and JSON/CSV/research-report exports. Its analytic exposure model is described in [model.md](docs/model.md).
 
 The optional Linux x86_64 SOFA runtime renders actual gallbladder/liver meshes, scripted grasping, bounded motions, and raw telemetry. An independently audited wrapper derives complete connectivity from unchanged upstream tetrahedra. The experimental material-softening variant changes actual element stiffness in response to strain/heat and has an elementary elasticity reference. It is separate from the portable RL engine and does not yet implement the proposal's full patient-specific CVS study. See [SOFA setup](docs/sofa-integration.md), [connectivity diagnosis](docs/physics-diagnostics.md), and [material-softening experiments](docs/sofa-softening.md).
+
+The [mesh-resolution diagnostics](docs/mesh-resolution.md) also retain unfavorable results: organ contact/preload changed with refinement, and a controlled three-resolution cantilever remained too stiff relative to a beam approximation. More elements alone did not establish accuracy or convergence.
 
 ## Run from source
 

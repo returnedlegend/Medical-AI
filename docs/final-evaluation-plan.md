@@ -10,6 +10,16 @@ The objective is a paired comparison of **fixed** policies and public baselines
 in the same synthetic tissue environment. It is not further training, a new
 model-selection contest, or a claim of clinical performance.
 
+The [prespecified design for evaluation 001](../examples/final-evaluation-001-design.json)
+includes the existing live V1 reference, study 002's validation-selected V2,
+and every paired V2/V3 policy from study 003's five training seeds 201–205.
+That is twelve fixed policies and three shared baselines on the 128 reserved
+patients: 1,920 episodes. The V3 validation-selected candidate is an alias of
+one included policy. The release reference remains unchanged regardless of
+final outcomes. This controller set was recorded before study 003 finished;
+the completed file hashes and exclusion audit must still be frozen before
+the root authorizes any final rollout.
+
 ## Before the reserved run
 
 1. Freeze the complete run/reference JSON files to evaluate, their labels, the

@@ -11,6 +11,7 @@ import multiprocessing
 import os
 from pathlib import Path
 import sys
+import threading
 import time
 from urllib.parse import urlparse
 
@@ -133,8 +134,54 @@ def main() -> int:
             self.profile.downloadRequested.connect(self.download)
             self.setCentralWidget(self.view)
             self.statusBar().showMessage("Local research workspace · synthetic simulation")
+            self._shutdown_started = False
+            self._shutdown_finished = threading.Event()
+            self._shutdown_error = None
+            self._shutdown_timer = QTimer(self)
+            self._shutdown_timer.setInterval(100)
+            self._shutdown_timer.timeout.connect(self.finish_shutdown)
             self.make_menu()
             self.view.load(QUrl(server.url))
+
+        def closeEvent(self, event):
+            if self._shutdown_finished.is_set() and not self._shutdown_error:
+                event.accept()
+                return
+            event.ignore()
+            if self._shutdown_started:
+                return
+            self._shutdown_started = True
+            self.view.setEnabled(False)
+            self.menuBar().setEnabled(False)
+            self.statusBar().showMessage("Finishing active computations and saving studies…")
+
+            def stop_service():
+                try:
+                    server.stop(timeout=None)
+                except Exception as exc:
+                    self._shutdown_error = str(exc)
+                    logging.exception("Desktop service shutdown failed")
+                finally:
+                    self._shutdown_finished.set()
+
+            self._shutdown_thread = threading.Thread(target=stop_service, name="desktop-shutdown", daemon=True)
+            self._shutdown_thread.start()
+            self._shutdown_timer.start()
+
+        def finish_shutdown(self):
+            if not self._shutdown_finished.is_set():
+                return
+            self._shutdown_timer.stop()
+            self._shutdown_thread.join()
+            if self._shutdown_error:
+                self._shutdown_started = False
+                self._shutdown_finished.clear()
+                self.menuBar().setEnabled(True)
+                self.statusBar().showMessage("Shutdown could not finish. Check diagnostic logs and try closing again.")
+                QMessageBox.warning(self, "Shutdown could not finish", "The local service could not stop cleanly. Your study remains locked. Check diagnostic logs and try closing again.")
+                self._shutdown_error = None
+                return
+            self.close()
 
         def make_menu(self):
             file_menu = self.menuBar().addMenu("&File")
@@ -387,7 +434,7 @@ def main() -> int:
                     evidence["error"] = str(exc)
                 args.smoke_test.write_text(json.dumps(evidence, indent=2) + "\n")
                 smoke_timer.stop()
-                QTimer.singleShot(100, lambda: app.exit(0 if evidence["status"] == "passed" else 1))
+                QTimer.singleShot(100, window.close if evidence["status"] == "passed" else lambda: app.exit(1))
 
         def poll_smoke():
             if time.monotonic() - started > 90:
