@@ -8,7 +8,7 @@ from retraction.simulation import (
     _mechanics, evaluate_grid, force_probe, generate_cohort,
     normalize_config, run_experiment, simulate_patient, strategy_grid,
 )
-from retraction.analysis import _fit_evaluate, paired_bootstrap_ci
+from retraction.analysis import _fit_evaluate, analyze_subgroups, paired_bootstrap_ci
 
 
 class MechanicsTests(unittest.TestCase):
@@ -151,6 +151,36 @@ class ExperimentTests(unittest.TestCase):
         values = [x["oracle_success_rate"] for x in self.result["sensitivity"]]
         self.assertEqual(values, sorted(values))
 
+    def test_subgroups_reconstruct_test_outcomes_and_partition_dimensions(self):
+        r = self.result
+        test = [p for p in r["patients"] if p["split"] == "test"]
+        predicates = {
+            ("attachment_length", "short"): lambda p: p["attachment_length_mm"] < 15,
+            ("attachment_length", "medium"): lambda p: 15 <= p["attachment_length_mm"] < 25,
+            ("attachment_length", "long"): lambda p: p["attachment_length_mm"] >= 25,
+            ("adhesions", "none"): lambda p: p["adhesion_count"] == 0,
+            ("adhesions", "mild"): lambda p: 1 <= p["adhesion_count"] <= 3,
+            ("adhesions", "high"): lambda p: p["adhesion_count"] >= 4,
+            ("distension", "lower"): lambda p: p["distension"] < 1.2,
+            ("distension", "higher"): lambda p: p["distension"] >= 1.2,
+        }
+        for row in r["subgroups"]:
+            selected = [p for p in test if predicates[(row["dimension"], row["group"])](p)]
+            self.assertEqual(row["n"], len(selected))
+            if selected:
+                shared = np.mean([p["shared"]["success"] for p in selected])
+                oracle = np.mean([p["oracle"]["success"] for p in selected])
+                self.assertAlmostEqual(row["shared_success_rate"], shared)
+                self.assertAlmostEqual(row["oracle_success_rate"], oracle)
+                self.assertAlmostEqual(row["personalization_gain"], oracle - shared)
+                self.assertAlmostEqual(row["bailout_rate"], 1 - oracle)
+                self.assertTrue(0 <= row["gain_ci"][0] <= row["gain_ci"][1] <= 1)
+        for dimension in {row["dimension"] for row in r["subgroups"]}:
+            rows = [row for row in r["subgroups"] if row["dimension"] == dimension]
+            self.assertEqual(sum(row["n"] for row in rows), len(test))
+            self.assertAlmostEqual(sum(row["n"] * row["personalization_gain"] for row in rows if row["n"]) / len(test),
+                                   r["summary"]["personalization_gain"])
+
     def test_metrics_cover_only_heldout_cases(self):
         probe = self.result["probe"]
         test = [p for p in self.result["patients"] if p["split"] == "test"]
@@ -163,6 +193,33 @@ class ExperimentTests(unittest.TestCase):
 
 
 class AnalysisTests(unittest.TestCase):
+    def test_subgroup_boundaries_empty_groups_and_training_exclusion(self):
+        base = {"split": "test", "attachment_length_mm": 15.0, "adhesion_count": 3,
+                "distension": 1.2, "shared": {"success": False}, "oracle": {"success": True}}
+        patients = [base, {**base, "attachment_length_mm": 25.0, "adhesion_count": 4},
+                    {**base, "split": "train", "attachment_length_mm": 8.0,
+                     "adhesion_count": 0, "distension": 0.8}]
+        rows = analyze_subgroups(patients, 42)
+        indexed = {(row["dimension"], row["group"]): row for row in rows}
+        self.assertEqual(indexed[("attachment_length", "medium")]["n"], 1)
+        self.assertEqual(indexed[("attachment_length", "long")]["n"], 1)
+        self.assertEqual(indexed[("adhesions", "mild")]["n"], 1)
+        self.assertEqual(indexed[("adhesions", "high")]["n"], 1)
+        self.assertEqual(indexed[("distension", "higher")]["n"], 2)
+        for key in [("attachment_length", "short"), ("adhesions", "none"), ("distension", "lower")]:
+            row = indexed[key]
+            self.assertEqual(row["n"], 0)
+            for metric in ["shared_success_rate", "oracle_success_rate", "personalization_gain", "bailout_rate", "gain_ci"]:
+                self.assertIsNone(row[metric])
+        for row in rows:
+            if row["n"]:
+                self.assertEqual(row["gain_ci"], [1.0, 1.0])
+        self.assertEqual(rows, analyze_subgroups(patients, 42))
+        json.dumps(rows, allow_nan=False)
+        empty = analyze_subgroups([], 42)
+        self.assertEqual(len(empty), 8)
+        self.assertTrue(all(row["n"] == 0 and row["gain_ci"] is None for row in empty))
+
     def test_test_labels_do_not_affect_model_fitting_or_predictions(self):
         rng = np.random.default_rng(1)
         features = rng.normal(size=(100, 4))

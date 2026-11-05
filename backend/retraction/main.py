@@ -217,6 +217,16 @@ def create_app(data_dir: str | Path | None = None) -> FastAPI:
                 "strategies": [simulate_patient(patient, strategy, thresholds)
                                for strategy in result["strategies"]]}
 
+    @app.get("/api/runs/{run_id}/report")
+    def report(run_id: UUID):
+        from .report import render_report
+
+        record = get_run(run_id, include_result=True)
+        if record["status"] != "completed":
+            raise HTTPException(409, "Complete the run before exporting a report")
+        return Response(render_report(record["result"], str(run_id)), media_type="text/markdown",
+                        headers={"Content-Disposition": f'attachment; filename="retraction-{run_id}.md"'})
+
     @app.get("/api/runs/{run_id}/export")
     def export(run_id: UUID, format: Literal["json", "csv"] = "json"):
         record = get_run(run_id, include_result=True)

@@ -1,0 +1,2 @@
+# Optional real-browser validation; separate from production dependencies.
+playwright==1.62.0

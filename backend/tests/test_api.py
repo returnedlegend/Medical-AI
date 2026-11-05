@@ -203,3 +203,8 @@ def test_patient_grid_reproduces_saved_oracle(tmp_path):
         assert selected['force_n'] == pytest.approx(patient['oracle']['force_n'])
         assert selected['exposure'] == pytest.approx(patient['oracle']['exposure'])
         assert client.get(f'/api/runs/{run["id"]}/patients/missing/strategies').status_code == 404
+        report = client.get(f'/api/runs/{run["id"]}/report')
+        assert report.status_code == 200
+        assert 'attachment;' in report.headers['content-disposition']
+        assert 'analytic-surrogate-1.0' in report.text
+        assert 'not externally preregistered' in report.text

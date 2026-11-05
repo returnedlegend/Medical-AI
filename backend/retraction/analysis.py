@@ -76,3 +76,51 @@ def analyze_probe(probes: list[dict[str, Any]], needs_personalization: np.ndarra
     return {**primary, "bailout": infeasibility, "model": "logistic_regression",
             "feature_names": FEATURE_NAMES, "decision_threshold": 0.5,
             "interpretation": "Held-out prediction of personalization need; probabilities are synthetic model estimates, not clinical confidence. Flagging does not simulate a successful surgeon intervention."}, predictions, bailout_predictions
+
+
+def analyze_subgroups(patients: list[dict[str, Any]], seed: int) -> list[dict[str, Any]]:
+    """Describe held-out outcomes in fixed, illustrative anatomy strata.
+
+    The cutoffs below are declared independently of outcomes, are not clinical
+    grades, and are never selected to maximize observed personalization gains.
+    Intervals are descriptive patient-bootstrap intervals conditional on the
+    training-selected shared strategy; they are not adjusted for multiplicity.
+    Each dimension partitions the same test cohort, so dimensions overlap.
+    """
+    test = [patient for patient in patients if patient["split"] == "test"]
+    strata = [
+        ("attachment_length", "short", "Short attachment (<15 mm)",
+         lambda p: p["attachment_length_mm"] < 15),
+        ("attachment_length", "medium", "Medium attachment (15–<25 mm)",
+         lambda p: 15 <= p["attachment_length_mm"] < 25),
+        ("attachment_length", "long", "Long attachment (≥25 mm)",
+         lambda p: p["attachment_length_mm"] >= 25),
+        ("adhesions", "none", "No adhesions (0)",
+         lambda p: p["adhesion_count"] == 0),
+        ("adhesions", "mild", "1–3 adhesion tethers",
+         lambda p: 1 <= p["adhesion_count"] <= 3),
+        ("adhesions", "high", "≥4 adhesion tethers",
+         lambda p: p["adhesion_count"] >= 4),
+        ("distension", "lower", "Lower distension (<1.2×)",
+         lambda p: p["distension"] < 1.2),
+        ("distension", "higher", "Higher distension (≥1.2×)",
+         lambda p: p["distension"] >= 1.2),
+    ]
+    results = []
+    for index, (dimension, group, label, predicate) in enumerate(strata):
+        selected = [patient for patient in test if predicate(patient)]
+        row = {"dimension": dimension, "group": group, "label": label,
+               "n": len(selected), "shared_success_rate": None,
+               "oracle_success_rate": None, "personalization_gain": None,
+               "bailout_rate": None, "gain_ci": None}
+        if selected:
+            shared = np.array([patient["shared"]["success"] for patient in selected], dtype=float)
+            oracle = np.array([patient["oracle"]["success"] for patient in selected], dtype=float)
+            gain = oracle - shared
+            row.update(shared_success_rate=float(shared.mean()),
+                       oracle_success_rate=float(oracle.mean()),
+                       personalization_gain=float(gain.mean()),
+                       bailout_rate=float((1 - oracle).mean()),
+                       gain_ci=paired_bootstrap_ci(gain, seed + 100 + index))
+        results.append(row)
+    return results

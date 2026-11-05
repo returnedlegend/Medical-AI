@@ -16,16 +16,17 @@ import io
 import json
 from pathlib import Path
 import re
+import shutil
 import sys
 from urllib.parse import urlparse
 
-from playwright.sync_api import expect, sync_playwright
+from playwright.sync_api import Error as PlaywrightError, expect, sync_playwright
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--base-url', default='http://127.0.0.1:8000')
-    parser.add_argument('--chromium', default='/usr/bin/chromium')
+    parser.add_argument('--chromium', default=shutil.which('chromium'), help='Chromium executable; otherwise use Playwright-managed Chromium')
     parser.add_argument('--output-dir', type=Path, default=Path('/tmp/retraction-browser-smoke'))
     args = parser.parse_args()
     base_url = args.base_url.rstrip('/')
@@ -116,6 +117,108 @@ def main() -> int:
             assert {row['run_id'] for row in rows} == {run_id}
             assert {row['id'] for row in rows} == {p['id'] for p in results['patients']}
             checks.append('real JSON/CSV downloads match persisted run and all patient IDs')
+            # Subgroup rows must display held-out values from the genuine export.
+            subgroup_panel = page.locator('.subgroup-panel')
+            expect(subgroup_panel).to_be_visible()
+            for dimension, button_name in (('attachment_length', 'Attachment'), ('adhesions', 'Adhesions'), ('distension', 'Distension')):
+                subgroup_panel.get_by_role('button', name=button_name, exact=True).click()
+                expected_groups = [g for g in results['subgroups'] if g['dimension'] == dimension]
+                subgroup_rows = subgroup_panel.locator('tbody tr')
+                expect(subgroup_rows).to_have_count(len(expected_groups))
+                for index, group in enumerate(expected_groups):
+                    cells = subgroup_rows.nth(index).locator('td')
+                    expect(cells.nth(0)).to_have_text(group['label'])
+                    expect(cells.nth(1)).to_have_text(str(group['n']))
+                    expect(cells.nth(2)).to_have_text(f"{group['shared_success_rate'] * 100:.1f}%" if group['n'] else '—')
+                    expect(cells.nth(3)).to_have_text(f"{group['oracle_success_rate'] * 100:.1f}%" if group['n'] else '—')
+                    if group['n']:
+                        expect(cells.nth(4)).to_contain_text(f"+{group['personalization_gain'] * 100:.1f} pp")
+            checks.append('attachment/adhesion/distension subgroup table agrees with exported held-out rates')
+
+            # Reuse changes only the draft controls; saved data remains fixed.
+            page.locator('#seed').fill('111')
+            page.locator('#threshold').select_option('conservative')
+            page.get_by_role('button', name='Reuse setup', exact=True).click()
+            expect(page.locator('#seed')).to_have_value('20261105')
+            expect(page.locator('#threshold')).to_have_value('nominal')
+            expect(page.locator('#cohort')).to_have_value('40')
+            checks.append('reuse setup restores selected run configuration into editable controls')
+
+            explorer = page.locator('.strategy-explorer')
+            preview_url = f'{base_url}/api/preview'
+            with page.expect_response(lambda r: r.url == preview_url and r.request.method == 'POST'):
+                explorer.get_by_role('button', name=re.compile(r'^Try a custom retraction')).click()
+            expect(explorer.locator('.constraint-meters')).to_be_visible()
+            scatter = explorer.get_by_role('group', name=re.compile(r'^All strategy outcomes'))
+            expect(scatter.get_by_role('button')).to_have_count(75)
+            grid_response = context.request.get(f'{base_url}/api/runs/{run_id}/patients/{selected_patient}/strategies')
+            assert grid_response.ok
+            grid = grid_response.json()
+            assert len(grid['strategies']) == 75
+            for outcome in grid['strategies']:
+                name = f"{outcome['strategy']['id']}: force {outcome['force_n']:.2f} N, exposure {outcome['exposure'] * 100:.0f}%, {'success' if outcome['success'] else 'failure'}"
+                expect(scatter.get_by_role('button', name=name, exact=True)).to_have_count(1)
+            distance_slider = explorer.get_by_label('Custom pull distance', exact=False)
+            with page.expect_response(lambda r: r.url == preview_url and r.request.post_data_json['strategy']['distance_mm'] == 0) as zero_response:
+                distance_slider.focus()
+                distance_slider.press('Home')
+            zero_outcome = zero_response.value.json()['outcome']
+            assert zero_outcome['force_n'] == 0 and zero_outcome['strain'] == 0 and zero_outcome['exposure'] == 0
+            assert zero_outcome['success'] is False
+            expect(explorer.locator('.preview-status')).to_contain_text('Proxy constraints do not all pass')
+            meters = explorer.locator('.constraint-meters .constraint b')
+            expect(meters.nth(0)).to_have_text('0.00 N')
+            expect(meters.nth(1)).to_have_text('0.0%')
+            expect(meters.nth(2)).to_have_text('0.0%')
+            with page.expect_response(lambda r: r.url == preview_url and r.request.post_data_json['strategy']['distance_mm'] == 30) as full_response:
+                distance_slider.press('End')
+            full_outcome = full_response.value.json()['outcome']
+            assert full_outcome['force_n'] > 0 and full_outcome['strain'] > 0
+            expect(meters.nth(0)).to_have_text(f"{full_outcome['force_n']:.2f} N")
+            expect(meters.nth(1)).to_have_text(f"{full_outcome['strain'] * 100:.1f}%")
+            candidate = grid['strategies'][0]
+            grid_point = scatter.get_by_role('button', name=re.compile('^' + re.escape(candidate['strategy']['id']) + ':'))
+            with page.expect_response(lambda r: r.url == preview_url and r.request.post_data_json['strategy']['distance_mm'] == candidate['strategy']['distance_mm']):
+                grid_point.focus()
+                grid_point.press('Enter')
+            expect(explorer.get_by_label('Custom grasp position', exact=False)).to_have_value(str(candidate['strategy']['grasp_position']))
+            expect(explorer.get_by_label('Custom pull direction', exact=False)).to_have_value(str(candidate['strategy']['direction_deg']))
+            expect(distance_slider).to_have_value(str(candidate['strategy']['distance_mm']))
+            expect(meters.nth(0)).to_have_text(f"{candidate['force_n']:.2f} N")
+            checks.append('custom preview zero/30mm mechanics, all75 real grid points, keyboard point selection and slider synchronization')
+
+            # Hold one old preview request while switching patients. Releasing
+            # its response afterwards must not overwrite the new patient view.
+            pending_previews = []
+            def hold_preview(route):
+                payload = route.request.post_data_json
+                if payload['strategy']['distance_mm'] == 30:
+                    pending_previews.append(route)
+                else:
+                    route.continue_()
+            page.route(preview_url, hold_preview)
+            with page.expect_request(lambda request: request.url == preview_url and request.post_data_json['strategy']['distance_mm'] == 30):
+                distance_slider.focus()
+                distance_slider.press('End')
+            other_patient = next(p for p in results['patients'] if p['id'] != selected_patient and p['oracle']['strategy']['distance_mm'] != 30)
+            with page.expect_response(lambda r: r.url == preview_url and r.request.post_data_json['patient']['attachment_length_mm'] == other_patient['attachment_length_mm']):
+                patient_select.select_option(other_patient['id'])
+            expect(explorer.locator('.preview-status')).not_to_contain_text('Updating mechanics')
+            assert pending_previews, 'The race check must hold an actual old request'
+            for held in pending_previews:
+                stale_response = context.request.post(preview_url, data=held.request.post_data_json)
+                try:
+                    held.fulfill(status=200, json=stale_response.json())
+                except PlaywrightError:
+                    if not held.request.failure:
+                        raise
+            page.unroute(preview_url, hold_preview)
+            expect(page.get_by_role('heading', name=other_patient['id'], exact=True)).to_be_visible()
+            expect(distance_slider).to_have_value(str(other_patient['oracle']['strategy']['distance_mm']))
+            expect(meters.nth(0)).to_have_text(f"{other_patient['oracle']['force_n']:.2f} N")
+            checks.append('patient switching cancels old preview and prevents stale metrics overwriting new patient')
+            page.screenshot(path=str(args.output_dir / 'custom-preview-desktop.png'), full_page=True)
+
             page.screenshot(path=str(args.output_dir / 'results-desktop.png'), full_page=True)
 
             page.get_by_role('button', name='Virtual patients', exact=True).click()
@@ -144,6 +247,17 @@ def main() -> int:
             page.get_by_role('button', name=re.compile(r'^Run history')).click()
             dialog = page.get_by_role('dialog', name='Experiment history')
             expect(dialog).to_be_visible()
+            close_history = dialog.get_by_role('button', name='Close history', exact=True)
+            expect(close_history).to_be_focused()
+            close_history.press('Shift+Tab')
+            expect(dialog.get_by_role('button').last).to_be_focused()
+            dialog.get_by_role('button').last.press('Tab')
+            expect(close_history).to_be_focused()
+            page.keyboard.press('Escape')
+            expect(dialog).not_to_be_visible()
+            page.get_by_role('button', name=re.compile(r'^Run history')).click()
+            expect(dialog).to_be_visible()
+            checks.append('history modal traps forward/reverse focus and closes on Escape')
             history_run = dialog.get_by_role('button', name=re.compile(rf'^Run {run_id[:8]}'))
             expect(history_run).to_be_visible()
             history_run.click()
@@ -187,6 +301,17 @@ def main() -> int:
             expect(page.get_by_text('Complete', exact=True)).to_be_visible()
             expect(page.get_by_role('alert')).to_have_count(0)
             checks.append('offline launch is disabled and connection retry recovers (intercepted 503)')
+            # Repeat the outage without reloading so an already selected run
+            # cannot leave a stale service-unavailable alert after recovery.
+            page.route(health_url, lambda route: route.fulfill(status=503, json={'detail': 'Smoke test: transient outage'}))
+            page.get_by_role('button', name='Service connected', exact=True).click()
+            expect(page.get_by_role('alert')).to_contain_text('research service is unavailable')
+            page.unroute(health_url)
+            page.get_by_role('button', name='Service offline', exact=True).click()
+            expect(page.get_by_role('button', name='Service connected', exact=True)).to_be_visible()
+            expect(page.get_by_role('alert')).to_have_count(0)
+            checks.append('transient service retry clears stale alert while retaining selected results')
+
             assert not javascript_errors, f'Unhandled browser errors: {javascript_errors}'
             report = {'status': 'passed', 'run_id': run_id, 'checks': checks,
                       'javascript_errors': javascript_errors, 'artifacts': str(args.output_dir)}

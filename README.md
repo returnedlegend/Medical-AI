@@ -73,3 +73,13 @@ Use `--config path/to/config.json` to set patient distributions; API `/api/prese
 “Success” means a **model exposure proxy** meets assumed limits, not clinical CVS achievement. “Bail-out” means no strategy in the finite grid succeeds, not that every surgical option would fail. The probe is quasi-static and noise-free, with any modeled probe-limit violations reported. Bootstrapping quantifies synthetic patient sampling, not uncertainty in tissue mechanics or model design.
 
 The next research milestones are independently validated LapGym/SOFA mechanics, anatomical/camera landmark visibility, mesh convergence, expert-reviewed thresholds, probe noise/stop rules, and independently trained RL agents. See [the research plan](docs/research-plan.md) and [model reference](docs/model.md).
+
+## Browser validation
+
+After starting the built app, optionally install `backend/requirements-browser.txt` into `.venv`, install a Chromium browser with `python -m playwright install --with-deps chromium`, and run:
+
+```bash
+.venv/bin/python scripts/browser_smoke.py
+```
+
+The script uses system Chromium if available, otherwise Playwright-managed Chromium. `--chromium /path/to/browser` overrides it. It creates a real 40-patient run, verifies downloads and saved history, checks mobile layout, and tests explicitly intercepted offline/error states. CI runs this check and preserves screenshots and a JSON report.

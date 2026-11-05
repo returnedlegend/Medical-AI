@@ -212,7 +212,7 @@ def _oracle_indices(success: np.ndarray, forces: np.ndarray, exposures: np.ndarr
 
 def run_experiment(config: dict[str, Any] | None = None,
                    progress_callback: Callable[..., Any] | None = None) -> dict[str, Any]:
-    from .analysis import analyze_probe, paired_bootstrap_ci
+    from .analysis import analyze_probe, analyze_subgroups, paired_bootstrap_ci
     cfg = normalize_config(config)
     patients, strategies = generate_cohort(cfg), strategy_grid()
     limits = {k: cfg[k] for k in THRESHOLD_PROFILES["nominal"]}
@@ -286,6 +286,7 @@ def run_experiment(config: dict[str, Any] | None = None,
     result = {"engine": "analytic-surrogate", "model_version": MODEL_VERSION, "config": cfg,
               "thresholds": limits, "summary": summary, "patients": records, "strategies": strategies,
               "probe": probe_result, "sensitivity": sensitivity,
+              "subgroups": analyze_subgroups(records, cfg["seed"]),
               "methodology": {
                   "scope": "Exploratory synthetic research only. Not LapGym/SOFA, not patient data, and not evidence of clinical safety.",
                   "oracle": "Exhaustive optimum over 75 discrete strategies, not a continuous or clinical optimum. Lowest-force successful strategy selected; if none succeeds, show the highest-exposure force/strain-feasible strategy or lowest force if none feasible.",
@@ -295,6 +296,7 @@ def run_experiment(config: dict[str, Any] | None = None,
                   "exposure": "Synthetic normalized projected triangle area (reference 90 mm²); no anatomy, camera rendering, segmentation, or clinical CVS verification.",
                   "probe": "Fixed 2 mm ramp in 1 second at grasp=0.75 and angle=35 degrees. Features derived only from this response; no anatomy or oracle outcomes used as input. Noise-free observations are optimistic.",
                   "early_warning_target": "Shared strategy fails but at least one grid strategy succeeds. This target is separate from grid infeasibility (bail-out).",
+                  "subgroups": "Descriptive held-out strata with fixed illustrative cutoffs: attachment <15 / 15–<25 / ≥25 mm; adhesions 0 / 1–3 / ≥4; distension <1.2 / ≥1.2. These are not clinical grades. Each dimension partitions test cases; dimensions overlap. Bootstrap intervals are unadjusted for multiple comparisons and can be unstable in small strata. Empty strata report null rates and intervals.",
                   "uncertainty": "Paired patient bootstrap, 1000 replicates, 95% percentile interval, shared strategy held fixed; does not include simulator/model uncertainty or selection variability.",
                   "limitations": ["Constants and thresholds are illustrative, unvalidated, and not calibrated to real tissue.", "Fixed fundus support is assumed; no mesh, dynamics, surgical anatomy, bleeding or inflammation.", "Bail-out means infeasible in this finite surrogate grid, not clinical inability to retract safely.", "Preferred direction is explicitly computed from anatomy parameters; personalization heterogeneity is partly imposed by model construction. Results exercise the analysis pipeline, not the biological hypothesis.", "Fixed probe ramps are not force-stopped. Cases exceeding the selected force or strain limits remain in model training/evaluation and are flagged in the data.", "Probe model is logistic regression; reinforcement learning and five-agent disagreement are not implemented.", "Threshold sensitivity is exploratory, not a preregistered experiment; no mesh-convergence claim."]}}
     if progress_callback:

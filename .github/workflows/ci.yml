@@ -20,3 +20,35 @@ jobs:
         run: scripts/setup.sh
       - name: Test and typecheck
         run: scripts/check.sh
+      - name: Install browser test dependencies
+        run: |
+          .venv/bin/python -m pip install -r backend/requirements-browser.txt
+          .venv/bin/python -m playwright install --with-deps chromium
+      - name: Browser smoke test
+        run: |
+          ./scripts/start.sh > /tmp/retraction-server.log 2>&1 &
+          service_pid=$!
+          trap 'kill "$service_pid"' EXIT
+          .venv/bin/python - <<'PY'
+          import time
+          import urllib.request
+          deadline = time.monotonic() + 30
+          while True:
+              try:
+                  with urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=2) as response:
+                      assert response.status == 200
+                  break
+              except OSError:
+                  if time.monotonic() >= deadline:
+                      raise
+                  time.sleep(.2)
+          PY
+          .venv/bin/python scripts/browser_smoke.py --output-dir /tmp/retraction-browser-smoke
+      - name: Keep browser evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-evidence
+          path: |
+            /tmp/retraction-browser-smoke
+            /tmp/retraction-server.log
