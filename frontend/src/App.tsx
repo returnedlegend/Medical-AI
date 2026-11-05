@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Activity,
+  Box,
   ArrowDownToLine,
   ArrowLeft,
   ArrowRight,
@@ -27,9 +28,10 @@ import {
 import { api, type Run, type RunConfig } from "./api";
 import type { Results, Patient, Outcome } from "./types";
 import Explorer from "./Explorer";
+import Physics from "./Physics";
 import { Anatomy, ForcePlot, CalibrationChart, pct, fixed } from "./visuals";
 
-type Tab = "overview" | "patients" | "methods";
+type Tab = "overview" | "patients" | "methods" | "physics";
 const defaults: RunConfig = {
   n_patients: 240,
   seed: 42,
@@ -258,6 +260,13 @@ export default function App() {
             Virtual patients
           </button>
           <button
+            className={tab === "physics" ? "nav-item active" : "nav-item"}
+            onClick={() => setTab("physics")}
+          >
+            <Box size={18} />
+            Physics sandbox
+          </button>
+          <button
             className={tab === "methods" ? "nav-item active" : "nav-item"}
             onClick={() => setTab("methods")}
           >
@@ -282,7 +291,9 @@ export default function App() {
         <div className="sidebar-bottom">
           <span className="small-model-tag">
             <span className="status-dot" />
-            Analytic surrogate · v0.1
+            {tab === "physics"
+              ? "SOFA 24.06 · diagnostic"
+              : "Analytic surrogate · v0.1"}
           </span>
           <p>
             Computational research only.
@@ -309,7 +320,9 @@ export default function App() {
                 ? "Experiments"
                 : tab === "patients"
                   ? "Virtual patients"
-                  : "Methods & limits"}
+                  : tab === "physics"
+                    ? "Physics sandbox"
+                    : "Methods & limits"}
             </strong>
           </div>
           <div className="topbar-right">
@@ -331,31 +344,41 @@ export default function App() {
         <main>
           <div className="page-heading">
             <div>
-              <div className="eyebrow">PATIENT-SPECIFIC STRATEGY SEARCH</div>
+              <div className="eyebrow">
+                {tab === "physics"
+                  ? "UPSTREAM PHYSICS · DIAGNOSTIC ONLY"
+                  : "PATIENT-SPECIFIC STRATEGY SEARCH"}
+              </div>
               <h1>
                 {tab === "overview"
                   ? "Experiment workbench"
                   : tab === "patients"
                     ? "The virtual cohort"
-                    : "Methods & limitations"}
+                    : tab === "physics"
+                      ? "Physics sandbox"
+                      : "Methods & limitations"}
               </h1>
               <p>
                 {tab === "overview"
                   ? "Explore how patient variation changes safe exposure in a simplified model."
                   : tab === "patients"
                     ? "Inspect individual mechanics, retraction choices, and probe responses."
-                    : "What the model measures, how the study is evaluated, and where it stops."}
+                    : tab === "physics"
+                      ? "Inspect an actual LapGym/SOFA scene independently from the analytic study."
+                      : "What the model measures, how the study is evaluated, and where it stops."}
               </p>
             </div>
-            <button
-              className="secondary-button"
-              onClick={() => setShowHistory(true)}
-            >
-              <Clock3 size={16} />
-              Run history<span className="button-count">{total}</span>
-            </button>
+            {tab !== "physics" && (
+              <button
+                className="secondary-button"
+                onClick={() => setShowHistory(true)}
+              >
+                <Clock3 size={16} />
+                Run history<span className="button-count">{total}</span>
+              </button>
+            )}
           </div>
-          {error && (
+          {error && tab !== "physics" && (
             <div role="alert" className="error-banner">
               <TriangleAlert size={18} />
               <span>{error}</span>
@@ -364,7 +387,9 @@ export default function App() {
               </button>
             </div>
           )}
-          {tab === "methods" ? (
+          {tab === "physics" ? (
+            <Physics />
+          ) : tab === "methods" ? (
             <Methods />
           ) : (
             <>
@@ -628,6 +653,7 @@ export default function App() {
                       <div className="export-buttons">
                         <button
                           className="small-button reuse-button"
+                          aria-label="Reuse setup"
                           onClick={() => {
                             setConfig(selected.config);
                             setConfigCopied(true);
@@ -835,7 +861,12 @@ export default function App() {
                               <ChevronDown size={14} />
                             </div>
                           </div>
-                          <div className="table-scroll">
+                          <div
+                            className="table-scroll"
+                            tabIndex={0}
+                            role="region"
+                            aria-label="Scrollable data table"
+                          >
                             <table>
                               <thead>
                                 <tr>
@@ -921,7 +952,9 @@ export default function App() {
               Built for exploration, designed for scrutiny.
             </span>
             <span>
-              Analytic surrogate · No clinical safety claims{" "}
+              {tab === "physics"
+                ? "Upstream diagnostic · Model not validated"
+                : "Analytic surrogate · No clinical safety claims"}{" "}
               <button onClick={() => setTab("methods")}>
                 Read limitations
                 <ArrowUpRight size={12} />
@@ -1137,7 +1170,12 @@ function SubgroupPanel({ results }: { results: Results }) {
             </button>
           ))}
         </div>
-        <div className="table-scroll">
+        <div
+          className="table-scroll"
+          tabIndex={0}
+          role="region"
+          aria-label="Scrollable data table"
+        >
           <table>
             <thead>
               <tr>
@@ -1432,7 +1470,12 @@ function ProbePanel({ results }: { results: Results }) {
           The same cohort and search are re-evaluated at three assumed limit
           profiles.
         </p>
-        <div className="table-scroll">
+        <div
+          className="table-scroll"
+          tabIndex={0}
+          role="region"
+          aria-label="Scrollable data table"
+        >
           <table>
             <thead>
               <tr>
@@ -1519,7 +1562,7 @@ function Methods() {
           {
             icon: <Sparkles size={21} />,
             title: "06 · What comes next",
-            body: "LapGym/SOFA soft-tissue integration, mesh convergence studies, expert review of mechanics, independently seeded reinforcement-learning agents, and external validation are extensions. No reinforcement-learning or SOFA result is represented by this interface.",
+            body: "Patient-parameterized LapGym/SOFA experiments, mesh convergence studies, expert review of mechanics, independently seeded reinforcement-learning agents, and external validation are extensions. The optional Physics sandbox displays upstream renders and raw telemetry separately; no validated patient-specific SOFA study or trained reinforcement-learning result is represented.",
           },
         ].map((item) => (
           <article className="panel method-card" key={item.title}>

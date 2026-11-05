@@ -150,7 +150,7 @@ input[type="number"] {
   justify-content: space-between;
 }
 .workspace-label span {
-  color: #64847b;
+  color: #a0bdb2;
 }
 .sidebar nav {
   display: flex;
@@ -203,7 +203,7 @@ input[type="number"] {
   font-size: 9px;
   letter-spacing: 1.5px;
   font-weight: 600;
-  color: #7b8b7f;
+  color: #57625a;
   display: block;
 }
 .sidebar-study .eyebrow {
@@ -305,7 +305,7 @@ input[type="number"] {
   gap: 13px;
   align-items: center;
   font-size: 11px;
-  color: #8b9690;
+  color: #5a615d;
 }
 .breadcrumbs strong {
   font-weight: 500;
@@ -323,7 +323,7 @@ input[type="number"] {
   align-items: center;
   gap: 7px;
   font-size: 10px;
-  color: #718275;
+  color: #566359;
 }
 .service-status.online .status-dot {
   background: #3e947b;
@@ -345,7 +345,7 @@ input[type="number"] {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  color: #637354;
+  color: #566449;
 }
 main {
   max-width: 1600px;
@@ -360,7 +360,7 @@ main {
   gap: 20px;
 }
 .page-heading .eyebrow {
-  color: #738f77;
+  color: #516453;
   font-size: 8.5px;
   letter-spacing: 1.8px;
   margin-bottom: 10px;
@@ -374,7 +374,7 @@ h1 {
 }
 .page-heading p {
   font-size: 11px;
-  color: #829087;
+  color: #58625c;
   margin-top: 10px;
   line-height: 1.6;
 }
@@ -424,7 +424,7 @@ h1 {
 .hero-kicker {
   font-size: 8px;
   letter-spacing: 1.8px;
-  color: #647d65;
+  color: #506551;
   display: flex;
   gap: 6px;
   align-items: center;
@@ -446,7 +446,7 @@ h1 {
 }
 .hero-strip p {
   font-size: 10px;
-  color: #6e7f70;
+  color: #566357;
   line-height: 1.7;
 }
 .hero-badges {
@@ -459,7 +459,7 @@ h1 {
   align-items: center;
   gap: 5px;
   font-size: 8px;
-  color: #5c735d;
+  color: #506551;
 }
 .hero-visual {
   position: absolute;
@@ -488,7 +488,7 @@ h1 {
   gap: 6px;
   align-items: center;
   border-radius: 3px;
-  color: #65795e;
+  color: #53644e;
 }
 .hero-visual-label .status-dot {
   width: 4px;
@@ -506,16 +506,16 @@ h1 {
 .hero-caption > span {
   font-size: 8px;
   letter-spacing: 1.5px;
-  color: #8b9a80;
+  color: #596252;
 }
 .hero-caption p {
   font-size: 11px;
   line-height: 1.9;
   margin: 20px 0 20px;
-  color: #5b745b;
+  color: #4f654f;
 }
 .hero-caption svg {
-  color: #6e896d;
+  color: #516550;
 }
 .experiment-layout {
   display: grid;
@@ -548,13 +548,13 @@ h1 {
 }
 .panel-heading p {
   font-size: 10px;
-  color: #8a968d;
+  color: #5a615c;
   margin-top: 5px;
   line-height: 1.6;
 }
 .step-badge {
   font-size: 9px;
-  color: #9ba693;
+  color: #5b6156;
   letter-spacing: 1px;
 }
 .config-panel .panel-heading {
@@ -570,13 +570,13 @@ h1 {
 .advanced-fields label {
   font-size: 10px;
   font-weight: 550;
-  color: #53654e;
+  color: #52644d;
   display: block;
   margin-bottom: 12px;
 }
 .field-value {
   float: right;
-  color: #2d6d53;
+  color: #2c6b51;
   font-size: 12px;
   font-weight: 600;
 }
@@ -591,13 +591,13 @@ h1 {
   display: flex;
   justify-content: space-between;
   font-size: 8px;
-  color: #9da68f;
+  color: #5c6154;
   margin-top: 4px;
 }
 .field-note {
   font-size: 9px;
   line-height: 1.8;
-  color: #939e90;
+  color: #5b6159;
   margin-top: 10px;
 }
 .select-wrap {
@@ -610,7 +610,7 @@ h1 {
   padding: 10px 31px 10px 12px;
   width: 100%;
   background: #fcfdf8;
-  color: #56694f;
+  color: #52654c;
   font-size: 11px;
   outline-offset: 2px;
   cursor: pointer;
@@ -621,14 +621,14 @@ h1 {
   top: 50%;
   transform: translateY(-50%);
   pointer-events: none;
-  color: #7c8e72;
+  color: #576350;
 }
 .optional-label {
   float: right;
   font-size: 7px;
   letter-spacing: 0.6px;
   font-weight: 400;
-  color: #a4ad9d;
+  color: #5c6158;
   margin-top: 2px;
 }
 .seed-input {
@@ -644,7 +644,7 @@ h1 {
   top: 9px;
   border: 0;
   background: #f4f5ec;
-  color: #8b9a7f;
+  color: #596251;
   border-radius: 3px;
   padding: 3px;
   display: flex;
@@ -653,7 +653,7 @@ h1 {
   border: 0;
   background: none;
   font-size: 10px;
-  color: #718169;
+  color: #576351;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -684,7 +684,7 @@ h1 {
   display: flex;
   gap: 9px;
   align-items: center;
-  color: #87947b;
+  color: #5a6252;
 }
 .config-summary span {
   font-size: 9px;
@@ -693,7 +693,7 @@ h1 {
 .config-summary strong {
   font-size: 8px;
   font-weight: 400;
-  color: #9da792;
+  color: #5c6155;
   display: block;
 }
 .primary-button {
@@ -722,7 +722,7 @@ h1 {
 .launch-note {
   font-size: 8px;
   text-align: center;
-  color: #a4ad9b;
+  color: #5c6157;
   margin-top: 12px;
   line-height: 1.5;
 }
@@ -740,7 +740,7 @@ h1 {
 .results-header .eyebrow {
   font-size: 8px;
   letter-spacing: 1.3px;
-  color: #8b9780;
+  color: #5a6253;
   margin-bottom: 6px;
 }
 .results-header h2 {
@@ -755,7 +755,7 @@ h1 {
 }
 .results-header p {
   font-size: 9px;
-  color: #98a18f;
+  color: #5c6156;
   margin-top: 7px;
   display: flex;
   gap: 8px;
@@ -767,7 +767,7 @@ h1 {
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
-  color: #648468;
+  color: #4d6550;
   background: #edf3e6;
   border: 1px solid #e2ebd9;
   border-radius: 3px;
@@ -807,7 +807,7 @@ h1 {
 }
 .metric-label {
   font-size: 9px;
-  color: #87927b;
+  color: #5a6252;
   line-height: 1.4;
 }
 .metric-card > strong {
@@ -816,7 +816,7 @@ h1 {
   font-size: 31px;
   line-height: 1;
   letter-spacing: -0.6px;
-  color: #58664b;
+  color: #566449;
 }
 .metric-card > strong small {
   font-family: Inter, sans-serif;
@@ -826,7 +826,7 @@ h1 {
 }
 .metric-note {
   font-size: 7px;
-  color: #9da58f;
+  color: #5c6154;
   line-height: 1.4;
 }
 .metric-card.accent {
@@ -834,10 +834,10 @@ h1 {
   border-color: #dce7d2;
 }
 .metric-card.accent > strong {
-  color: #3c7152;
+  color: #38694c;
 }
 .metric-card.warning > strong {
-  color: #b17b56;
+  color: #7d573d;
 }
 .comparison-panel {
   margin-bottom: 20px;
@@ -845,7 +845,7 @@ h1 {
 .heldout-tag {
   font-size: 7px;
   letter-spacing: 1px;
-  color: #8c9b7b;
+  color: #59634e;
   white-space: nowrap;
 }
 .comparison-body {
@@ -869,12 +869,12 @@ h1 {
 }
 .comparison-row > span {
   font-size: 9px;
-  color: #7e8c74;
+  color: #596252;
 }
 .comparison-row > strong {
   font-size: 10px;
   font-weight: 500;
-  color: #596f51;
+  color: #51654a;
   text-align: right;
 }
 .bar-track {
@@ -912,17 +912,17 @@ h1 {
   font-weight: 400;
   display: block;
   margin-top: 9px;
-  color: #6d805e;
+  color: #556449;
 }
 .comparison-aside p {
   font-size: 8px;
-  color: #939e85;
+  color: #5b6252;
   margin-top: 4px;
 }
 .comparison-aside > span:last-child {
   display: block;
   font-size: 7px;
-  color: #a5ad9a;
+  color: #5d6156;
   margin-top: 14px;
 }
 .panel-footnote {
@@ -932,13 +932,13 @@ h1 {
   padding: 12px 23px;
   border-top: 1px solid var(--line);
   font-size: 8px;
-  color: #9aa68c;
+  color: #5b6252;
   background: #fdfdf7;
   line-height: 1.6;
 }
 .panel-footnote svg {
   flex-shrink: 0;
-  color: #9dac8e;
+  color: #5a6251;
 }
 .patient-panel {
   margin-bottom: 20px;
@@ -977,12 +977,12 @@ h1 {
   padding: 6px 9px;
   font-size: 8px;
   border-radius: 3px;
-  color: #99a48c;
+  color: #5b6253;
   white-space: nowrap;
 }
 .segmented button.selected {
   background: #fffefa;
-  color: #4b7152;
+  color: #44674b;
   box-shadow: 0 1px 4px #3e4f2220;
 }
 .patient-detail {
@@ -1036,12 +1036,12 @@ h1 {
     -apple-system,
     sans-serif;
   font-size: 10px;
-  fill: #768b7b;
+  fill: #546358;
 }
 .svg-note {
   font-family: Inter, sans-serif;
   font-size: 6px;
-  fill: #90a08e;
+  fill: #586257;
   letter-spacing: 0.75px;
 }
 .patient-readout {
@@ -1065,10 +1065,10 @@ h1 {
   white-space: nowrap;
 }
 .outcome-chip.pass {
-  color: #498066;
+  color: #3b6853;
 }
 .outcome-chip.fail {
-  color: #bd8a61;
+  color: #7a593e;
 }
 .patient-readout h3 {
   font-family: Georgia, serif;
@@ -1083,19 +1083,19 @@ h1 {
 }
 .patient-params > span {
   font-size: 7px;
-  color: #a2ad96;
+  color: #5b6254;
 }
 .patient-params strong {
   display: block;
   font-size: 14px;
-  color: #6f815d;
+  color: #566448;
   font-weight: 450;
   margin-top: 6px;
 }
 .patient-params small {
   font-size: 7px;
   font-weight: 400;
-  color: #9ba98e;
+  color: #5a6252;
   margin-left: 3px;
 }
 .selected-strategy {
@@ -1112,11 +1112,11 @@ h1 {
   display: flex;
   gap: 8px;
   font-size: 9px;
-  color: #748969;
+  color: #55644c;
   margin-top: 7px;
 }
 .selected-strategy p > span {
-  color: #bec8b0;
+  color: #5c6155;
 }
 .outcome-grid {
   display: flex;
@@ -1125,25 +1125,25 @@ h1 {
 }
 .outcome-grid > div > span {
   font-size: 7px;
-  color: #9ca88f;
+  color: #5b6253;
 }
 .outcome-grid strong {
   display: block;
   font-size: 14px;
   font-weight: 450;
-  color: #66805a;
+  color: #516547;
   margin-top: 5px;
 }
 .outcome-grid small {
   font-size: 8px;
   margin-left: 3px;
   font-weight: 400;
-  color: #a1ae94;
+  color: #5b6253;
 }
 .readout-note {
   font-size: 7px;
   line-height: 1.7;
-  color: #a4ae98;
+  color: #5c6155;
   margin-top: 15px;
 }
 .patient-probe {
@@ -1161,14 +1161,14 @@ h1 {
   font-family: Georgia, serif;
   font-weight: 400;
   font-size: 19px;
-  color: #5f7555;
+  color: #526549;
   margin-top: 9px;
   line-height: 1.3;
 }
 .patient-probe p {
   font-size: 9px;
   line-height: 1.8;
-  color: #97a18b;
+  color: #5b6254;
   margin-top: 9px;
   max-width: 255px;
 }
@@ -1179,11 +1179,11 @@ h1 {
 }
 .probe-patient-values span {
   font-size: 7px;
-  color: #a4ad95;
+  color: #5c6154;
 }
 .probe-patient-values strong {
   display: block;
-  color: #6e8560;
+  color: #536548;
   font-size: 11px;
   font-weight: 500;
   margin-top: 6px;
@@ -1196,7 +1196,7 @@ h1 {
 }
 .chart text {
   font-size: 9px;
-  fill: #96a18e;
+  fill: #5b6256;
   font-family:
     Inter,
     -apple-system,
@@ -1219,7 +1219,7 @@ h1 {
   font-family: Georgia, serif;
   font-size: 40px;
   font-weight: 400;
-  color: #527750;
+  color: #476745;
   margin: 16px 0;
   line-height: 1;
   letter-spacing: -1px;
@@ -1227,14 +1227,14 @@ h1 {
 .auroc-value span {
   font-family: Inter, sans-serif;
   font-size: 8px;
-  color: #a1ad90;
+  color: #5b6251;
   margin-left: 9px;
   letter-spacing: 0.5px;
 }
 .probe-analysis-copy > p {
   font-size: 9px;
   line-height: 1.8;
-  color: #929e84;
+  color: #5a6252;
   max-width: 275px;
 }
 .probe-stat-row {
@@ -1246,18 +1246,18 @@ h1 {
 }
 .probe-stat-row > div > span {
   font-size: 7px;
-  color: #9ba68d;
+  color: #5b6253;
 }
 .probe-stat-row strong {
   display: block;
-  color: #6a815a;
+  color: #536546;
   font-size: 13px;
   font-weight: 450;
   margin-top: 6px;
 }
 .probe-analysis-copy > .subtle-note {
   font-size: 7px;
-  color: #a9b29b;
+  color: #5c6155;
   line-height: 1.8;
   margin-top: 16px;
 }
@@ -1268,12 +1268,12 @@ h1 {
 }
 .calibration-plot h3 {
   font-size: 10px;
-  color: #788b68;
+  color: #56644a;
   font-weight: 500;
 }
 .calibration-plot > div > span {
   font-size: 7px;
-  color: #a1ad91;
+  color: #5b6252;
   display: block;
   margin-top: 5px;
 }
@@ -1309,7 +1309,7 @@ h1 {
 .chart-empty {
   font-size: 10px;
   padding: 60px 20px;
-  color: #8f9d84;
+  color: #596252;
   text-align: center;
 }
 .sensitivity-section {
@@ -1318,12 +1318,12 @@ h1 {
 }
 .sensitivity-section h3 {
   font-size: 11px;
-  color: #6f845e;
+  color: #546447;
   font-weight: 550;
 }
 .sensitivity-section > p {
   font-size: 8px;
-  color: #a1ac91;
+  color: #5b6252;
   margin-top: 6px;
   margin-bottom: 15px;
 }
@@ -1340,12 +1340,12 @@ table {
 th {
   font-size: 7px;
   font-weight: 450;
-  color: #a2ae92;
+  color: #5b6252;
   border-bottom: 1px solid var(--line);
   padding: 9px 12px 10px 0;
 }
 td {
-  color: #7a8c68;
+  color: #57644a;
   padding: 13px 12px 13px 0;
   border-bottom: 1px solid #edf0e5;
 }
@@ -1354,10 +1354,10 @@ tr:last-child td {
 }
 .profile-name {
   text-transform: capitalize;
-  color: #637c53;
+  color: #516544;
 }
 .gain-cell {
-  color: #3d7a53;
+  color: #356a48;
   font-weight: 600;
 }
 .cohort-panel .panel-heading .select-wrap {
@@ -1381,7 +1381,7 @@ tr:last-child td {
   align-items: center;
   gap: 8px;
   font-size: 9px;
-  color: #4c7658;
+  color: #43684d;
 }
 .selected-row td {
   background: #f1f5e8;
@@ -1390,16 +1390,16 @@ tr:last-child td {
   font-size: 7px;
   padding: 4px 6px;
   background: #eef2e7;
-  color: #7c916c;
+  color: #55644a;
   border-radius: 3px;
 }
 .category-tag.personalize {
   background: #e8f2e4;
-  color: #4d8354;
+  color: #3e6943;
 }
 .category-tag.bail_out {
   background: #f8eee1;
-  color: #b18c5c;
+  color: #745b3c;
 }
 .page-footer {
   border-top: 1px solid var(--line);
@@ -1409,7 +1409,7 @@ tr:last-child td {
   justify-content: space-between;
   align-items: center;
   gap: 15px;
-  color: #a0ab94;
+  color: #5b6254;
   font-size: 8px;
   line-height: 1.6;
 }
@@ -1423,7 +1423,7 @@ tr:last-child td {
   padding: 0;
   background: none;
   font-size: 8px;
-  color: #778f6a;
+  color: #53644a;
   display: inline-flex;
   gap: 3px;
   align-items: center;
@@ -1451,14 +1451,14 @@ tr:last-child td {
   border: 1px solid #d9e3ce;
   border-radius: 17px;
   background: #eaf1e2;
-  color: #779667;
+  color: #506545;
   margin-bottom: 29px;
   box-shadow: 0 0 0 10px #f3f6ed;
 }
 .empty-state .eyebrow {
   font-size: 8px;
   letter-spacing: 1.4px;
-  color: #9ba98c;
+  color: #5a6251;
 }
 .empty-state h3,
 .running-state h3 {
@@ -1466,14 +1466,14 @@ tr:last-child td {
   font-weight: 400;
   font-size: 27px;
   letter-spacing: -0.5px;
-  color: #607550;
+  color: #536545;
   margin-top: 15px;
 }
 .empty-state > p,
 .running-state > p {
   max-width: 360px;
   font-size: 11px;
-  color: #9aa78d;
+  color: #5a6253;
   line-height: 1.9;
   margin-top: 13px;
 }
@@ -1482,14 +1482,14 @@ tr:last-child td {
   align-items: center;
   gap: 10px;
   margin-top: 37px;
-  color: #bcc5ad;
+  color: #5d6155;
 }
 .empty-steps span {
   font-size: 8px;
   display: flex;
   align-items: center;
   gap: 5px;
-  color: #879b75;
+  color: #57644b;
 }
 .empty-steps b {
   font-size: 7px;
@@ -1502,7 +1502,7 @@ tr:last-child td {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #8fa57c;
+  color: #56644b;
 }
 .empty-state > .secondary-button {
   margin-top: 25px;
@@ -1514,7 +1514,7 @@ tr:last-child td {
   align-items: center;
   width: 80px;
   height: 80px;
-  color: #78996b;
+  color: #4f6547;
   margin: 20px 0;
 }
 .loading-orbit > span {
@@ -1551,7 +1551,7 @@ tr:last-child td {
   border: 1px solid #ead5c5;
   border-radius: 5px;
   background: #fcf1e9;
-  color: #ad795a;
+  color: #7d5741;
   font-size: 11px;
   margin-bottom: 20px;
   line-height: 1.7;
@@ -1564,7 +1564,7 @@ tr:last-child td {
   border: 0;
   background: none;
   margin-left: auto;
-  color: #a98465;
+  color: #745a45;
   display: flex;
 }
 .modal-backdrop {
@@ -1596,7 +1596,7 @@ tr:last-child td {
   justify-content: center;
   border: 0;
   background: none;
-  color: #8e9d82;
+  color: #596251;
   padding: 7px;
   border-radius: 4px;
 }
@@ -1625,17 +1625,17 @@ tr:last-child td {
   width: 38px;
   height: 38px;
   border-radius: 6px;
-  color: #829e71;
+  color: #536548;
 }
 .history-list strong {
   font-size: 12px;
   font-weight: 500;
   display: block;
-  color: #6a805a;
+  color: #536547;
 }
 .history-list small {
   font-size: 9px;
-  color: #9aa98a;
+  color: #5a6250;
   display: block;
   margin-top: 6px;
 }
@@ -1644,27 +1644,27 @@ tr:last-child td {
 }
 .run-status {
   font-size: 9px;
-  color: #7d976b;
+  color: #536547;
   background: #edf2e5;
   padding: 4px 7px;
   border-radius: 3px;
 }
 .run-status.failed {
   background: #f6e9dd;
-  color: #b08462;
+  color: #775942;
 }
 .run-status.running,
 .run-status.queued {
   background: #edf0e6;
-  color: #9eab82;
+  color: #5b624b;
 }
 .history-list > button > svg {
-  color: #a3b091;
+  color: #5b6251;
 }
 .history-empty {
   padding: 45px;
   text-align: center;
-  color: #98a68a;
+  color: #5a6252;
   font-size: 12px;
 }
 .method-intro {
@@ -1679,7 +1679,7 @@ tr:last-child td {
   align-items: center;
   justify-content: center;
   background: #e2ecd6;
-  color: #7b9c64;
+  color: #506641;
   border: 1px solid #d5e2c8;
   width: 65px;
   height: 65px;
@@ -1687,7 +1687,7 @@ tr:last-child td {
   flex-shrink: 0;
 }
 .method-intro .eyebrow {
-  color: #88a16f;
+  color: #556445;
   font-size: 8px;
 }
 .method-intro h2 {
@@ -1695,14 +1695,14 @@ tr:last-child td {
   font-size: 27px;
   font-weight: 400;
   letter-spacing: -0.3px;
-  color: #5c754b;
+  color: #506641;
   margin-top: 12px;
 }
 .method-intro p {
   font-size: 11px;
   line-height: 1.9;
   max-width: 790px;
-  color: #91a17e;
+  color: #59634d;
   margin-top: 14px;
 }
 .method-grid {
@@ -1715,19 +1715,19 @@ tr:last-child td {
   padding: 28px;
 }
 .method-card > span {
-  color: #8aa174;
+  color: #566448;
   display: block;
   margin-bottom: 22px;
 }
 .method-card h3 {
   font-size: 13px;
   font-weight: 500;
-  color: #6f865b;
+  color: #536544;
 }
 .method-card p {
   font-size: 11px;
   line-height: 1.9;
-  color: #9aa88b;
+  color: #5a6251;
   margin-top: 13px;
 }
 .limitations-callout {
@@ -1736,7 +1736,7 @@ tr:last-child td {
   padding: 27px 30px;
   border: 1px solid #e7d9bd;
   background: #f7f1e4;
-  color: #b69b6c;
+  color: #6e5d41;
   border-radius: 6px;
   margin-top: 24px;
 }
@@ -1746,12 +1746,12 @@ tr:last-child td {
 .limitations-callout h3 {
   font-size: 13px;
   font-weight: 550;
-  color: #9e8b61;
+  color: #6b5e42;
 }
 .limitations-callout p {
   font-size: 11px;
   line-height: 1.9;
-  color: #b09d77;
+  color: #6a5e47;
   margin-top: 9px;
 }
 .spin {
@@ -2612,7 +2612,7 @@ tr:last-child td {
   flex-wrap: wrap;
   margin-top: 12px;
   font-size: 7px;
-  color: #829272;
+  color: #58634d;
 }
 .threshold-readout > span {
   background: #f1f4e9;
@@ -2626,7 +2626,7 @@ tr:last-child td {
   background: #fbf1df;
   border: 1px solid #eddfc4;
   padding: 8px;
-  color: #a58250;
+  color: #745b38;
   font-size: 8px;
   max-width: none;
 }
@@ -2659,17 +2659,17 @@ tr:last-child td {
   border: 1px solid #dfe8d5;
   border-radius: 5px;
   background: #ecf2e3;
-  color: #72965e;
+  color: #4e6640;
 }
 .explorer-toggle strong {
   font-size: 10px;
   font-weight: 550;
-  color: #6e8759;
+  color: #526542;
   display: block;
 }
 .explorer-toggle small {
   font-size: 8px;
-  color: #9baa8b;
+  color: #5a6250;
   display: block;
   margin-top: 5px;
   line-height: 1.6;
@@ -2678,20 +2678,20 @@ tr:last-child td {
   margin-left: auto;
   font-size: 6px;
   letter-spacing: 1px;
-  color: #9aaf86;
+  color: #57634c;
   background: #eaf2df;
   padding: 4px 6px;
   border-radius: 3px;
 }
 .explorer-toggle > svg {
-  color: #8fa47a;
+  color: #57644a;
 }
 .explorer-body {
   border-top: 1px solid var(--line);
 }
 .explorer-note {
   font-size: 8px;
-  color: #8ca078;
+  color: #57634a;
   display: flex;
   gap: 6px;
   align-items: center;
@@ -2708,7 +2708,7 @@ tr:last-child td {
 }
 .explorer-controls h3 {
   font-size: 11px;
-  color: #698352;
+  color: #51663f;
   font-weight: 550;
   margin-bottom: 20px;
 }
@@ -2717,13 +2717,13 @@ tr:last-child td {
 }
 .explorer-slider label {
   font-size: 8px;
-  color: #889c72;
+  color: #576449;
   display: block;
 }
 .explorer-slider label > span {
   float: right;
   font-size: 8px;
-  color: #5d8850;
+  color: #47683d;
 }
 .explorer-slider input[type="range"] {
   width: 100%;
@@ -2737,7 +2737,7 @@ tr:last-child td {
   display: flex;
   justify-content: space-between;
   font-size: 7px;
-  color: #afba9f;
+  color: #5c6253;
 }
 .reset-strategy {
   display: flex;
@@ -2746,7 +2746,7 @@ tr:last-child td {
   border: 0;
   background: none;
   font-size: 8px;
-  color: #8aa274;
+  color: #556448;
   padding: 0;
 }
 .preview-status {
@@ -2755,7 +2755,7 @@ tr:last-child td {
   align-items: center;
   gap: 6px;
   min-height: 38px;
-  color: #9ba98b;
+  color: #5a6251;
   margin-top: 8px;
 }
 .preview-status > span {
@@ -2764,10 +2764,10 @@ tr:last-child td {
   align-items: center;
 }
 .preview-pass {
-  color: #588946;
+  color: #436935;
 }
 .preview-fail {
-  color: #b39158;
+  color: #725c38;
 }
 .preview-visual {
   border-left: 1px solid var(--line);
@@ -2784,7 +2784,7 @@ tr:last-child td {
 .preview-visual > span {
   font-size: 6px;
   letter-spacing: 0.5px;
-  color: #a1b28b;
+  color: #59634d;
   text-align: center;
   padding: 0 10px;
   line-height: 1.6;
@@ -2805,7 +2805,7 @@ tr:last-child td {
   align-items: center;
   justify-content: space-between;
   font-size: 8px;
-  color: #8fa279;
+  color: #58634a;
   gap: 10px;
 }
 .constraint > span > strong {
@@ -2816,10 +2816,10 @@ tr:last-child td {
   font-weight: 400;
 }
 .constraint.pass > span > strong {
-  color: #6c9756;
+  color: #4a673b;
 }
 .constraint.fail > span > strong {
-  color: #b69763;
+  color: #705d3d;
 }
 .constraint > div:not(.constraint-track) {
   display: flex;
@@ -2830,15 +2830,15 @@ tr:last-child td {
 }
 .constraint b {
   font-size: 16px;
-  color: #74935f;
+  color: #506642;
   font-weight: 450;
 }
 .constraint.fail b {
-  color: #b08e5a;
+  color: #725c3a;
 }
 .constraint small {
   font-size: 7px;
-  color: #a9b695;
+  color: #5b6250;
 }
 .constraint-track {
   height: 5px;
@@ -2869,13 +2869,13 @@ tr:last-child td {
 }
 .grid-search-view h3 {
   font-size: 11px;
-  color: #77945e;
+  color: #516540;
   font-weight: 550;
 }
 .grid-search-view p {
   font-size: 8px;
   line-height: 1.8;
-  color: #a2b18d;
+  color: #5a624e;
   margin-top: 6px;
 }
 .strategy-scatter {
@@ -2906,7 +2906,7 @@ tr:last-child td {
 }
 .scatter-key > span {
   font-size: 7px;
-  color: #a2b28e;
+  color: #5a624e;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -2931,14 +2931,14 @@ tr:last-child td {
 .grid-search-view .scatter-hover {
   font-size: 7px;
   min-height: 26px;
-  color: #abb896;
+  color: #5b6250;
   margin-top: 13px;
   text-align: center;
 }
 .explorer-error {
   font-size: 9px;
   line-height: 1.7;
-  color: #b58e64;
+  color: #745b40;
   margin-top: 6px;
 }
 @media (max-width: 1200px) and (min-width: 901px) {
@@ -3074,7 +3074,7 @@ tr:last-child td {
 .subgroup-body .gain-cell small {
   display: block;
   font-size: 7px;
-  color: #a3b38e;
+  color: #5a624e;
   font-weight: 400;
   margin-top: 4px;
 }
@@ -3084,10 +3084,10 @@ tr:last-child td {
   line-height: 1.7;
 }
 .reuse-button {
-  color: #7a9366;
+  color: #536546;
 }
 .reuse-button svg {
-  color: #8fa47b;
+  color: #57644b;
 }
 @media (max-width: 680px) {
   .subgroup-body {
@@ -3118,5 +3118,1022 @@ tr:last-child td {
   }
   .results-header .eyebrow {
     font-size: 7px;
+  }
+}
+.physics-intro {
+  padding: 27px 29px;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  background: #eaf0e3;
+  position: relative;
+}
+.physics-intro-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 12px;
+  border: 1px solid #cfddc2;
+  background: #e0ebd3;
+  color: #506544;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.physics-intro .eyebrow {
+  font-size: 8px;
+  color: #556448;
+}
+.physics-intro h2 {
+  font-family: Georgia, serif;
+  font-size: 28px;
+  font-weight: 400;
+  color: #506641;
+  margin: 11px 0;
+}
+.physics-intro p {
+  font-size: 11px;
+  color: #59634e;
+  line-height: 1.9;
+  max-width: 650px;
+}
+.physics-runtime {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 8px;
+  color: #6b5e47;
+  background: #f9f3e6;
+  border: 1px solid #e8ddc4;
+  border-radius: 4px;
+  padding: 7px 9px;
+  white-space: nowrap;
+  margin-left: auto;
+}
+.physics-runtime .status-dot {
+  background: #b7a575;
+}
+.physics-runtime.available {
+  background: #eff5e8;
+  border-color: #dbe7cc;
+  color: #536545;
+}
+.physics-runtime.available .status-dot {
+  background: #89a96f;
+}
+.physics-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 19px;
+  border: 1px solid #e9dcc2;
+  background: #f8f2e5;
+  border-radius: 6px;
+  margin: 19px 0 23px;
+  color: #6c5d43;
+}
+.physics-warning > svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.physics-warning strong {
+  font-size: 11px;
+  font-weight: 550;
+  color: #6c5e41;
+}
+.physics-warning p {
+  font-size: 10px;
+  line-height: 1.8;
+  color: #6a5e47;
+  margin-top: 6px;
+}
+.physics-layout {
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.physics-config .panel-heading {
+  padding: 18px 20px;
+}
+.physics-config form {
+  padding: 20px;
+}
+.physics-preset .eyebrow {
+  font-size: 7px;
+  margin-bottom: 11px;
+}
+.physics-preset .segmented {
+  justify-content: space-between;
+}
+.physics-preset .segmented > button {
+  font-size: 9px;
+  padding: 7px 11px;
+  background: #fcfdf6;
+  color: #566448;
+  border: 1px solid #dce7d0;
+}
+.physics-preset p,
+.physics-actuators p {
+  font-size: 8px;
+  line-height: 1.9;
+  color: #5b6252;
+  margin-top: 11px;
+}
+.physics-number-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 22px;
+}
+.physics-number-fields > label {
+  font-size: 9px;
+  color: #566446;
+}
+.physics-number-fields input {
+  font-size: 11px;
+  margin-top: 10px;
+  padding: 9px 10px;
+}
+.physics-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 19px 0;
+  margin-top: 10px;
+}
+.physics-checkbox > input {
+  margin: 1px 0 0;
+  accent-color: #6e965a;
+  flex-shrink: 0;
+}
+.physics-checkbox > span {
+  font-size: 9px;
+  color: #556445;
+  line-height: 1.6;
+}
+.physics-checkbox small {
+  display: block;
+  font-size: 8px;
+  line-height: 1.8;
+  color: #5c6153;
+  margin-top: 4px;
+}
+.physics-actuators {
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  margin-top: 6px;
+}
+.physics-actuators > .eyebrow {
+  font-size: 6px;
+  letter-spacing: 1.1px;
+  margin-bottom: 19px;
+}
+.physics-actuators .explorer-slider {
+  margin-bottom: 20px;
+}
+.physics-actuators p {
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 20px;
+}
+.physics-history {
+  margin-top: 20px;
+}
+.physics-history .panel-heading {
+  padding: 16px 20px;
+}
+.physics-history .panel-heading h2 {
+  font-size: 11px;
+}
+.physics-history > button {
+  display: flex;
+  text-align: left;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  width: 100%;
+  padding: 14px 20px;
+}
+.physics-history > button:hover,
+.physics-history > button.selected {
+  background: #edf3e6;
+}
+.physics-history > button > span:first-child {
+  min-width: 0;
+}
+.physics-history strong {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  color: #536545;
+}
+.physics-history small {
+  display: block;
+  font-size: 7px;
+  margin-top: 5px;
+  color: #59634e;
+  line-height: 1.5;
+}
+.physics-history .run-status {
+  font-size: 7px;
+  flex-shrink: 0;
+  padding: 3px 4px;
+}
+.physics-history > p {
+  font-size: 9px;
+  color: #5a634d;
+  padding: 20px;
+  line-height: 1.7;
+}
+.physics-results {
+  min-width: 0;
+}
+.physics-results .results-header h2 {
+  font-size: 20px;
+}
+.physics-frame-panel {
+  margin-bottom: 17px;
+}
+.physics-engine-tag {
+  font-size: 7px;
+  color: #5a634d;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.physics-frame-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.physics-frame-controls .segmented button {
+  font-size: 8px;
+}
+.physics-frame {
+  position: relative;
+  background: radial-gradient(ellipse at 50% 50%, #18242a, #090f12);
+  min-height: 280px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 25px;
+}
+.physics-frame img {
+  width: 100%;
+  max-width: 460px;
+  max-height: 450px;
+  object-fit: contain;
+  display: block;
+  border: 1px solid #344046;
+  box-shadow: 0 7px 30px #0006;
+}
+.physics-frame-overlay {
+  position: absolute;
+  left: 17px;
+  right: 17px;
+  top: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #95ada3;
+  font-size: 6px;
+  letter-spacing: 1px;
+  pointer-events: none;
+}
+.physics-frame-overlay > span:last-child {
+  color: #b8a58b;
+}
+.physics-frame-footer {
+  padding: 12px 20px;
+  display: flex;
+  gap: 17px;
+  align-items: center;
+  color: #5a624f;
+  font-size: 8px;
+}
+.physics-frame-footer a {
+  margin-left: auto;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  color: #526544;
+}
+.physics-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 19px;
+}
+.physics-metrics .metric-card > strong {
+  font-family:
+    Inter,
+    -apple-system,
+    sans-serif;
+  font-size: 19px;
+  line-height: 1.3;
+  color: #526544;
+  letter-spacing: -0.4px;
+}
+.physics-metrics .metric-card {
+  min-height: 117px;
+  padding: 16px;
+}
+.physics-metrics .metric-label {
+  font-size: 9px;
+}
+.physics-metrics .metric-note {
+  font-size: 7px;
+}
+.physics-diagnostics {
+  margin-bottom: 20px;
+}
+.physics-diagnostic-state {
+  font-size: 8px;
+  white-space: nowrap;
+  color: #546545;
+  padding: 5px 7px;
+  border: 1px solid #dfe9d3;
+  background: #f1f6e9;
+  border-radius: 4px;
+}
+.physics-diagnostic-state.needs-review {
+  background: #f7eedf;
+  border-color: #eaddc1;
+  color: #6e5d3c;
+}
+.physics-diagnostic-counts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 20px 23px;
+  gap: 15px;
+}
+.physics-diagnostic-counts > span {
+  font-size: 8px;
+  color: #5b6252;
+  line-height: 1.5;
+}
+.physics-diagnostic-counts strong {
+  display: block;
+  font-family: Georgia, serif;
+  font-weight: 400;
+  font-size: 29px;
+  margin-bottom: 4px;
+  color: #6c5e44;
+}
+.physics-topology-alert {
+  font-size: 9px;
+  color: #6c5e42;
+  line-height: 1.8;
+  padding: 12px 23px;
+  background: #faf4e8;
+  border-top: 1px solid #eee3cd;
+  border-bottom: 1px solid #eee3cd;
+}
+.physics-messages summary,
+.physics-pose summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 9px;
+  color: #58634a;
+  padding: 14px 23px;
+  cursor: pointer;
+  list-style: none;
+}
+.physics-messages summary::-webkit-details-marker,
+.physics-pose summary::-webkit-details-marker {
+  display: none;
+}
+.physics-messages[open] summary > svg,
+.physics-pose details[open] summary > svg {
+  transform: rotate(180deg);
+}
+.physics-messages > div {
+  padding: 14px 23px;
+  border-top: 1px solid var(--line);
+  background: #fdfcf6;
+}
+.physics-messages > div > span {
+  font-size: 8px;
+  font-weight: 500;
+  color: #6b5e45;
+  overflow-wrap: anywhere;
+}
+.physics-messages p {
+  font-size: 8px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #5f6152;
+  margin-top: 8px;
+}
+.physics-messages > p {
+  padding: 0 23px 15px;
+}
+.physics-telemetry {
+  margin-bottom: 20px;
+}
+.physics-telemetry-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.physics-telemetry-chart {
+  padding: 22px;
+}
+.physics-telemetry-chart + .physics-telemetry-chart {
+  border-left: 1px solid var(--line);
+}
+.physics-telemetry-chart > h3 {
+  font-size: 10px;
+  color: #576449;
+  font-weight: 500;
+}
+.physics-telemetry-chart > span {
+  display: block;
+  font-size: 7px;
+  color: #5c6252;
+  margin-top: 6px;
+}
+.physics-telemetry-chart > .chart {
+  margin-top: 12px;
+}
+.physics-telemetry-chart .chart text {
+  font-size: 7px;
+}
+.physics-step-table {
+  max-height: 310px;
+  padding: 0 23px;
+}
+.physics-step-table th {
+  position: sticky;
+  top: 0;
+  background: var(--paper);
+}
+.physics-pose {
+  margin-bottom: 20px;
+}
+.physics-pose-values {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 21px 23px;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+.physics-pose-values > span {
+  color: #5a6251;
+  font-size: 9px;
+}
+.physics-pose-values strong {
+  display: block;
+  font-weight: 450;
+  color: #546544;
+  font-size: 12px;
+  margin-top: 8px;
+}
+.physics-pose details {
+  border-top: 1px solid var(--line);
+}
+.physics-pose details > p {
+  font-size: 8px;
+  color: #5b6250;
+  line-height: 1.8;
+  padding: 0 23px 17px;
+}
+.physics-limitations {
+  padding: 24px;
+}
+.physics-limitations > h3 {
+  font-size: 12px;
+  color: #576447;
+  font-weight: 550;
+}
+.physics-limitations ul {
+  padding-left: 17px;
+  margin: 16px 0;
+  color: #5a634d;
+  font-size: 9px;
+  line-height: 1.9;
+}
+.physics-limitations li + li {
+  margin-top: 9px;
+}
+.physics-limitations > span {
+  font-size: 8px;
+  display: block;
+  color: #5a6250;
+  overflow-wrap: anywhere;
+  line-height: 1.8;
+}
+.physics-limitations code {
+  font-size: 7px;
+}
+.physics-limitations > strong {
+  display: block;
+  font-size: 8px;
+  color: #685e4a;
+  font-weight: 400;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.physics-empty-note {
+  font-size: 8px;
+  color: #5a624f;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 28px;
+}
+.physics-retry {
+  gap: 5px;
+  align-items: center;
+  font-size: 9px;
+}
+.physics-unavailable {
+  padding: 60px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+.physics-unavailable > svg {
+  color: #58634b;
+  margin-bottom: 24px;
+}
+.physics-unavailable h3 {
+  font-family: Georgia, serif;
+  font-size: 27px;
+  font-weight: 400;
+  color: #556447;
+}
+.physics-unavailable p {
+  font-size: 11px;
+  line-height: 1.9;
+  color: #5a6251;
+  max-width: 500px;
+  margin-top: 17px;
+}
+.physics-unavailable code {
+  padding: 14px 23px;
+  font-size: 12px;
+  background: #eff4e8;
+  border: 1px solid #e1e8d6;
+  color: #546547;
+  border-radius: 4px;
+  margin-top: 25px;
+}
+.physics-unavailable > span {
+  font-size: 9px;
+  color: #5b6254;
+  margin-top: 12px;
+}
+.physics-unavailable > .secondary-button {
+  margin-top: 27px;
+}
+@media (max-width: 1200px) {
+  .physics-layout {
+    grid-template-columns: 230px minmax(0, 1fr);
+    gap: 19px;
+  }
+  .physics-intro {
+    flex-wrap: wrap;
+  }
+  .physics-runtime {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+  }
+  .physics-intro > div {
+    padding-top: 25px;
+    flex: 1;
+    min-width: 0;
+  }
+  .physics-intro .eyebrow {
+    font-size: 7px;
+  }
+  .physics-intro h2 {
+    font-size: 26px;
+  }
+  .physics-telemetry-charts {
+    grid-template-columns: 1fr;
+  }
+  .physics-telemetry-chart + .physics-telemetry-chart {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .physics-telemetry-chart > .chart {
+    max-height: 190px;
+  }
+  .physics-metrics {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+  .physics-metrics .metric-card {
+    min-height: 0;
+    gap: 9px;
+  }
+  .physics-metrics .metric-card > strong {
+    font-size: 21px;
+  }
+  .physics-frame {
+    padding: 25px 18px;
+    min-height: 240px;
+  }
+  .physics-frame-controls {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 9px;
+  }
+  .physics-pose-values {
+    gap: 20px;
+  }
+  .physics-pose-values > span {
+    font-size: 8px;
+  }
+  .physics-pose-values strong {
+    font-size: 10px;
+  }
+  .physics-frame-footer {
+    font-size: 7px;
+    gap: 10px;
+  }
+}
+@media (max-width: 900px) {
+  .physics-layout {
+    grid-template-columns: 1fr;
+  }
+  .physics-config form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px 25px;
+  }
+  .physics-preset {
+    grid-column: 1;
+  }
+  .physics-number-fields {
+    grid-column: 2;
+    margin-top: 0;
+    align-self: center;
+  }
+  .physics-checkbox {
+    grid-column: 1/-1;
+  }
+  .physics-actuators {
+    grid-column: 1/-1;
+  }
+  .physics-actuators .explorer-slider {
+    width: 30%;
+    display: inline-block;
+    vertical-align: top;
+  }
+  .physics-actuators .explorer-slider + .explorer-slider {
+    margin-left: 5%;
+  }
+  .physics-actuators .explorer-slider > label {
+    font-size: 9px;
+  }
+  .physics-actuators > .eyebrow {
+    font-size: 7px;
+  }
+  .physics-config .launch,
+  .physics-config .launch-note {
+    grid-column: 1/-1;
+  }
+  .physics-history {
+    margin-top: 15px;
+    max-height: 230px;
+    overflow: auto;
+  }
+  .physics-history > button {
+    padding: 11px 20px;
+  }
+  .physics-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .physics-metrics .metric-card {
+    min-height: 120px;
+  }
+  .physics-telemetry-charts {
+    grid-template-columns: 1fr 1fr;
+  }
+  .physics-telemetry-chart + .physics-telemetry-chart {
+    border-left: 1px solid var(--line);
+    border-top: 0;
+  }
+  .physics-frame-controls {
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+  }
+  .physics-frame {
+    min-height: 320px;
+  }
+  .physics-frame img {
+    max-height: 400px;
+  }
+  .physics-intro > div {
+    padding-top: 14px;
+  }
+  .physics-intro h2 {
+    font-size: 26px;
+  }
+  .physics-intro p {
+    font-size: 10px;
+  }
+}
+@media (max-width: 680px) {
+  .physics-intro {
+    padding: 22px;
+    gap: 15px;
+    display: block;
+  }
+  .physics-intro-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 14px;
+  }
+  .physics-intro > div {
+    padding-top: 0;
+  }
+  .physics-intro .eyebrow {
+    font-size: 6px;
+    letter-spacing: 1px;
+  }
+  .physics-intro h2 {
+    font-size: 25px;
+  }
+  .physics-intro p {
+    font-size: 10px;
+  }
+  .physics-runtime {
+    font-size: 7px;
+    top: 22px;
+    right: 18px;
+    padding: 6px 7px;
+  }
+  .physics-warning {
+    padding: 15px;
+    gap: 9px;
+    margin-top: 16px;
+  }
+  .physics-warning > svg {
+    width: 17px;
+  }
+  .physics-warning strong {
+    font-size: 10px;
+  }
+  .physics-warning p {
+    font-size: 9px;
+  }
+  .physics-config form {
+    display: block;
+    padding: 20px;
+  }
+  .physics-number-fields {
+    margin-top: 20px;
+  }
+  .physics-preset .segmented {
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .physics-checkbox {
+    margin-top: 14px;
+  }
+  .physics-actuators .explorer-slider {
+    width: 100%;
+    display: block;
+  }
+  .physics-actuators .explorer-slider + .explorer-slider {
+    margin-left: 0;
+  }
+  .physics-preset p,
+  .physics-actuators p,
+  .physics-checkbox small {
+    font-size: 9px;
+  }
+  .physics-checkbox > span {
+    font-size: 10px;
+  }
+  .physics-preset .segmented button {
+    font-size: 10px;
+    flex: 1;
+  }
+  .physics-actuators .explorer-slider > label {
+    font-size: 10px;
+  }
+  .physics-config .launch-note {
+    margin-top: 12px;
+    font-size: 8px;
+  }
+  .physics-history {
+    max-height: 220px;
+  }
+  .physics-history small {
+    font-size: 8px;
+  }
+  .physics-history strong {
+    font-size: 11px;
+  }
+  .physics-results .results-header h2 {
+    font-size: 20px;
+  }
+  .physics-frame {
+    padding: 30px 20px 20px;
+    min-height: 250px;
+  }
+  .physics-frame-controls {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 7px;
+  }
+  .physics-frame-panel .panel-heading p {
+    font-size: 8px;
+    max-width: 170px;
+  }
+  .physics-frame-overlay {
+    font-size: 5px;
+    left: 15px;
+    right: 15px;
+    top: 13px;
+  }
+  .physics-frame-footer {
+    padding: 12px 17px;
+    font-size: 7px;
+    gap: 10px;
+  }
+  .physics-metrics {
+    gap: 8px;
+  }
+  .physics-metrics .metric-card {
+    padding: 12px;
+    min-height: 127px;
+    gap: 10px;
+  }
+  .physics-metrics .metric-card > strong {
+    font-size: 15px;
+    overflow-wrap: anywhere;
+  }
+  .physics-metrics .metric-label {
+    font-size: 8px;
+  }
+  .physics-metrics .metric-note {
+    font-size: 7px;
+    line-height: 1.6;
+  }
+  .physics-diagnostic-state {
+    font-size: 7px;
+    padding: 4px 5px;
+  }
+  .physics-diagnostic-counts {
+    padding: 20px 17px;
+  }
+  .physics-diagnostic-counts > span {
+    font-size: 8px;
+  }
+  .physics-topology-alert {
+    padding: 13px 17px;
+    font-size: 9px;
+  }
+  .physics-messages summary,
+  .physics-pose summary {
+    padding: 15px 17px;
+    font-size: 9px;
+  }
+  .physics-messages > div {
+    padding: 14px 17px;
+  }
+  .physics-messages p {
+    font-size: 9px;
+  }
+  .physics-telemetry-charts {
+    grid-template-columns: 1fr;
+  }
+  .physics-telemetry-chart + .physics-telemetry-chart {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .physics-telemetry-chart {
+    padding: 20px 17px;
+  }
+  .physics-telemetry-chart h3 {
+    font-size: 11px;
+  }
+  .physics-telemetry-chart > span {
+    font-size: 8px;
+  }
+  .physics-telemetry-chart .chart text {
+    font-size: 8px;
+  }
+  .physics-step-table {
+    padding: 0 17px;
+  }
+  .physics-pose-values {
+    padding: 20px 17px;
+    gap: 21px;
+  }
+  .physics-pose-values > span {
+    font-size: 9px;
+  }
+  .physics-pose-values strong {
+    font-size: 12px;
+  }
+  .physics-pose details > p {
+    padding: 0 17px 17px;
+    font-size: 8px;
+  }
+  .physics-limitations {
+    padding: 20px;
+  }
+  .physics-limitations ul {
+    font-size: 10px;
+  }
+  .physics-limitations code {
+    font-size: 8px;
+  }
+  .physics-unavailable {
+    padding: 45px 23px;
+  }
+  .physics-unavailable h3 {
+    font-size: 24px;
+  }
+  .physics-unavailable p {
+    font-size: 10px;
+  }
+  .physics-unavailable code {
+    font-size: 11px;
+    padding: 13px 17px;
+  }
+  .physics-unavailable > span {
+    font-size: 8px;
+    line-height: 1.7;
+  }
+  .physics-results .empty-state > p {
+    font-size: 10px;
+  }
+  .physics-empty-note {
+    font-size: 8px;
+  }
+}
+
+.physics-history-tools {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.physics-topology-mode {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+  background: #f5f8ef;
+}
+.physics-topology-mode > span {
+  font-size: 6px;
+  letter-spacing: 1px;
+  color: #5b6253;
+}
+.physics-topology-mode > strong {
+  font-size: 9px;
+  font-weight: 500;
+  color: #556448;
+  margin-left: 12px;
+}
+.physics-topology-mode > p {
+  font-size: 8px;
+  line-height: 1.8;
+  color: #5a6250;
+  margin-top: 7px;
+}
+@media (max-width: 680px) {
+  .physics-topology-mode {
+    padding: 14px 17px;
+  }
+  .physics-topology-mode > p {
+    font-size: 8px;
+  }
+}
+
+.physics-topology-table {
+  padding: 0 23px 17px;
+  border-top: 1px solid var(--line);
+}
+.physics-topology-table td:first-child {
+  text-transform: capitalize;
+}
+.physics-topology-table > p {
+  font-size: 8px;
+  line-height: 1.8;
+  color: #5a6252;
+  margin-top: 12px;
+  white-space: normal;
+}
+@media (max-width: 680px) {
+  .physics-topology-table {
+    padding: 0 17px 17px;
   }
 }
