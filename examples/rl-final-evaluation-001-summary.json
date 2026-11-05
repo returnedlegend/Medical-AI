@@ -1,0 +1,516 @@
+{
+  "format": "retraction-final-assessment-summary-v1",
+  "phase": "final",
+  "completed_at": "2026-11-05T18:28:24.549433+00:00",
+  "patients": 128,
+  "rollouts": 1920,
+  "physics_fingerprint": "99bcc146975fff6221c65ee927d4bc38373a18069e56ce8cd45bf7a75c984898",
+  "protocol_sha256": "91b79c60b941b780074ecfa3478f15e2e674910110541d14e466ddc5162230f6",
+  "results_sha256": "46240155cf8633e7aaa23ce0faf7631930e10f51dfb48ff6e41486f427f5272f",
+  "policy_selection_performed": false,
+  "reference_changed": false,
+  "controllers": [
+    {
+      "controller": "policy:live_v1",
+      "n": 128,
+      "successes": 78,
+      "severe_harm_episodes": 0,
+      "handoffs": 0,
+      "success_rate": 0.609375,
+      "success_rate_wilson_ci": [
+        0.5228464818201277,
+        0.6895298089950423
+      ],
+      "severe_harm_rate": 0.0,
+      "severe_harm_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "mean_return": 9.551758461252849,
+      "mean_max_damage": 6.017764594497873e-05,
+      "mean_blood_loss_ml": 0.0
+    },
+    {
+      "controller": "policy:study002_selected_v2",
+      "n": 128,
+      "successes": 75,
+      "severe_harm_episodes": 0,
+      "handoffs": 0,
+      "success_rate": 0.5859375,
+      "success_rate_wilson_ci": [
+        0.4993185914156349,
+        0.6675484942248558
+      ],
+      "severe_harm_rate": 0.0,
+      "severe_harm_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "mean_return": 9.08643611015381,
+      "mean_max_damage": 0.0022410167472004337,
+      "mean_blood_loss_ml": 0.0
+    },
+    {
+      "controller": "policy:study003_v2_seed201",
+      "n": 128,
+      "successes": 53,
+      "severe_harm_episodes": 0,
+      "handoffs": 0,
+      "success_rate": 0.4140625,
+      "success_rate_wilson_ci": [
+        0.33245150577514415,
+        0.5006814085843652
+      ],
+      "severe_harm_rate": 0.0,
+      "severe_harm_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "mean_return": 5.765971309660046,
+      "mean_max_damage": 0.011553800459715362,
+      "mean_blood_loss_ml": 0.0
+    },
+    {
+      "controller": "policy:study003_v2_seed202",
+      "n": 128,
+      "successes": 0,
+      "severe_harm_episodes": 1,
+      "handoffs": 0,
+      "success_rate": 0.0,
+      "success_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "severe_harm_rate": 0.0078125,
+      "severe_harm_rate_wilson_ci": [
+        0.0013804318928742412,
+        0.04292625943886061
+      ],
+      "mean_return": -1.5887826344547888,
+      "mean_max_damage": 0.01307102061188153,
+      "mean_blood_loss_ml": 0.0
+    },
+    {
+      "controller": "policy:study003_v2_seed203",
+      "n": 128,
+      "successes": 0,
+      "severe_harm_episodes": 0,
+      "handoffs": 0,
+      "success_rate": 0.0,
+      "success_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "severe_harm_rate": 0.0,
+      "severe_harm_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "mean_return": -3.0000000000000018,
+      "mean_max_damage": 0.0,
+      "mean_blood_loss_ml": 0.0
+    },
+    {
+      "controller": "policy:study003_v2_seed204",
+      "n": 128,
+      "successes": 69,
+      "severe_harm_episodes": 0,
+      "handoffs": 0,
+      "success_rate": 0.5390625,
+      "success_rate_wilson_ci": [
+        0.4528298312720518,
+        0.6230188440190805
+      ],
+      "severe_harm_rate": 0.0,
+      "severe_harm_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "mean_return": 8.181241928862283,
+      "mean_max_damage": 0.0018731132474386764,
+      "mean_blood_loss_ml": 0.0
+    },
+    {
+      "controller": "policy:study003_v2_seed205",
+      "n": 128,
+      "successes": 62,
+      "severe_harm_episodes": 0,
+      "handoffs": 0,
+      "success_rate": 0.484375,
+      "success_rate_wilson_ci": [
+        0.39952298025969557,
+        0.5701375496238515
+      ],
+      "severe_harm_rate": 0.0,
+      "severe_harm_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "mean_return": 6.738881285666083,
+      "mean_max_damage": 0.012433185673147544,
+      "mean_blood_loss_ml": 0.0
+    },
+    {
+      "controller": "policy:study003_v3_seed201",
+      "n": 128,
+      "successes": 37,
+      "severe_harm_episodes": 0,
+      "handoffs": 0,
+      "success_rate": 0.2890625,
+      "success_rate_wilson_ci": [
+        0.21758399767802578,
+        0.3728331557498606
+      ],
+      "severe_harm_rate": 0.0,
+      "severe_harm_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "mean_return": 3.7258012183690066,
+      "mean_max_damage": 0.00996784719697668,
+      "mean_blood_loss_ml": 0.0
+    },
+    {
+      "controller": "policy:study003_v3_seed202",
+      "n": 128,
+      "successes": 64,
+      "severe_harm_episodes": 0,
+      "handoffs": 0,
+      "success_rate": 0.5,
+      "success_rate_wilson_ci": [
+        0.41465224626050723,
+        0.5853477537394928
+      ],
+      "severe_harm_rate": 0.0,
+      "severe_harm_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "mean_return": 7.723083576831778,
+      "mean_max_damage": 0.0008581724302591199,
+      "mean_blood_loss_ml": 0.0
+    },
+    {
+      "controller": "policy:study003_v3_seed203",
+      "n": 128,
+      "successes": 8,
+      "severe_harm_episodes": 4,
+      "handoffs": 0,
+      "success_rate": 0.0625,
+      "success_rate_wilson_ci": [
+        0.03200692569506119,
+        0.11848791104425865
+      ],
+      "severe_harm_rate": 0.03125,
+      "severe_harm_rate_wilson_ci": [
+        0.01221826524505338,
+        0.07759763126136077
+      ],
+      "mean_return": -1.151253167027713,
+      "mean_max_damage": 0.02977411811501308,
+      "mean_blood_loss_ml": 0.0
+    },
+    {
+      "controller": "policy:study003_v3_seed204",
+      "n": 128,
+      "successes": 0,
+      "severe_harm_episodes": 0,
+      "handoffs": 128,
+      "success_rate": 0.0,
+      "success_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "severe_harm_rate": 0.0,
+      "severe_harm_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "mean_return": -3.5465875673348277,
+      "mean_max_damage": 0.0,
+      "mean_blood_loss_ml": 0.0
+    },
+    {
+      "controller": "policy:study003_v3_seed205",
+      "n": 128,
+      "successes": 78,
+      "severe_harm_episodes": 0,
+      "handoffs": 0,
+      "success_rate": 0.609375,
+      "success_rate_wilson_ci": [
+        0.5228464818201277,
+        0.6895298089950423
+      ],
+      "severe_harm_rate": 0.0,
+      "severe_harm_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "mean_return": 9.435232302598541,
+      "mean_max_damage": 0.0023441374705267326,
+      "mean_blood_loss_ml": 0.0
+    },
+    {
+      "controller": "baseline:random",
+      "n": 128,
+      "successes": 0,
+      "severe_harm_episodes": 0,
+      "handoffs": 128,
+      "success_rate": 0.0,
+      "success_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "severe_harm_rate": 0.0,
+      "severe_harm_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "mean_return": -2.168396798632583,
+      "mean_max_damage": 5.2251307867947835e-06,
+      "mean_blood_loss_ml": 0.0
+    },
+    {
+      "controller": "baseline:random_no_handoff",
+      "n": 128,
+      "successes": 0,
+      "severe_harm_episodes": 1,
+      "handoffs": 0,
+      "success_rate": 0.0,
+      "success_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "severe_harm_rate": 0.0078125,
+      "severe_harm_rate_wilson_ci": [
+        0.0013804318928742412,
+        0.04292625943886061
+      ],
+      "mean_return": -2.845679729523274,
+      "mean_max_damage": 0.006166645942760558,
+      "mean_blood_loss_ml": 0.00012480013871473127
+    },
+    {
+      "controller": "baseline:scripted",
+      "n": 128,
+      "successes": 78,
+      "severe_harm_episodes": 0,
+      "handoffs": 0,
+      "success_rate": 0.609375,
+      "success_rate_wilson_ci": [
+        0.5228464818201277,
+        0.6895298089950423
+      ],
+      "severe_harm_rate": 0.0,
+      "severe_harm_rate_wilson_ci": [
+        0.0,
+        0.029136956273508416
+      ],
+      "mean_return": 9.51809062349558,
+      "mean_max_damage": 8.583542926754277e-05,
+      "mean_blood_loss_ml": 0.0
+    }
+  ],
+  "crossed_analysis": {
+    "plan_sha256": "e6d22396e6e1cef79462925bcc87253284f9231d7e749979d54680b172c79d8f",
+    "plan": {
+      "format": "retraction-crossed-analysis-plan-v1",
+      "prespecified_at": "2026-11-05T18:06:31.065424+00:00",
+      "design_sha256": "49487dd049b2f590cdc407e943c88dc54d2a59d0d9821e44abcb1dce11831780",
+      "positive_arm": "study003_v3",
+      "negative_arm": "study003_v2",
+      "paired_training_seeds": [
+        201,
+        202,
+        203,
+        204,
+        205
+      ],
+      "shared_patient_seeds": [
+        20000,
+        20001,
+        20002,
+        20003,
+        20004,
+        20005,
+        20006,
+        20007,
+        20008,
+        20009,
+        20010,
+        20011,
+        20012,
+        20013,
+        20014,
+        20015,
+        20016,
+        20017,
+        20018,
+        20019,
+        20020,
+        20021,
+        20022,
+        20023,
+        20024,
+        20025,
+        20026,
+        20027,
+        20028,
+        20029,
+        20030,
+        20031,
+        20032,
+        20033,
+        20034,
+        20035,
+        20036,
+        20037,
+        20038,
+        20039,
+        20040,
+        20041,
+        20042,
+        20043,
+        20044,
+        20045,
+        20046,
+        20047,
+        20048,
+        20049,
+        20050,
+        20051,
+        20052,
+        20053,
+        20054,
+        20055,
+        20056,
+        20057,
+        20058,
+        20059,
+        20060,
+        20061,
+        20062,
+        20063,
+        20064,
+        20065,
+        20066,
+        20067,
+        20068,
+        20069,
+        20070,
+        20071,
+        20072,
+        20073,
+        20074,
+        20075,
+        20076,
+        20077,
+        20078,
+        20079,
+        20080,
+        20081,
+        20082,
+        20083,
+        20084,
+        20085,
+        20086,
+        20087,
+        20088,
+        20089,
+        20090,
+        20091,
+        20092,
+        20093,
+        20094,
+        20095,
+        20096,
+        20097,
+        20098,
+        20099,
+        20100,
+        20101,
+        20102,
+        20103,
+        20104,
+        20105,
+        20106,
+        20107,
+        20108,
+        20109,
+        20110,
+        20111,
+        20112,
+        20113,
+        20114,
+        20115,
+        20116,
+        20117,
+        20118,
+        20119,
+        20120,
+        20121,
+        20122,
+        20123,
+        20124,
+        20125,
+        20126,
+        20127
+      ],
+      "metrics": [
+        "return",
+        "success",
+        "severe_harm"
+      ],
+      "bootstrap_seed": 99175,
+      "bootstrap_replicates": 2000,
+      "method": "For each replicate independently resample five paired training-seed indices and one common128-patient index vector with replacement. Apply their Cartesian product to the paired V3-minus-V2 outcome matrix and take its mean. Use2.5th/97.5th percentiles. All metrics share the same resampled indices.",
+      "sampling_units": "Five paired training seeds crossed with128shared synthetic patients. Do not treat640policy-patient observations as independent patients.",
+      "limitations": [
+        "Descriptive percentile intervals from only five training seeds may be unstable.",
+        "Intervals exclude tissue/model error and clinical generalization uncertainty.",
+        "Three outcomes and other pairwise analyses are unadjusted for multiplicity; no familywise superiority claim."
+      ],
+      "selection": "Assessment only. No ranking, checkpoint replacement, tuning, or new reference export."
+    },
+    "contrasts": [
+      {
+        "metric": "return",
+        "positive_arm": "study003_v3",
+        "negative_arm": "study003_v2",
+        "paired_training_seeds": 5,
+        "shared_patients": 128,
+        "mean_difference": 0.01779289474063255,
+        "crossed_ci_lower": -6.600783620126605,
+        "crossed_ci_upper": 5.626366853820196
+      },
+      {
+        "metric": "success",
+        "positive_arm": "study003_v3",
+        "negative_arm": "study003_v2",
+        "paired_training_seeds": 5,
+        "shared_patients": 128,
+        "mean_difference": 0.0046875,
+        "crossed_ci_lower": -0.3109375,
+        "crossed_ci_upper": 0.2906640624999998
+      },
+      {
+        "metric": "severe_harm",
+        "positive_arm": "study003_v3",
+        "negative_arm": "study003_v2",
+        "paired_training_seeds": 5,
+        "shared_patients": 128,
+        "mean_difference": 0.0046875,
+        "crossed_ci_lower": -0.00625,
+        "crossed_ci_upper": 0.0234375
+      }
+    ]
+  },
+  "limitations": [
+    "Synthetic unvalidated dynamics; no claim of clinical performance or generalization.",
+    "Exclusion completeness across all prior studies is supplied by the caller; input-policy histories are explicitly checked.",
+    "Intervals condition on these fixed trained policies and exclude training-run and model uncertainty.",
+    "Zero observed harm does not establish zero risk; Wilson intervals remain nonzero.",
+    "This evaluator never selects or exports a new reference policy."
+  ],
+  "independent_audit_sha256": "a17c4b8a8d57800102c2331283ca8ceda5294a3ec7ebfa7999bb86772ab75597"
+}

@@ -1,0 +1,17 @@
+{
+  "published_at": "2026-11-05T18:31:02.528515+00:00",
+  "source_report_sha256": "9c3cd38d84dcb76852a0c7ab6f0ff1cdbd99c9f3ff666d71506ad2d2231f64a3",
+  "published_report_sha256": "fbb4b67096faafb63d40573245e29380c84ab1ad85469e9db8f35b4c36b1fbba",
+  "transformation": "Relative links rewritten and frozen-records context appended; CSV copies use LF newlines. Metrics and verified original report remain unchanged.",
+  "published_files_sha256": {
+    "docs/validation/rl-final-001-controllers.csv": "5ff3d300f45f35c2755dd63d77ed13c309734a50281b3744c3630095542556ee",
+    "docs/validation/rl-final-001-study003-crossed-contrasts.csv": "489b4dc0267917e8bfbb1a46aaad858057a0b5c3fabd2821a21394b019fe2eb7",
+    "docs/validation/rl-final-001-study003-fixed-arm-descriptors.csv": "d0327c2e9371746f30a4458ae046df13bf7c7832c4c7ec4c6781989b33abdcb1",
+    "docs/validation/rl-final-001-study003-paired-seeds.csv": "7d1deeb1b530b4217f094fc33bab6138097155051f34cc87f730b0fae5c8d0ba",
+    "docs/validation/rl-final-001-paired-return-contrasts.csv": "36e1e8e81b388f69aae167c78eb1b0bf4cc575cc085cced2d764c5699f99baea",
+    "docs/assets/rl-final-001-fixed-policies.svg": "733a57f6648ae4e08e2125839dabae10051ebb41ba5dd9483dd3216e7f749fbe",
+    "docs/assets/rl-final-001-fixed-policies.png": "3930b26a0276d4e270c4ea9e7b6529e6238dad88217055890df0dd672bf1acf3",
+    "docs/validation/rl-final-001-report-provenance.json": "387df307a628616428a2c3b77b545fba392e8da1ef24c6f41f408c988fc129a2"
+  },
+  "source_report_provenance_sha256": "387df307a628616428a2c3b77b545fba392e8da1ef24c6f41f408c988fc129a2"
+}

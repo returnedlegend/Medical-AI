@@ -2,7 +2,7 @@
 
 ## Origin and research question
 
-This project implements an exploratory prototype based on the user-supplied proposal, “Personalizing Robotic Gallbladder Retraction Using Simulated Strategy Search and Force Probing to Improve Safe Surgical Exposure.” The proposal describes a future LapGym/SOFA study. This MVP is a lower-cost analytic workbench that supports pipeline development and hypothesis exploration before a validated soft-tissue simulator is available.
+This project implements an exploratory prototype based on the user-supplied proposal, “Personalizing Robotic Gallbladder Retraction Using Simulated Strategy Search and Force Probing to Improve Safe Surgical Exposure.” The proposal describes a future LapGym/SOFA study. The current MVP is a native desktop application with three separate research components: an analytic cohort strategy study, a portable stateful tissue/RL laboratory, and optional SOFA mesh diagnostics. Their mechanics, tasks and success rates are different; none supplies validated human tissue behavior.
 
 The primary question is how much safe exposure improves when a retraction strategy is chosen separately for each synthetic patient instead of applying one strategy to all patients. Secondary questions ask whether early force responses identify patients needing adaptation and patients for whom the available strategy grid fails.
 
@@ -25,7 +25,15 @@ A successful exposure proxy requires the geometric visibility threshold AND both
 9. Test sensitivity to three named force/strain presets. Threshold selection after inspecting results is exploratory and must not be described as preregistration.
 10. Keep crashes distinct from unsuccessful retractions. Export the configuration, model version, selected strategy, and patient-level results.
 
-The web workbench permits repeated exploratory runs. It is not itself a preregistration system. A formal study should freeze its final cohort distributions, seeds, exclusion rules, thresholds, mesh checks, and analysis plan in a time-stamped external registration before running confirmatory experiments.
+The desktop workbench permits repeated exploratory runs. The numbered discipline above describes the analytic cohort study. The sequential RL experiments additionally freeze training-source snapshots, action/observation encoders, complete fitting/validation seed histories and declarative checkpoints. Their cross-run validation selection is disclosed. The separate [fixed-policy final plan](final-evaluation-plan.md) defines a paired assessment with immutable inputs and a complete prior-use exclusion audit; repository records are not a substitute for an external clinical preregistration.
+
+## Stateful body and trained controllers
+
+The portable laboratory implements actual tool actions, observations, rewards and terminal states. Mechanical/thermal injury persists, changes restoring stiffness, and can produce bleeding or bile leakage with simplified physiological feedback. The [equations and limitations](tissue-response.md) and [controlled tool-response protocols](response-protocols.md) document this causal loop. The 3D depth/surface rendering is illustrative; the numerical body is a 23-site model.
+
+NumPy Double DQN and tabular Double-Q controllers have been trained from observed transitions. [Studies 001](rl-study-001.md), [002](rl-study-002.md) and [003](rl-study-003.md) retain all 35 runs and 105,000 online training episodes on paired synthetic seed streams. Those are repeated episodes, not that many independent patients. Larger encodings did not demonstrate improved performance in the recorded comparisons, and harmful/zero-success runs remain available. Scripted demonstrations, continuous scripted control and learned policies are labeled separately. Policy playback keeps weights fixed; manual episode logs do not silently become training demonstrations.
+
+The [completed fixed-policy assessment](rl-final-001.md) compares twelve frozen checkpoints and three common controls on the same 128 previously reserved patients. All 1,920 rollouts and independent audits are retained, with no subsequent checkpoint replacement. Its synthetic performance and uncertainty do not establish the proposal's anatomical or clinical hypothesis.
 
 ## Model-design dependence
 
@@ -33,10 +41,10 @@ The surrogate explicitly computes a preferred pull direction from attachment len
 
 ## Beyond the MVP
 
-- Integrate LapGym/SOFA through a separate simulator adapter with actual meshes and camera rendering.
+- Replace or calibrate the portable dynamics using an independently validated simulator adapter. The existing optional SOFA mesh/camera diagnostic is not yet that adapter.
 - Review constitutive assumptions, numerical integration, force units, and landmark visibility with a mechanics mentor and surgeon.
-- Verify forces against analytic mechanics and check at two mesh resolutions.
-- Add independently trained reinforcement-learning seeds, confidence estimates, and a fixed handoff policy.
+- Resolve the [organ mesh-refinement contact/preload mismatch](mesh-resolution.md), mass distribution and discretization error before claiming convergence. An independent tetrahedral stiffness check agrees with SOFA, but the coarse cantilever remains substantially too stiff relative to a beam approximation.
+- Expand independent training seeds and assess richer state/history representations, continuous control and justified handoff criteria. Existing checkpoints and negative results must remain frozen when new experiments begin.
 - Evaluate domain shift, simulated inflammation and bleeding, and model discrepancy.
 
-No RL agent is claimed to be trained by the current prototype. The logistic early-warning model is a supervised baseline. A handoff or abstention curve is an evaluation of model confidence, not a working surgical control or clinical handoff system.
+The logistic early-warning model remains a separate supervised cohort baseline. The portable RL agents are real trained research controllers, but the optional SOFA scene does not yet have a learned surgical policy or the proposal's full patient-specific CVS task. Modeled handoff terminates a synthetic episode; it is not a clinical handoff system. Positive analytic personalization gains cannot be combined with sequential RL scores to claim the original surgical hypothesis is established.

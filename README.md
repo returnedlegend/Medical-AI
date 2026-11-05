@@ -39,6 +39,8 @@ The [all-seed validation figures](docs/validation-figures.md) retain unsuccessfu
 
 The [third paired study](docs/rl-study-003.md) preserves all ten V2/V3 runs, including a severe-injury outcome and zero-success runs. Its larger representation did not demonstrate improved performance. These studies contain 105,000 recorded online training episodes on paired synthetic seed streams, not that many independent patients.
 
+The [final fixed-policy assessment](docs/rl-final-001.md) evaluates twelve frozen policies and three shared controls on 128 previously reserved synthetic patients. The existing bundled controller and continuous scripted baseline each succeeded on 78/128 cases. All 1,920 rollouts, uncertainty intervals, harmful/zero-success policies, frozen sources and independent audits are retained; no policy was replaced using the final outcomes.
+
 ## Cohort experiments and real-physics diagnostics
 
 The cohort module retains seeded patient distributions, exhaustive 75-strategy sweeps, training-selected shared strategies, held-out personalization benefit, force-probe prediction/calibration, subgroup analysis, threshold sensitivity, and JSON/CSV/research-report exports. Its analytic exposure model is described in [model.md](docs/model.md).

@@ -1,0 +1,3 @@
+arm,fixed_policies,shared_patients,mean_return,success_rate,severe_harm_rate,mean_return_min,mean_return_max,success_rate_min,success_rate_max,severe_harm_rate_min,severe_harm_rate_max
+study003_v2,5,128,3.219462377946724,0.2875,0.0015625,-3.0000000000000018,8.181241928862283,0.0,0.5390625,0.0,0.0078125
+study003_v3,5,128,3.2372552726873574,0.2921875,0.00625,-3.5465875673348277,9.435232302598541,0.0,0.609375,0.0,0.03125

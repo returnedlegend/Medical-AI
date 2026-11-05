@@ -1,0 +1,4 @@
+metric,positive_arm,negative_arm,paired_training_seeds,shared_patients,mean_difference,crossed_ci_lower,crossed_ci_upper
+return,study003_v3,study003_v2,5,128,0.01779289474063255,-6.600783620126605,5.626366853820196
+success,study003_v3,study003_v2,5,128,0.0046875,-0.3109375,0.2906640624999998
+severe_harm,study003_v3,study003_v2,5,128,0.0046875,-0.00625,0.0234375
