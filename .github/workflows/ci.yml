@@ -26,7 +26,7 @@ jobs:
       - name: Install browser test dependencies
         run: |
           .venv/bin/python -m pip install -r backend/requirements-browser.txt
-          .venv/bin/python -m playwright install --with-deps chromium
+          .venv/bin/python scripts/ci_browser_checks.py --prepare-browser
       - name: Browser smoke test
         run: |
           ./scripts/start.sh > /tmp/retraction-server.log 2>&1 &
