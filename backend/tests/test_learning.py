@@ -81,6 +81,8 @@ def test_checkpoint_roundtrip_preserves_action_without_pickle():
     lambda c: c['weights']['w1'][0].__setitem__(0, float('nan')),
     lambda c: c['action_primitives'][0].__setitem__(0, 2),
     lambda c: c['observation_high'].__setitem__(0, -2),
+    lambda c: c.update(observation_low=[-3e38] * 2, observation_high=[3e38] * 2),
+    lambda c: c.update(observation_low=[0] * 2, observation_high=[1e-9] * 2),
 ])
 def test_checkpoint_rejects_unsafe_or_incompatible_arrays(change):
     names, _ = action_primitives()
@@ -115,7 +117,7 @@ def test_replay_wraps_but_keeps_transition_components_paired():
     {'episodes': True}, {'episodes': 3001}, {'eval_episodes': 1},
     {'learning_rate': float('nan')}, {'gamma': 1.1}, {'unknown': 1},
     {'environment': []}, {'environment': {'max_steps': 10}},
-    {'tabular_state_encoding': 'v3'},
+    {'tabular_state_encoding': 'v4'},
 ])
 def test_training_configuration_has_bounded_cost_and_no_unknown_fields(bad):
     with pytest.raises(ValueError):

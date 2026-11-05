@@ -6,6 +6,10 @@ An alternative **tabular Double-Q** baseline deliberately uses a smaller, reacti
 
 The environment accepts seven continuous controls. DQN selects from a declared, finite library of control primitives: hold, gentle grasp, release, eight full-speed grasper directions, four finer grasper directions, four cautery movement directions, several slower lateral grasper movements, a low-power cautery pulse, and handoff. The exact seven-element vectors and names are exported in every checkpoint. This is a discrete-action wrapper around the continuous simulator, not unrestricted robot-control optimization. Cautery is an available harmful affordance; the exposure task does not require it.
 
+The grasp primitive fixes closure at .55 and the energy primitive fixes power at .35. These are declared action-space priors: the learner does not discover an optimal jaw pressure or demonstrate avoidance of crush injury at other closures. Manual continuous controls still expose those responses. All learners and random comparators use the same primitive library.
+
+Training jobs update action values from the tissue responses they generate. Interactive trained-policy playback uses fixed exported weights while reacting to changing observations; it does not update those weights during a displayed episode. Manual traces are saved for inspection/replay but are not silently added as expert training data.
+
 ## Demonstration assistance and initial exploration failure
 
 The default training protocol first collects 40 transparent scripted trajectories using **training-only seeds**. Their actions are mapped to the nearest declared primitive. These are actual environment trajectories with observed rewards, not oracle Q-values or held-out patient labels. The network performs 1,000 warm-start TD updates from those transitions. Subsequent batches contain half retained demonstration transitions and half online exploration transitions. Demonstration batches sample action groups uniformly so a single initial grasp is not overwhelmed by hundreds of movement/hold examples.

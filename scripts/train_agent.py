@@ -32,7 +32,7 @@ def main() -> int:
     parser.add_argument('--demonstration-episodes', type=int, help='Training-only scripted replay trajectories; zero disables assistance')
     parser.add_argument('--observation-encoding', choices=['box', 'characteristic'])
     parser.add_argument('--algorithm', choices=['dqn', 'tabular_q'])
-    parser.add_argument('--tabular-state-encoding', choices=['v1', 'v2'])
+    parser.add_argument('--tabular-state-encoding', choices=['v1', 'v2', 'v3'])
     parser.add_argument('--output', type=Path, required=True, help='New bundle directory; refuses overwrite')
     args = parser.parse_args()
     try:

@@ -15,6 +15,7 @@ import numpy as np
 ALGORITHM = "numpy-dqn-1.0"
 CHECKPOINT_FORMAT = "retraction-dqn-json-1"
 FEATURE_VERSION = "public-tissue-features-1"
+RAW_FEATURE_TRANSFORM = {"version": "public-raw-box-1", "clip_to_bounds": True}
 DEFAULT_TRAINING_CONFIG = {
     "algorithm": "dqn",
     "training_seed": 42, "episodes": 300, "eval_episodes": 20,
@@ -40,8 +41,8 @@ def normalize_training_config(config: dict | None = None) -> dict:
         raise ValueError("algorithm must be dqn or tabular_q")
     if result["observation_encoding"] not in ("box", "characteristic"):
         raise ValueError("observation_encoding must be box or characteristic")
-    if result["tabular_state_encoding"] not in ("v1", "v2"):
-        raise ValueError("tabular_state_encoding must be v1 or v2")
+    if result["tabular_state_encoding"] not in ("v1", "v2", "v3"):
+        raise ValueError("tabular_state_encoding must be v1, v2 or v3")
     for key, lo, hi in (("training_seed", 0, 2**32 - 1), ("episodes", 20, 3000),
                         ("eval_episodes", 5, 100), ("max_steps", 20, 300),
                         ("demonstration_episodes", 0, 300)):
@@ -279,6 +280,9 @@ def _encode(observation, low, high, specification: dict | None = None) -> np.nda
     values = np.asarray(observation, dtype=np.float32)
     if values.shape != low.shape or not np.isfinite(values).all():
         raise ValueError("Observation dimensions/values do not match the policy specification")
+    values = np.clip(values, low, high)
+    if specification == RAW_FEATURE_TRANSFORM:
+        return values
     names = specification["observation_names"]
     index = {name: position for position, name in enumerate(names)}
     def get(name):
@@ -348,7 +352,10 @@ def load_checkpoint(checkpoint: dict) -> tuple[Network, np.ndarray, np.ndarray, 
         low = np.asarray(checkpoint["observation_low"], dtype=np.float32)
         high = np.asarray(checkpoint["observation_high"], dtype=np.float32)
         actions = np.asarray(checkpoint["action_primitives"], dtype=np.float32)
-        if low.ndim != 1 or not 1 <= len(low) <= 2048 or high.shape != low.shape or not np.isfinite(low).all() or not np.isfinite(high).all() or np.any(high <= low):
+        if (low.ndim != 1 or not 1 <= len(low) <= 2048 or high.shape != low.shape
+                or not np.isfinite(low).all() or not np.isfinite(high).all() or np.any(high <= low)
+                or np.any(np.abs(low) > 1e6) or np.any(np.abs(high) > 1e6)
+                or np.any(high.astype(np.float64) - low.astype(np.float64) < 1e-6)):
             raise ValueError("Invalid checkpoint observation bounds")
         feature_spec = checkpoint.get("feature_transform")
         if feature_spec is None:
@@ -386,6 +393,9 @@ def validate_checkpoint_compatibility(checkpoint: dict, description: dict) -> No
         raise ValueError("Policy observation specification does not match this environment")
     if checkpoint.get("action_names") != description.get("action_names"):
         raise ValueError("Policy action specification does not match this environment")
+    for key in ("observation_low", "observation_high"):
+        if key in description and checkpoint.get(key) != description[key]:
+            raise ValueError("Policy observation bounds do not match this environment")
 
 
 def policy_action(checkpoint: dict, observation) -> list[float]:
