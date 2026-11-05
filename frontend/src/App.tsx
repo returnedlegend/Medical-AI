@@ -659,6 +659,14 @@ export default function App() {
                         >
                           JSON
                         </a>
+                        <a
+                          className="small-button"
+                          href={`/api/runs/${encodeURIComponent(selected.id)}/report`}
+                          download
+                          title="Download the research report as Markdown"
+                        >
+                          Report
+                        </a>
                       </div>
                     )}
                   </div>
@@ -1506,7 +1514,7 @@ function Methods() {
           {
             icon: <Database size={21} />,
             title: "05 · Reproducibility",
-            body: "Each run stores its configuration, seed, patient records, search outcomes, and results. Export JSON for the full record or CSV for patient-level analysis. The shared strategy is chosen before held-out outcome evaluation.",
+            body: "Each run stores its configuration, seed, patient records, search outcomes, and results. Export JSON for the full record, CSV for patient-level analysis, or a Markdown report for a readable summary. The shared strategy is chosen before held-out outcome evaluation.",
           },
           {
             icon: <Sparkles size={21} />,
