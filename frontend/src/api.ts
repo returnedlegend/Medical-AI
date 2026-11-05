@@ -27,10 +27,16 @@ export async function request<T>(
     let message = `Request failed (${response.status})`;
     try {
       const error = await response.json();
-      message =
-        typeof error.detail === "string"
-          ? error.detail
-          : JSON.stringify(error.detail || error);
+      if (typeof error.detail === "string") {
+        message = error.detail;
+      } else if (Array.isArray(error.detail)) {
+        message = error.detail
+          .map((item: { loc?: string[]; msg?: string }) => {
+            const field = item.loc?.slice(1).join(" ").replaceAll("_", " ");
+            return `${field ? `${field}: ` : ""}${item.msg || "Invalid input"}`;
+          })
+          .join(". ");
+      }
     } catch {
       /* no JSON */
     }

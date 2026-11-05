@@ -85,7 +85,11 @@ export default function App() {
     setSelected(run);
     setResults(null);
     setLoading(false);
-    setError("");
+    setError(
+      run.status === "failed"
+        ? run.error || "This experiment failed. Please launch a new run."
+        : "",
+    );
     setShowHistory(false);
     if (run.status === "completed") {
       setLoading(true);
@@ -130,6 +134,7 @@ export default function App() {
       try {
         const updated = await api.run(selectedId);
         if (stopped) return;
+        setError("");
         setSelected(updated);
         setRuns((old) => old.map((r) => (r.id === updated.id ? updated : r)));
         if (updated.status === "completed") {
@@ -197,6 +202,7 @@ export default function App() {
     try {
       const run = await api.create(config);
       ++requestId.current;
+      setLoading(false);
       setSelected(run);
       setResults(null);
       setRuns((old) => [run, ...old]);
