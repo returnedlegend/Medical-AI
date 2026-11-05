@@ -64,3 +64,7 @@ Use the recorded source commit and its locked dependencies. Each command creates
 ```
 
 The common JSON configuration above records gamma .99; all other effective settings are in the frozen protocol. If using the historical source checkout, copy that small configuration file from this report. Dependency/platform floating-point differences can change trajectories near decision thresholds; the source identity alone is not a cross-platform numerical guarantee.
+
+## Complete records
+
+The [full study archive](../research-artifacts/rl-study-001-full.zip) preserves all ten checkpoints and learning curves, exact source snapshots, the frozen protocol, and per-file hashes. Its [SHA-256](../research-artifacts/rl-study-001-full.zip.sha256) verifies the download. This archive includes failed/harmful runs and is distinct from the validation-selected bundled example.

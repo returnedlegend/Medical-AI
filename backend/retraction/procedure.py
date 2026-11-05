@@ -298,7 +298,12 @@ class EpisodeStore:
     def get(self, session_id: str):
         with self.connect() as db:
             row = db.execute('SELECT * FROM sessions WHERE id=?', (session_id,)).fetchone()
-        return self.decode(row)
+            record = self.decode(row)
+            if record is not None:
+                transition = db.execute('SELECT transition FROM transitions WHERE session_id=? AND revision=?',
+                                        (session_id, record['revision'])).fetchone()
+                record['source'] = json.loads(transition['transition']).get('source') if transition else None
+        return record
 
     def list(self, limit: int, offset: int):
         with self.connect() as db:

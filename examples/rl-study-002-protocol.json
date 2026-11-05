@@ -1,0 +1,319 @@
+{
+  "created_at": "2026-11-05T17:22:00.721862+00:00",
+  "purpose": "Frozen exploratory paired reactive-state aliasing comparison plus unassisted ablation, no physics/reward changes",
+  "entries": [
+    {
+      "arm": "tabular_v1",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 101,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v1",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v1",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 102,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v1",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v1",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 103,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v1",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v1",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 104,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v1",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v1",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 105,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v1",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v2",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 101,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v2",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v2",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 102,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v2",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v2",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 103,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v2",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v2",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 104,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v2",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v2",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 105,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 100,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v2",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v2_unassisted",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 101,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 0,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v2",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v2_unassisted",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 102,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 0,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v2",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v2_unassisted",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 103,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 0,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v2",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v2_unassisted",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 104,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 0,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v2",
+        "environment": {}
+      }
+    },
+    {
+      "arm": "tabular_v2_unassisted",
+      "config": {
+        "algorithm": "tabular_q",
+        "training_seed": 105,
+        "episodes": 3000,
+        "eval_episodes": 30,
+        "max_steps": 200,
+        "learning_rate": 0.0007,
+        "gamma": 0.99,
+        "demonstration_episodes": 0,
+        "demonstration_margin": 0.1,
+        "demonstration_weight": 0.5,
+        "observation_encoding": "characteristic",
+        "tabular_learning_rate": 0.15,
+        "tabular_state_encoding": "v2",
+        "environment": {}
+      }
+    }
+  ],
+  "source_sha256": {
+    "learning.py": "ebb0563e5b1d77445bf72d27d773667a51e4f66cebc5e63551df1267a40dd0f6",
+    "tabular.py": "f25fc3d451c29d3e7553361b52a75f54d950b130c22ed48585e121b4dd35b142",
+    "environment.py": "be5bfeb9a50fd66b6f1477b0e8d9926cb30406c8f3ba24fbc33fb74056992427",
+    "tissue.py": "220c34760a7990648841a1e3a40aaad621d8cd0da12d7ea900bcbb3d94763fe1"
+  },
+  "physics_fingerprint": "99bcc146975fff6221c65ee927d4bc38373a18069e56ce8cd45bf7a75c984898",
+  "model_version": "tissue-retraction-1.1",
+  "selection_require_zero_severe_harm": true,
+  "selection_rule": "Among runs with zero observed severe injury on validation, choose highest validation success; tie-break lower mean maximum injury, then higher mean return. Zero observed injury is an eligibility convention, not proof of safety. If none qualify, export no policy. Reserved final patients are excluded from all selection.",
+  "design_sha256": "f613e635d708779148140d30287473409fe4630d7468e985f3710cb036f10584",
+  "preflight": {
+    "reserved_final_patient_count": 128,
+    "reserved_final_overlap": 0,
+    "cross_run_fit_validation_overlap": 0,
+    "old_study_fit_new_validation_overlap": 0,
+    "old_study_validation_new_fit_overlap": 0,
+    "fitting_patients_reused_from_prior_fitting": 0,
+    "validation_patients_per_training_seed": 30,
+    "validation_patients_paired_across_all_three_arms": true
+  },
+  "limitations": [
+    "All tissue mechanics and harm weights are unvalidated surrogate assumptions",
+    "V2 remains a reactive partial-state policy and can alias anatomy/deformation histories",
+    "Assisted arms receive100extraexperttrajectories; online episode budget is equal but total observed transitions differ",
+    "Five training seeds per arm; validation selection is optimistic",
+    "No reserved final patient was run or inspected for this protocol"
+  ]
+}

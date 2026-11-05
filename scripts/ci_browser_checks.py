@@ -39,7 +39,12 @@ def main() -> int:
                     tail = '\n'.join(output.splitlines()[-80:]).replace('```', "'''")
                     report.write(f'```text\n{tail}\n```\n\n')
         if result.returncode:
-            print(f'::error title={name} browser checks failed::See the job summary and browser artifacts for the actual test failure.', flush=True)
+            # Public error annotations remain readable when GitHub requires a
+            # sign-in for raw logs or custom summaries. This is captured test
+            # output only; never include environment or credential values.
+            detail = '\n'.join(output.splitlines()[-50:])[-6000:]
+            escaped = detail.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+            print(f'::error title={name} browser checks failed::{escaped}', flush=True)
             return result.returncode if result.returncode > 0 else 1
     return 0
 

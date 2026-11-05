@@ -79,6 +79,8 @@ jobs:
             if ($process.ExitCode -ne 0) { throw "NSIS installation exited $($process.ExitCode)" }
           } catch {
             @('### NSIS setup failed', '```text', $_.Exception.Message, $_.ScriptStackTrace, '```') | Add-Content $env:GITHUB_STEP_SUMMARY
+            $message = $_.Exception.Message.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=NSIS compiler acquisition failed::$message"
             throw
           }
       - name: Assemble Windows installer
@@ -137,3 +139,15 @@ jobs:
             ${{ runner.temp }}/retraction-installed-diagnose.json
             ${{ runner.temp }}/retraction-installer-smoke.json
             ${{ runner.temp }}/retraction-desktop-data/logs/
+      - name: Publish desktop check summary
+        if: always()
+        shell: pwsh
+        run: |
+          foreach ($name in @('retraction-desktop-diagnose.json', 'retraction-desktop-smoke.json', 'retraction-installed-diagnose.json', 'retraction-installer-smoke.json')) {
+            $path = Join-Path $env:RUNNER_TEMP $name
+            if (Test-Path $path) {
+              $json = Get-Content $path -Raw
+              if ($json.Length -gt 20000) { $json = $json.Substring(0, 20000) + "`n[truncated]" }
+              @("### $name", '```json', $json, '```') | Add-Content $env:GITHUB_STEP_SUMMARY
+            }
+          }

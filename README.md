@@ -21,7 +21,7 @@ Local build outputs live under ignored `artifacts/desktop/`; compiled runtimes a
 3. Observe actual state transitions: deformation, force, heat, accumulated injury, bleeding or bile leakage, and explicitly synthetic vital signs.
 4. Inspect each reward component and the episode trace. Injury persists after tool release or cooling and changes future stiffness and mechanics.
 5. Run the transparent scripted baseline or train and replay an experimental learned policy. The interface distinguishes them and shows held-out success, harm, handoff, and return separately.
-6. Export the episode JSON, including configuration, actions, responses, events, and model provenance. A reset creates a new episode and preserves the previous record.
+6. Export the episode JSON, including configuration, actions, responses, events, and model provenance. A reset creates a new episode and preserves the previous record. The Protocols inspector provides controlled traction, crush, arterial-heat, duct-heat, and remote-heat experiments with the same recorded state transitions.
 
 Shortcuts: **G** grasper, **C** cautery, arrow keys move the selected tool, **Space** grasp/pulse, **Escape** pause automatic playback. A 2D node view is available alongside the illustrative 3D rendering.
 
@@ -33,7 +33,7 @@ The [recorded thermal-injury view](docs/images/tissue-injury.png) shows the actu
 
 The Gymnasium environment exposes reset/step/observation/reward/termination. Policies learn from observed transitions; JSON checkpoints contain declarative parameters and weights, not executable pickle data. Training seeds and evaluation seeds are recorded and separated. Playback reports changed environment conditions and can create an episode matching a checkpoint's settings.
 
-The research agents are experimental. Some development runs learned to hand off or caused substantial harm rather than solving the task; these outcomes are retained and documented. A successful scripted baseline, a supervised demonstration component, and a trained RL policy are different results. See [the training reference](docs/rl-training.md).
+The research agents are experimental. Some development runs learned to hand off or caused substantial harm rather than solving the task; these outcomes are retained and documented. A successful scripted baseline, a supervised demonstration component, and a trained RL policy are different results. See [the training reference](docs/rl-training.md) and [the complete five-seed study](docs/rl-study-001.md). The bundled policy is explicitly validation-selected; its displayed score is not an untouched-test or clinical-safety estimate.
 
 ## Cohort experiments and real-physics diagnostics
 

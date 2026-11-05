@@ -13,3 +13,4 @@
 *.ico binary
 # Preserve upstream attribution files byte-for-byte for their recorded hashes.
 desktop/licenses/* -text
+*.zip binary

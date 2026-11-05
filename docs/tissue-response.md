@@ -259,3 +259,36 @@ remain necessary before stronger interpretations.
 This prototype uses monotonic loss of load-bearing stiffness for both mechanical and thermal injury. That is an explicit modeling choice: real thermal tissue response can include contraction and stiffening, and cannot be inferred from these illustrative damage variables. The portable model does not solve viscoelasticity, fluid flow, inflammation, thermal diffusion, or biological healing. New clinical or constitutive conclusions require an independently validated replacement model.
 
 The legacy cohort strategy-search engine and this sequential RL environment have different mechanics and task definitions. Their success rates cannot be combined to claim that an agent recovered the legacy grid oracle’s personalization benefit. Such a comparison requires a matched simulator, cohort, action space, limits, and exposure definition.
+
+## Causal feedback loop and when learning occurs
+
+```mermaid
+flowchart LR
+    A[Tool position, closure, power] --> B[Contact force and local heat]
+    B --> D[Persistent material injury]
+    D --> E[Reduced restoring stiffness]
+    E --> B
+    D --> F[Vessel bleeding or duct leakage]
+    F --> G[Loss, pressure and heart-rate state]
+    G --> F
+    F --> H[Obscured exposure proxy]
+    D --> R[Observed reward components]
+    H --> R
+    R --> T[Replay and TD updates during training]
+    T --> P[Versioned learned policy]
+    P --> A
+```
+
+A manual episode records exactly the transitions and rewards produced by tool
+use. The current trainer creates new seeded episodes and optional scripted
+training demonstrations; it does not silently ingest the user's manual records.
+During **Run policy**, checkpoint weights are frozen: the agent observes the
+state and chooses actions, while harm changes the simulated body and subsequent
+observations/rewards. During **Train policy**, those observed rewards enter the
+replay buffer and actual temporal-difference updates. Retraining produces a new
+inspectable checkpoint rather than modifying a previously recorded policy.
+
+The reward trace therefore represents real environment feedback, but a harmful
+manual intervention is not itself evidence that a deployed policy has already
+learned to avoid it. The separate training/evaluation records establish what
+learning occurred and whether it helped on other synthetic patients.

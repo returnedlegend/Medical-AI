@@ -77,6 +77,7 @@ def test_real_protocol_actions_persist_outcomes_and_provenance(client, scenario)
         assert source['version'] == record['protocol']['version']
         assert source['protocol_step'] == source['controller_state']['steps'] == index
         assert len(transition['action']) == 7
+    assert record['source'] == transitions[-1]['source']
     if scenario == 'gentle-traction':
         assert record['info']['success'] is True and record['state']['max_damage'] == 0
     elif scenario == 'held-jaw-crush':
@@ -146,6 +147,7 @@ def test_manual_intervention_marks_protocol_interrupted_and_reset_starts_fresh_c
                          json={'action': [0] * 7, 'expected_revision': record['revision']}).json()
     assert manual['protocol']['status'] == 'interrupted'
     assert manual['protocol']['completed'] is True
+    assert manual['source'] == {'type': 'manual'}
     assert manual['revision'] == 2 and manual['protocol']['protocol_step'] == 1
     assert advance(client, manual).status_code == 409
     reset = client.post(f"/api/procedure/sessions/{manual['id']}/reset", json={'expected_revision': 2})
