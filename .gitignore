@@ -1,0 +1,22 @@
+# Local environments and generated outputs
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+node_modules/
+dist/
+*.tsbuildinfo
+.data/
+.retraction-data/
+*.sqlite3
+*.sqlite3-*
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+playwright-report/
+test-results/
