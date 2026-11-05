@@ -6,7 +6,6 @@ Its parameters are illustrative assumptions, not fitted tissue measurements.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
 import math
 from typing import Any, Callable
 
@@ -33,6 +32,18 @@ DEFAULT_CONFIG = {
 }
 
 
+def _finite_number(value: Any, name: str) -> float:
+    if isinstance(value, (bool, str)):
+        raise ValueError(f"{name} must be a finite number, not a boolean or string")
+    try:
+        number = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{name} must be a finite number") from exc
+    if not math.isfinite(number):
+        raise ValueError(f"{name} must be a finite number")
+    return number
+
+
 def normalize_config(config: dict[str, Any] | None = None) -> dict[str, Any]:
     supplied = dict(config or {})
     if "cohort_size" in supplied and "n_patients" not in supplied:
@@ -51,7 +62,7 @@ def normalize_config(config: dict[str, Any] | None = None) -> dict[str, Any]:
         ("adhesion_stiffness_min", "adhesion_stiffness_max", 0, 0.5),
         ("distension_min", "distension_max", 0.5, 2.5),
     ]:
-        if not (lower <= float(result[lo]) <= float(result[hi]) <= upper):
+        if not (lower <= _finite_number(result[lo], lo) <= _finite_number(result[hi], hi) <= upper):
             raise ValueError(f"{lo} and {hi} must be ordered in [{lower}, {upper}]")
     a = result["adhesion_max_count"]
     if isinstance(a, bool) or not isinstance(a, (int, np.integer)) or not 0 <= a <= 12:
@@ -59,7 +70,7 @@ def normalize_config(config: dict[str, Any] | None = None) -> dict[str, Any]:
     thresholds = dict(THRESHOLD_PROFILES[result["threshold_profile"]])
     for key in thresholds:
         if key in supplied and supplied[key] is not None:
-            thresholds[key] = float(supplied[key])
+            thresholds[key] = _finite_number(supplied[key], key)
     if not (0 < thresholds["force_limit_n"] <= 20):
         raise ValueError("force_limit_n must be in (0, 20]")
     if not (0 < thresholds["strain_limit"] <= 3):
@@ -103,9 +114,11 @@ def generate_cohort(config: dict[str, Any] | None = None) -> list[dict[str, Any]
 def validate_patient(patient: dict[str, Any]) -> None:
     for key, lo, hi in [("attachment_length_mm", 4, 60), ("adhesion_count", 0, 12),
                         ("adhesion_stiffness_n_per_mm", 0, 0.5), ("distension", 0.5, 2.5)]:
-        value = float(patient[key])
+        value = _finite_number(patient[key], key)
         if not math.isfinite(value) or not lo <= value <= hi:
             raise ValueError(f"{key} must be finite and in [{lo}, {hi}]")
+    if "preferred_direction_deg" in patient and not 0 <= _finite_number(patient["preferred_direction_deg"], "preferred_direction_deg") <= 180:
+        raise ValueError("preferred_direction_deg must be in [0, 180]")
     if float(patient["adhesion_count"]) != int(patient["adhesion_count"]):
         raise ValueError("adhesion_count must be an integer")
 
@@ -137,11 +150,14 @@ def _mechanics(patient: dict[str, Any], grasp: np.ndarray | float,
 def simulate_patient(patient: dict[str, Any], strategy: dict[str, Any],
                      thresholds: dict[str, Any] | None = None) -> dict[str, Any]:
     validate_patient(patient)
-    g, a, d = (float(strategy[k]) for k in ("grasp_position", "direction_deg", "distance_mm"))
+    g, a, d = (_finite_number(strategy[k], k) for k in ("grasp_position", "direction_deg", "distance_mm"))
     if not (math.isfinite(g) and 0 <= g <= 1 and math.isfinite(a) and 0 <= a <= 180
             and math.isfinite(d) and 0 <= d <= 30):
         raise ValueError("Strategy needs grasp_position in [0,1], direction_deg in [0,180], distance_mm in [0,30]")
     limits = {**THRESHOLD_PROFILES["nominal"], **(thresholds or {})}
+    limits = {key: _finite_number(value, key) for key, value in limits.items()}
+    if any(value <= 0 for value in limits.values()) or limits["exposure_threshold"] > 1:
+        raise ValueError("Thresholds must be positive and exposure_threshold at most 1")
     f, s, e = _mechanics(patient, g, a, d)
     force, strain, exposure = float(f), float(s), float(e)
     force_ok = force <= limits["force_limit_n"]
@@ -153,17 +169,23 @@ def simulate_patient(patient: dict[str, Any], strategy: dict[str, Any],
             "projected_area_mm2": exposure * 90.0, "strategy": dict(strategy)}
 
 
-def force_probe(patient: dict[str, Any]) -> dict[str, Any]:
+def force_probe(patient: dict[str, Any], thresholds: dict[str, Any] | None = None) -> dict[str, Any]:
     """A fixed 2-mm, one-second ramp tug; no oracle information in features."""
+    validate_patient(patient)
+    limits = {**THRESHOLD_PROFILES["nominal"], **(thresholds or {})}
     times = np.linspace(0, 1, 21)
     distance = 2.0 * times
-    forces, _, _ = _mechanics(patient, 0.75, 35, distance)
+    forces, strains, _ = _mechanics(patient, 0.75, 35, distance)
     return {"times_s": times.tolist(), "forces_n": forces.tolist(),
             "peak_force_n": float(forces[-1]),
             "stiffness_n_per_mm": float(forces[1] / distance[1]),
             "nonlinearity_ratio": float(forces[-1] / (2 * forces[10]) - 1) if forces[10] else 0.0,
             "work_mj": float(np.trapezoid(forces, distance)),
-            "duration_s": 1.0, "distance_mm": 2.0}
+            "duration_s": 1.0, "distance_mm": 2.0, "peak_strain": float(strains[-1]),
+            "force_ok": bool(forces[-1] <= limits["force_limit_n"]),
+            "strain_ok": bool(strains[-1] <= limits["strain_limit"]),
+            "within_limits": bool(forces[-1] <= limits["force_limit_n"] and strains[-1] <= limits["strain_limit"]),
+            "protocol": "Fixed ramp with no force-triggered stop; limit violations retained and reported."}
 
 
 def evaluate_grid(patients: list[dict[str, Any]], strategies: list[dict[str, Any]],
@@ -218,7 +240,7 @@ def run_experiment(config: dict[str, Any] | None = None,
     standard_success = success[:, standard_idx]
     needs_personalization = oracle_success & ~shared_success
     bailout = ~oracle_success
-    probes = [force_probe(p) for p in patients]
+    probes = [force_probe(p, limits) for p in patients]
     probe_result, predictions, bailout_predictions = analyze_probe(
         probes, needs_personalization, bailout, train_idx, test_idx, cfg["seed"])
     records = []
@@ -244,6 +266,7 @@ def run_experiment(config: dict[str, Any] | None = None,
                "oracle_success_rate": float(oracle_success[test_idx].mean()),
                "personalization_gain": float(needs_personalization[test_idx].mean()),
                "bailout_rate": float(bailout[test_idx].mean()),
+               "probe_violation_rate": float(np.mean([not probes[i]["within_limits"] for i in test_idx])),
                "personalization_gain_ci": paired_bootstrap_ci(needs_personalization[test_idx], cfg["seed"]),
                "best_shared_strategy": strategies[shared_idx],
                "categories": {"standard": int(shared_success[test_idx].sum()),
@@ -273,7 +296,7 @@ def run_experiment(config: dict[str, Any] | None = None,
                   "probe": "Fixed 2 mm ramp in 1 second at grasp=0.75 and angle=35 degrees. Features derived only from this response; no anatomy or oracle outcomes used as input. Noise-free observations are optimistic.",
                   "early_warning_target": "Shared strategy fails but at least one grid strategy succeeds. This target is separate from grid infeasibility (bail-out).",
                   "uncertainty": "Paired patient bootstrap, 1000 replicates, 95% percentile interval, shared strategy held fixed; does not include simulator/model uncertainty or selection variability.",
-                  "limitations": ["Constants and thresholds are illustrative, unvalidated, and not calibrated to real tissue.", "Fixed fundus support is assumed; no mesh, dynamics, surgical anatomy, bleeding or inflammation.", "Bail-out means infeasible in this finite surrogate grid, not clinical inability to retract safely.", "Probe model is logistic regression; reinforcement learning and five-agent disagreement are not implemented.", "Threshold sensitivity is exploratory, not a preregistered experiment; no mesh-convergence claim."]}}
+                  "limitations": ["Constants and thresholds are illustrative, unvalidated, and not calibrated to real tissue.", "Fixed fundus support is assumed; no mesh, dynamics, surgical anatomy, bleeding or inflammation.", "Bail-out means infeasible in this finite surrogate grid, not clinical inability to retract safely.", "Preferred direction is explicitly computed from anatomy parameters; personalization heterogeneity is partly imposed by model construction. Results exercise the analysis pipeline, not the biological hypothesis.", "Fixed probe ramps are not force-stopped. Cases exceeding the selected force or strain limits remain in model training/evaluation and are flagged in the data.", "Probe model is logistic regression; reinforcement learning and five-agent disagreement are not implemented.", "Threshold sensitivity is exploratory, not a preregistered experiment; no mesh-convergence claim."]}}
     if progress_callback:
         progress_callback(1.0, "Experiment complete")
     return result

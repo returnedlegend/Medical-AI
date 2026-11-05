@@ -71,16 +71,40 @@ class MechanicsTests(unittest.TestCase):
         endpoint = simulate_patient(self.patient, {**STANDARD_STRATEGY, "distance_mm": 2})
         self.assertAlmostEqual(probe["peak_force_n"], endpoint["force_n"])
 
+    def test_probe_work_matches_analytic_spring_integral(self):
+        # For an unadhered patient k=EA/L, e=beta*d. Integrate F(d)
+        # analytically and compare to the sampled one-second probe work.
+        probe = force_probe(self.patient)
+        beta = 0.42 + 0.58 * 0.75
+        k, length, d = 1.6 / 20, 20, 2
+        exact_work = k * beta * d**2 / 2 + k * 1.3 * beta**3 * d**4 / (4 * length**2)
+        self.assertAlmostEqual(probe["work_mj"], exact_work, delta=exact_work * 0.0001)
+
+    def test_probe_exceedances_are_reported(self):
+        severe = {**self.patient, "attachment_length_mm": 4.0, "adhesion_count": 12,
+                  "adhesion_stiffness_n_per_mm": 0.5, "distension": 2.5}
+        probe = force_probe(severe, {"force_limit_n": 0.01, "strain_limit": 0.01})
+        self.assertFalse(probe["within_limits"])
+        self.assertFalse(probe["force_ok"])
+        self.assertFalse(probe["strain_ok"])
+        self.assertEqual(probe["duration_s"], 1.0)  # no undocumented force stop
+
     def test_invalid_inputs_rejected(self):
         for config in [{"n_patients": 10}, {"n_patients": 40.5}, {"seed": -1},
                        {"threshold_profile": "made-up"}, {"force_limit_n": float("nan")},
-                       {"attachment_min_mm": 40, "attachment_max_mm": 20}]:
+                       {"attachment_min_mm": 40, "attachment_max_mm": 20},
+                       {"attachment_min_mm": True}, {"force_limit_n": True},
+                       {"distension_min": "0.8"}]:
             with self.subTest(config=config), self.assertRaises(ValueError):
                 normalize_config(config)
         with self.assertRaises(ValueError):
             simulate_patient({**self.patient, "attachment_length_mm": -1}, STANDARD_STRATEGY)
         with self.assertRaises(ValueError):
             simulate_patient(self.patient, {**STANDARD_STRATEGY, "distance_mm": float("nan")})
+        with self.assertRaises(ValueError):
+            simulate_patient({**self.patient, "preferred_direction_deg": float("nan")}, STANDARD_STRATEGY)
+        with self.assertRaises(ValueError):
+            simulate_patient(self.patient, {**STANDARD_STRATEGY, "grasp_position": True})
 
 
 class ExperimentTests(unittest.TestCase):

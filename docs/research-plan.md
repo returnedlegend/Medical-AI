@@ -27,6 +27,10 @@ A successful exposure proxy requires the geometric visibility threshold AND both
 
 The web workbench permits repeated exploratory runs. It is not itself a preregistration system. A formal study should freeze its final cohort distributions, seeds, exclusion rules, thresholds, mesh checks, and analysis plan in a time-stamped external registration before running confirmatory experiments.
 
+## Model-design dependence
+
+The surrogate explicitly computes a preferred pull direction from attachment length, adhesion count, and distension. Alignment with that preferred direction affects force and exposure. Therefore, patient-dependent strategy benefit is partly imposed by the equations. A positive gain or strong probe AUROC demonstrates behavior of this chosen model and the analysis pipeline; it cannot establish that real tissue exhibits the same effect. Noise-free force features can also make early prediction optimistically informative.
+
 ## Beyond the MVP
 
 - Integrate LapGym/SOFA through a separate simulator adapter with actual meshes and camera rendering.
