@@ -181,3 +181,25 @@ def test_active_queue_limit_and_incomplete_exports(tmp_path, monkeypatch):
 def test_nonfinite_numbers_are_rejected(client):
     assert client.post("/api/runs", content='{"force_limit_n": NaN}', headers={"Content-Type": "application/json"}).status_code == 422
     assert client.post("/api/preview", content='{"strategy":{"distance_mm": Infinity}}', headers={"Content-Type": "application/json"}).status_code == 422
+
+
+def test_patient_grid_reproduces_saved_oracle(tmp_path):
+    with TestClient(main.create_app(tmp_path)) as client:
+        run = client.post('/api/runs', json={'n_patients': 40, 'seed': 42}).json()
+        for _ in range(100):
+            record = client.get(f'/api/runs/{run["id"]}').json()
+            if record['status'] in ('completed', 'failed'):
+                break
+            time.sleep(.02)
+        assert record['status'] == 'completed'
+        results = client.get(f'/api/runs/{run["id"]}/results').json()
+        patient = results['patients'][0]
+        response = client.get(f'/api/runs/{run["id"]}/patients/{patient["id"]}/strategies')
+        assert response.status_code == 200
+        grid = response.json()
+        assert len(grid['strategies']) == 75
+        assert any(s['success'] for s in grid['strategies']) == patient['oracle']['success']
+        selected = next(s for s in grid['strategies'] if s['strategy']['id'] == patient['oracle']['strategy']['id'])
+        assert selected['force_n'] == pytest.approx(patient['oracle']['force_n'])
+        assert selected['exposure'] == pytest.approx(patient['oracle']['exposure'])
+        assert client.get(f'/api/runs/{run["id"]}/patients/missing/strategies').status_code == 404

@@ -200,6 +200,23 @@ def create_app(data_dir: str | Path | None = None) -> FastAPI:
             raise HTTPException(409, f"Run is {record['status']}; results are available after completion")
         return record["result"]
 
+    @app.get("/api/runs/{run_id}/patients/{patient_id}/strategies")
+    def patient_strategies(run_id: UUID, patient_id: str):
+        """Recompute the finite grid for one saved patient without storing a second matrix."""
+        from .simulation import simulate_patient
+
+        record = get_run(run_id, include_result=True)
+        if record["status"] != "completed":
+            raise HTTPException(409, "Complete the run before inspecting its strategy grid")
+        result = record["result"]
+        patient = next((p for p in result["patients"] if p["id"] == patient_id), None)
+        if patient is None:
+            raise HTTPException(404, "Patient not found in this run")
+        thresholds = result["thresholds"]
+        return {"patient_id": patient_id, "thresholds": thresholds,
+                "strategies": [simulate_patient(patient, strategy, thresholds)
+                               for strategy in result["strategies"]]}
+
     @app.get("/api/runs/{run_id}/export")
     def export(run_id: UUID, format: Literal["json", "csv"] = "json"):
         record = get_run(run_id, include_result=True)
