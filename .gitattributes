@@ -11,3 +11,5 @@
 *.yaml text eol=lf
 *.png binary
 *.ico binary
+# Preserve upstream attribution files byte-for-byte for their recorded hashes.
+desktop/licenses/* -text
