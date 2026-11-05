@@ -147,11 +147,13 @@ step, terminal episode, cohort, and offline Help checks using Qt 6.8.3, launched
 outside the checkout. Its packaged diagnosis also passed source fingerprint,
 restart/replay, DQN training, held-out evaluation, and trained-policy checks.
 
-The native Windows build and packaged graphical smoke test passed for source
-checkpoint `79bcf56` in [Windows workflow run 42068968304](https://github.com/returnedlegend/Medical-AI/actions/runs/42068968304).
-That workflow separately enforces both packaged service/model diagnosis and
-the actual Qt window, including interface controls and offline Help. The run
-contains the Windows application and smoke evidence artifacts.
+The complete native Windows pipeline passed for source checkpoint `cc419f8` in
+[Windows workflow run 42079918146](https://github.com/returnedlegend/Medical-AI/actions/runs/42079918146).
+Its three successful jobs cover the actual Qt window and interface controls,
+offline Help, packaged service/model checks, verified compiler assembly, real
+Windows installation and installed-model diagnosis, then preservation of saved
+databases and unrelated files during uninstallation. The run contains both the
+portable application and single Setup executable, with checksums and evidence.
 
 Actual Windows CPython and Windows wheels have also produced a PE32+ x64
 application on this cloud host; its packaged model diagnosis passes under Wine.
