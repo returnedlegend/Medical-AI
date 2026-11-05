@@ -309,6 +309,22 @@ def test_cache_is_bounded_and_session_quota_requires_explicit_close(client, monk
     assert client.post('/api/procedure/sessions', json={}).status_code == 201
 
 
+def test_archived_version_and_fingerprint_episodes_do_not_exhaust_active_quota(client, monkeypatch):
+    monkeypatch.setattr(procedure, 'MAX_ACTIVE_SESSIONS', 2)
+    legacy_version, legacy_source = [create_session(client) for _ in range(2)]
+    with client.app.state.procedure.store.connect() as db:
+        db.execute('UPDATE sessions SET engine_version=? WHERE id=?', ('old-version', legacy_version['id']))
+        db.execute('UPDATE sessions SET physics_fingerprint=? WHERE id=?', ('old-source', legacy_source['id']))
+    current = [create_session(client) for _ in range(2)]
+    assert client.post('/api/procedure/sessions', json={}).status_code == 429
+    assert all(item['engine_compatible'] for item in current)
+    for archived in (legacy_version, legacy_source):
+        saved = client.get(f"/api/procedure/sessions/{archived['id']}").json()
+        assert saved['status'] == 'active' and saved['engine_compatible'] is False
+        assert client.get(f"/api/procedure/sessions/{archived['id']}/export").status_code == 200
+    assert len(client.get('/api/procedure/sessions').json()['sessions']) == 4
+
+
 def finish_training(client, run_id):
     deadline = time.monotonic() + 5
     while time.monotonic() < deadline:

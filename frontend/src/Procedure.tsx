@@ -129,6 +129,8 @@ interface EvaluationSummary {
 }
 interface LearningResult {
   algorithm: string;
+  model_version?: string;
+  checkpoint?: { model_version?: string; physics_fingerprint?: string };
   learning_curve: {
     episode: number;
     return: number;
@@ -191,7 +193,12 @@ export default function Procedure() {
   const [learningError, setLearningError] = useState("");
   const [engineSpec, setEngineSpec] = useState<EngineSpec | null>(null);
   const [algorithm, setAlgorithm] = useState<"dqn" | "tabular_q">("dqn");
-  const state = session?.state;
+  const [recordedFrames, setRecordedFrames] = useState<Episode[]>([]);
+  const [replayIndex, setReplayIndex] = useState<number | null>(null);
+  const [replayRunning, setReplayRunning] = useState(false);
+  const inspectedEpisode =
+    replayIndex === null ? session : recordedFrames[replayIndex];
+  const state = inspectedEpisode?.state;
   const episodeFingerprint =
     session?.physics_fingerprint ?? session?.info.physics_fingerprint;
   const legacy =
@@ -203,9 +210,37 @@ export default function Procedure() {
         (engineSpec.physics_fingerprint &&
           episodeFingerprint !== engineSpec.physics_fingerprint))
     );
+  const checkpointCompatible = !!(
+    learningResult &&
+    engineSpec &&
+    (learningResult.checkpoint?.model_version ??
+      learningResult.model_version) === engineSpec.engine_version &&
+    (!engineSpec.physics_fingerprint ||
+      learningResult.checkpoint?.physics_fingerprint ===
+        engineSpec.physics_fingerprint)
+  );
+  const referenceOrigin = training?.summary?.origin;
+  const referenceProvenance =
+    referenceOrigin &&
+    typeof referenceOrigin === "object" &&
+    "provenance" in referenceOrigin &&
+    referenceOrigin.provenance &&
+    typeof referenceOrigin.provenance === "object"
+      ? (referenceOrigin.provenance as Record<string, unknown>)
+      : null;
   const accept = useCallback((data: Episode, fresh = false) => {
     current.current = data;
     setSession(data);
+    setReplayIndex(null);
+    setReplayRunning(false);
+    setRecordedFrames((old) =>
+      fresh
+        ? [data]
+        : [
+            ...old.filter((frame) => frame.revision !== data.revision),
+            data,
+          ].slice(-501),
+    );
     const s = data.state;
     const point = {
       time: s.time_s,
@@ -244,6 +279,18 @@ export default function Procedure() {
       runningRef.current = false;
     }
   }, []);
+  useEffect(() => {
+    if (!replayRunning) return;
+    if ((replayIndex ?? 0) >= recordedFrames.length - 1) {
+      setReplayRunning(false);
+      return;
+    }
+    const timer = window.setTimeout(
+      () => setReplayIndex((replayIndex ?? 0) + 1),
+      180,
+    );
+    return () => window.clearTimeout(timer);
+  }, [replayRunning, recordedFrames.length, replayIndex]);
   useEffect(() => {
     let active = true;
     Promise.all([
@@ -308,6 +355,7 @@ export default function Procedure() {
   const load = async (id: string) => {
     const token = ++generation.current;
     setRunning(false);
+    setReplayRunning(false);
     runningRef.current = false;
     setBusy(true);
     setError("");
@@ -331,6 +379,7 @@ export default function Procedure() {
         cursor = history.next_revision;
       }
       if (records.length) {
+        setRecordedFrames(records);
         setTrace(
           records.slice(-240).map((t) => ({
             time: t.state.time_s,
@@ -373,6 +422,7 @@ export default function Procedure() {
     if (inFlight.current) return;
     const token = ++generation.current;
     setRunning(false);
+    setReplayRunning(false);
     runningRef.current = false;
     setBusy(true);
     setError("");
@@ -422,6 +472,7 @@ export default function Procedure() {
     async (action: number[], policy = false) => {
       if (
         legacy ||
+        replayIndex !== null ||
         inFlight.current ||
         !current.current ||
         current.current.terminated ||
@@ -470,7 +521,7 @@ export default function Procedure() {
         setBusy(false);
       }
     },
-    [accept, training?.id, controller, legacy],
+    [accept, training?.id, controller, legacy, replayIndex],
   );
   const manual = useCallback(
     (dx = 0, dy = 0, grip = 0, cautery = 0) => {
@@ -616,6 +667,7 @@ export default function Procedure() {
   const disabled =
     busy ||
     legacy ||
+    replayIndex !== null ||
     !session ||
     session.terminated ||
     session.truncated ||
@@ -650,10 +702,12 @@ export default function Procedure() {
           disabled={
             !session ||
             legacy ||
+            replayIndex !== null ||
             session.status !== "active" ||
             session.terminated ||
             session.truncated ||
             (controller === "trained" && training?.status !== "completed") ||
+            (controller === "trained" && !checkpointCompatible) ||
             (controller === "trained" &&
               (!policyContext ||
                 contextSessionId !== session.id ||
@@ -733,7 +787,7 @@ export default function Procedure() {
               {policyContext.reasons.join("; ")}
             </span>
             <button
-              disabled={busy}
+              disabled={busy || !checkpointCompatible}
               onClick={() => void initialize(false, true)}
             >
               Match checkpoint conditions
@@ -820,10 +874,42 @@ export default function Procedure() {
               <span>Millimetre coordinates · geometry illustrative</span>
               <span>
                 {session
-                  ? `${session.status} · revision ${session.revision}`
+                  ? `${replayIndex === null ? session.status : "Recording inspection"} · revision ${inspectedEpisode?.revision}`
                   : "Session not initialized"}
               </span>
             </div>
+            {state && (
+              <div
+                className="viewport-live-readings"
+                aria-label="Synthetic telemetry for displayed state"
+                role="group"
+              >
+                <span>
+                  Force <strong>{fmt(state.tools.grasper.force_n)} N*</strong>
+                </span>
+                <span>
+                  Peak injury{" "}
+                  <strong>
+                    {fmt(
+                      Math.max(
+                        ...state.tissue.nodes.map((node) => node.damage),
+                      ),
+                      3,
+                    )}
+                  </strong>
+                </span>
+                <span>
+                  HR{" "}
+                  <strong>{fmt(state.physiology.heart_rate_bpm, 1)} bpm</strong>
+                </span>
+                <span>
+                  MAP{" "}
+                  <strong>
+                    {fmt(state.physiology.mean_arterial_pressure_mmhg, 1)} mmHg*
+                  </strong>
+                </span>
+              </div>
+            )}
           </div>
           <div className="tool-dock">
             <div
@@ -971,6 +1057,24 @@ export default function Procedure() {
                   <ChevronDown size={12} />
                 </summary>
                 <dl>
+                  <div>
+                    <dt>Model version</dt>
+                    <dd>{session?.engine_version ?? "—"}</dd>
+                  </div>
+                  <div>
+                    <dt>Mechanics fingerprint</dt>
+                    <dd
+                      title={
+                        typeof episodeFingerprint === "string"
+                          ? episodeFingerprint
+                          : undefined
+                      }
+                    >
+                      {typeof episodeFingerprint === "string"
+                        ? episodeFingerprint.slice(0, 16)
+                        : "not recorded"}
+                    </dd>
+                  </div>
                   {Object.entries(state?.patient ?? {}).map(([k, v]) => (
                     <div key={k}>
                       <dt>{k.replaceAll("_", " ")}</dt>
@@ -1171,19 +1275,39 @@ export default function Procedure() {
                     </option>
                     {trainings.map((t) => (
                       <option value={t.id} key={t.id}>
-                        {t.id.slice(0, 8)} · {t.status}
+                        {typeof t.summary?.label === "string"
+                          ? t.summary.label
+                          : t.id.slice(0, 8)}{" "}
+                        · {t.status}
                       </option>
                     ))}
                   </select>
                 </label>
                 <button
                   className="lab-train-button"
-                  disabled={busy || training?.status !== "completed"}
+                  disabled={
+                    busy ||
+                    training?.status !== "completed" ||
+                    !checkpointCompatible
+                  }
                   onClick={() => void initialize(false, true)}
                 >
                   <Plus size={13} />
                   New matched episode
                 </button>
+                {learningResult && !checkpointCompatible && (
+                  <div
+                    className="policy-context archived-checkpoint"
+                    role="status"
+                  >
+                    <strong>Archived model checkpoint</strong>
+                    <p>
+                      This checkpoint’s model version or mechanics fingerprint
+                      differs from the running engine. Its recorded evaluation
+                      remains available; train a current policy for playback.
+                    </p>
+                  </div>
+                )}
                 <p>
                   Uses the selected checkpoint’s environment parameters and
                   training horizon. A new seed is an evaluation sample, not
@@ -1266,6 +1390,18 @@ export default function Procedure() {
                     </a>
                     {learningResult && (
                       <>
+                        {referenceProvenance && (
+                          <p className="reference-provenance">
+                            <strong>
+                              Bundled reference · selected on validation
+                              rollouts.
+                            </strong>{" "}
+                            {typeof referenceProvenance.scientific_note ===
+                            "string"
+                              ? referenceProvenance.scientific_note
+                              : "Selection performance is not an untouched final test or evidence of clinical validity."}
+                          </p>
+                        )}
                         <p className="learning-method">
                           {learningResult.metadata?.training_method ??
                             learningResult.algorithm}
@@ -1285,12 +1421,12 @@ export default function Procedure() {
               <h2>Reward feedback</h2>
               <div className="reward-total">
                 <span>Current transition</span>
-                <strong>{fmt(session?.reward, 3)}</strong>
+                <strong>{fmt(inspectedEpisode?.reward, 3)}</strong>
                 <span>Episode return</span>
-                <strong>{fmt(session?.episode_reward, 3)}</strong>
+                <strong>{fmt(inspectedEpisode?.episode_reward, 3)}</strong>
               </div>
               <div className="reward-components">
-                {Object.entries(session?.reward_components ?? {}).map(
+                {Object.entries(inspectedEpisode?.reward_components ?? {}).map(
                   ([key, value]) => (
                     <div key={key}>
                       <span>{key.replaceAll("_", " ")}</span>
@@ -1312,6 +1448,97 @@ export default function Procedure() {
           )}
         </aside>
       </div>
+      {recordedFrames.length > 1 && (
+        <div
+          className={`replay-transport ${replayIndex !== null ? "inspecting" : ""}`}
+          role="group"
+          aria-label="Recorded episode inspection"
+        >
+          <button
+            disabled={busy || running || replayIndex === 0}
+            onClick={() => {
+              setReplayRunning(false);
+              setReplayIndex(
+                Math.max(0, (replayIndex ?? recordedFrames.length - 1) - 1),
+              );
+            }}
+            aria-label="Previous recorded transition"
+          >
+            <ArrowLeft size={12} />
+          </button>
+          <button
+            disabled={busy || running}
+            onClick={() => {
+              if (replayRunning) setReplayRunning(false);
+              else {
+                setReplayIndex((index) =>
+                  index === null || index >= recordedFrames.length - 1
+                    ? 0
+                    : index,
+                );
+                setReplayRunning(true);
+              }
+            }}
+          >
+            {replayRunning ? <Pause size={12} /> : <Play size={12} />}{" "}
+            {replayRunning ? "Pause recording" : "Play recording"}
+          </button>
+          <button
+            disabled={
+              busy ||
+              running ||
+              replayIndex === null ||
+              replayIndex === recordedFrames.length - 1
+            }
+            onClick={() => {
+              setReplayRunning(false);
+              setReplayIndex(
+                Math.min(
+                  recordedFrames.length - 1,
+                  (replayIndex ?? recordedFrames.length - 1) + 1,
+                ),
+              );
+            }}
+            aria-label="Next recorded transition"
+          >
+            <ArrowRight size={12} />
+          </button>
+          <label className="sr-only" htmlFor="recorded-transition">
+            Recorded transition
+          </label>
+          <input
+            id="recorded-transition"
+            type="range"
+            min="0"
+            max={recordedFrames.length - 1}
+            step="1"
+            value={replayIndex ?? recordedFrames.length - 1}
+            disabled={busy || running}
+            onChange={(e) => {
+              setReplayRunning(false);
+              setReplayIndex(Number(e.target.value));
+            }}
+            aria-valuetext={`Recorded revision ${inspectedEpisode?.revision ?? 0}, ${fmt(state?.time_s)} seconds`}
+          />
+          <span>
+            Revision {inspectedEpisode?.revision} · {fmt(state?.time_s)} s
+          </span>
+          <button
+            disabled={replayIndex === null}
+            onClick={() => {
+              setReplayRunning(false);
+              setReplayIndex(null);
+            }}
+          >
+            Return to latest
+          </button>
+          <span className="replay-state">
+            {replayIndex === null
+              ? "Latest saved state"
+              : "Read-only recorded frame"}
+          </span>
+        </div>
+      )}
       <section className="procedure-console">
         <div className="console-heading">
           <h2>
@@ -1427,8 +1654,11 @@ export default function Procedure() {
               <>
                 <table>
                   <caption>
-                    Held-out synthetic rollouts · {training?.id.slice(0, 8)} ·
-                    mean return with 95% bootstrap interval
+                    {referenceProvenance
+                      ? "Training-disjoint validation rollouts · selected reference"
+                      : "Held-out synthetic rollouts"}{" "}
+                    · {training?.id.slice(0, 8)} · mean return with 95%
+                    bootstrap interval
                   </caption>
                   <thead>
                     <tr>

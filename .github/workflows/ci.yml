@@ -43,9 +43,7 @@ jobs:
                       raise
                   time.sleep(.2)
           PY
-          .venv/bin/python scripts/browser_smoke.py --output-dir /tmp/retraction-browser-smoke
-          .venv/bin/python scripts/procedure_browser_smoke.py
-          .venv/bin/python frontend/scripts/audit_accessibility.py
+          .venv/bin/python scripts/ci_browser_checks.py
       - name: Keep browser evidence
         uses: actions/upload-artifact@v4
         if: always()
@@ -56,3 +54,4 @@ jobs:
             /tmp/retraction-server.log
             /tmp/retraction-accessibility
             /tmp/retraction-procedure-browser
+            /tmp/retraction-ci-browser

@@ -25,6 +25,35 @@ def main():
         context=browser.new_context(viewport={'width':1600,'height':1050},accept_downloads=True)
         page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)))
         page.goto(args.base_url,wait_until='networkidle')
+        def assert_rendered(label):
+            viewport=page.locator('.three-tissue-viewport canvas, .tissue-scene')
+            expect(viewport).to_be_visible()
+            variation=viewport.evaluate("""async element => {
+                let pixels,width,height;
+                if(element instanceof HTMLCanvasElement){
+                    const gl=element.getContext('webgl2');
+                    if(!gl || gl.isContextLost()) return 0;
+                    width=gl.drawingBufferWidth;height=gl.drawingBufferHeight;
+                    pixels=new Uint8Array(width*height*4);
+                    gl.readPixels(0,0,width,height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+                } else {
+                    const image=new Image();
+                    image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(element));
+                    await image.decode();
+                    const canvas=document.createElement('canvas');
+                    width=canvas.width=800;height=canvas.height=600;
+                    const context=canvas.getContext('2d');context.drawImage(image,0,0,width,height);
+                    pixels=context.getImageData(0,0,width,height).data;
+                }
+                const sums=[0,0,0],squared=[0,0,0];let count=0;
+                for(let y=Math.floor(height*.15);y<height*.9;y+=3)for(let x=Math.floor(width*.1);x<width*.9;x+=3){
+                    const offset=(y*width+x)*4;count++;
+                    for(let c=0;c<3;c++){sums[c]+=pixels[offset+c];squared[c]+=pixels[offset+c]**2;}
+                }
+                return sums.reduce((total,sum,c)=>total+Math.sqrt(Math.max(0,squared[c]/count-(sum/count)**2)),0);
+            }""")
+            assert variation>40,f'{label}: anatomy viewport was blank or insufficiently rendered (RGB variation {variation:.2f})'
+            viewport.screenshot(path=str(args.output_dir/f'{label}-viewport.png'))
         expect(page.get_by_role('button',name='New episode',exact=True)).to_be_visible()
         def click_response(button,path):
             expect(button).to_be_enabled()
@@ -36,6 +65,7 @@ def main():
         episode=initial['id'];assert len(initial['state']['tissue']['nodes'])==23
         page.wait_for_selector('.three-tissue-viewport canvas, .tissue-scene')
         page.wait_for_timeout(600)
+        assert_rendered('initial')
         page.screenshot(path=str(args.output_dir/'procedure-initial-desktop.png'),full_page=True)
         checks.append('actual episode initialization and state-driven 3D or XY rendering')
         closed=click_response(page.get_by_role('button',name=re.compile('^Close grasper')),'/step')
@@ -47,6 +77,7 @@ def main():
         assert moved['state']['tissue']['nodes'][3]['position_mm']!=initial['state']['tissue']['nodes'][3]['position_mm']
         assert moved['reward_components']
         checks.append('manual grasp and pull update mechanics, node geometry and reward components')
+        assert_rendered('retraction')
         page.screenshot(path=str(args.output_dir/'procedure-retraction-desktop.png'),full_page=True)
         reset=click_response(page.get_by_role('button',name='Reset',exact=True),'/reset')
         assert reset['id']!=episode and reset['revision']==0
@@ -65,6 +96,7 @@ def main():
         assert heated['episode_reward']<0
         fetched=context.request.get(f"{args.base_url}/api/procedure/sessions/{heated['id']}").json()
         assert fetched['state']['tissue']['nodes']==heated['state']['tissue']['nodes']
+        assert_rendered('injury')
         page.screenshot(path=str(args.output_dir/'procedure-injury-desktop.png'),full_page=True)
         checks.append('contact heating causes persistent real engine injury, bleeding, physiological response and negative reward')
         with page.expect_download() as downloaded:page.get_by_role('link',name='Episode JSON',exact=True).click()
@@ -78,6 +110,18 @@ def main():
         page.get_by_role('button',name='Reward trace',exact=True).click()
         expect(page.get_by_role('img',name=re.compile('Observed reward per transition'))).to_be_visible()
         checks.append('saved episodes restore recorded transitions, events and reward traces')
+        assert_rendered('restored-injury')
+        recording=page.get_by_label('Recorded transition',exact=True)
+        recording.focus();recording.press('Home')
+        expect(page.locator('.replay-state')).to_have_text('Read-only recorded frame')
+        expect(page.get_by_role('button',name='Step',exact=True)).to_be_disabled()
+        assert_rendered('recorded-early-frame')
+        retained_after_inspection=context.request.get(f"{args.base_url}/api/procedure/sessions/{heated['id']}").json()
+        assert retained_after_inspection['revision']==heated['revision']
+        assert retained_after_inspection['state']['tissue']['nodes']==heated['state']['tissue']['nodes']
+        page.get_by_role('button',name='Return to latest',exact=True).click()
+        expect(page.locator('.replay-state')).to_have_text('Latest saved state')
+        checks.append('recorded-state inspection updates actual anatomy without changing the saved episode')
         page.get_by_role('button',name='Events',exact=True).click()
         reset=click_response(page.get_by_role('button',name='Reset',exact=True),'/reset')
         page.keyboard.press('g')
@@ -148,6 +192,15 @@ def main():
         assert retained['policy_context']['out_of_distribution']
         checks.append('changed environment conditions are warned before playback and retained with policy provenance')
         page.get_by_role('button',name='Tissue / tools',exact=True).click()
+        canvas=page.locator('.three-tissue-viewport canvas')
+        if canvas.count():
+            canvas.evaluate("canvas => canvas.getContext('webgl2').getExtension('WEBGL_lose_context').loseContext()")
+            expect(page.locator('.tissue-scene')).to_be_visible()
+            assert_rendered('webgl-loss-fallback')
+            page.get_by_role('button',name='3D surface',exact=True).click()
+            expect(page.get_by_role('button',name='Reset 3D camera',exact=True)).to_be_visible()
+            assert_rendered('restored-3d-renderer')
+            checks.append('WebGL loss falls back to rendered XY state and the 3D camera can be restored')
         page.set_viewport_size({'width':390,'height':844})
         page.screenshot(path=str(args.output_dir/'procedure-mobile.png'),full_page=True)
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth+1')

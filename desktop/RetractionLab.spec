@@ -23,6 +23,8 @@ datas = [
     (str(root / 'backend' / 'retraction' / 'tissue.py'), 'retraction'),
 ]
 datas.extend((str(path), '.') for path in (root / 'desktop' / 'runtime-ca').glob('*.pem'))
+if (root / 'examples').is_dir():
+    datas.append((str(root / 'examples'), 'examples'))
 a = Analysis([str(root / 'desktop' / 'app.py')],
              pathex=[str(root), str(root / 'backend')],
              binaries=[], datas=datas, hiddenimports=hiddenimports,
@@ -33,5 +35,6 @@ pyz = PYZ(a.pure)
 exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name='RetractionLab',
           debug=False, bootloader_ignore_signals=False, strip=False, upx=False,
           console=False, disable_windowed_traceback=False,
+          version=str(root / 'desktop' / 'version-info.txt') if sys.platform == 'win32' else None,
           icon=str(root / 'desktop' / 'assets' / 'icon.ico') if sys.platform == 'win32' else None)
 coll = COLLECT(exe, a.binaries, a.datas, strip=False, upx=False, name='RetractionLab')

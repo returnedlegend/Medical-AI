@@ -114,11 +114,19 @@ drivers cannot create the normal browser rendering context.
 
 ## Runtime validation status
 
-The native Linux source window has passed real embedded-interface, manual step,
-terminal episode, cohort, and offline Help checks using Qt 6.8.3. Actual Windows
-CPython and Windows wheels have produced a PE32+ x64 desktop executable and
-portable archive on this host. Its backend starts under Wine; Wine stalls on
-Chromium initialization, including in a minimal independent QtWebEngine example.
-This does not establish a passing Windows graphical application test. The
-native Windows workflow separately checks packaged models and the actual window.
-Use its recorded outcome and smoke evidence for native Windows validation.
+The standalone Linux application has passed real embedded-interface, manual
+step, terminal episode, cohort, and offline Help checks using Qt 6.8.3, launched
+outside the checkout. Its packaged diagnosis also passed source fingerprint,
+restart/replay, DQN training, held-out evaluation, and trained-policy checks.
+
+The native Windows build and packaged graphical smoke test passed for source
+checkpoint `79bcf56` in [Windows workflow run 42068968304](https://github.com/returnedlegend/Medical-AI/actions/runs/42068968304).
+That workflow separately enforces both packaged service/model diagnosis and
+the actual Qt window, including interface controls and offline Help. The run
+contains the Windows application and smoke evidence artifacts.
+
+Actual Windows CPython and Windows wheels have also produced a PE32+ x64
+application on this cloud host; its packaged model diagnosis passes under Wine.
+Wine itself stalls on QtWebEngine initialization in a minimal example, so the
+graphical validation above comes from the native Windows runner. Each later
+artifact needs its own recorded build and smoke outcome.

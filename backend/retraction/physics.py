@@ -10,9 +10,11 @@ import json
 import logging
 import os
 from pathlib import Path
+import platform
 import re
 import signal
 import subprocess
+import sys
 import threading
 from typing import Literal
 from uuid import UUID
@@ -57,19 +59,23 @@ def runtime_root() -> Path:
 
 def runtime_status() -> dict:
     root = runtime_root()
+    supported_platform = sys.platform == 'linux' and platform.machine().lower() in ('x86_64', 'amd64')
     sentinels = [root / "venv/bin/python",
                  root / "SOFA_v24.06.00_Linux/plugins/SofaPython3/lib/python3/site-packages/Sofa",
                  root / "source/.upstream_commit",
                  PROJECT_ROOT / "scripts/run-sofa-smoke.sh"]
-    available = all(path.exists() for path in sentinels)
+    available = supported_platform and all(path.exists() for path in sentinels)
     commit = None
     if available:
         candidate = (root / "source/.upstream_commit").read_text().strip()
         commit = candidate if re.fullmatch(r"[0-9a-f]{40}", candidate) else None
     return {
         "available": available, "purpose": PURPOSE, "model_ready": False,
-        "reason": "Runtime files are installed; scene diagnostics still require inspection." if available else
-                  "Optional SOFA runtime is not installed. Run scripts/setup-sofa.sh to prepare it.",
+        "reason": ("The optional SOFA runtime supports Linux x86_64 only; the portable procedure laboratory remains available."
+                   if not supported_platform else
+                   "Runtime files are installed; scene diagnostics still require inspection." if available else
+                   "Optional SOFA runtime is not installed. Run scripts/setup-sofa.sh to prepare it."),
+        "supported_platform": supported_platform,
         "upstream_commit": commit, "sofa_version": "24.06.00" if available else None,
         "limits": {"max_steps": 50, "max_active_runs": 2, "max_workers": 1, "timeout_seconds": WORKER_TIMEOUT_SECONDS},
         "warning": "This upstream physics diagnostic does not implement the parameterized retraction study or validate surgical safety.",

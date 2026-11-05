@@ -268,7 +268,9 @@ class EpisodeStore:
 
     def active_count(self):
         with self.connect() as db:
-            return db.execute("SELECT COUNT(*) FROM sessions WHERE status='active'").fetchone()[0]
+            return db.execute("""SELECT COUNT(*) FROM sessions
+                WHERE status='active' AND engine_version=? AND physics_fingerprint=?""",
+                (current_engine_version(), current_physics_fingerprint())).fetchone()[0]
 
     def create(self, seed: int, config: dict, patient: dict | None, snapshot: dict, version: str,
                reset_from_id=None, context=None, physics_fingerprint=None):
@@ -461,6 +463,8 @@ class LearningService:
     def __init__(self, directory: Path):
         self.store = Store(directory)
         self.store.recover_interrupted()
+        from .reference import seed_reference
+        self.reference = seed_reference(self.store)
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='learning')
         self.lock = threading.Lock()
         self.stop = threading.Event()
@@ -553,6 +557,11 @@ def shutdown_procedure(app):
 
 router = APIRouter(prefix='/api/procedure', tags=['live synthetic tissue procedure'])
 learning_router = APIRouter(prefix='/api/learning', tags=['local research policy learning'])
+
+
+@learning_router.get('/reference')
+def read_bundled_reference(request: Request):
+    return request.app.state.learning.reference
 
 
 @router.get('/spec')

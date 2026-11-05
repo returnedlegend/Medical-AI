@@ -11,7 +11,9 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import re
 import shutil
+from urllib.parse import urlparse
 
 from playwright.sync_api import expect, sync_playwright
 
@@ -37,7 +39,11 @@ def main() -> int:
         context = browser.new_context(viewport={'width': 1440, 'height': 1050})
         page = context.new_page()
         errors = []
+        mutations = []
         page.on('pageerror', lambda error: errors.append(str(error)))
+        page.on('request', lambda request: mutations.append(request.url)
+                if request.method in ('POST', 'PUT', 'PATCH', 'DELETE')
+                and not urlparse(request.url).path.endswith('/preview') else None)
         try:
             cohorts = context.request.get(f'{base_url}/api/runs')
             assert cohorts.ok, 'Start scripts/start.sh before running this audit.'
@@ -45,7 +51,11 @@ def main() -> int:
             assert completed, 'Complete a cohort first with scripts/browser_smoke.py. No records were changed.'
             episodes = context.request.get(f'{base_url}/api/procedure/sessions').json()['sessions']
             assert episodes, 'Save a procedure episode first with scripts/procedure_browser_smoke.py. No records were changed.'
-            episode = episodes[0]
+            episode = next((item for item in episodes if item['revision'] > 1), None)
+            assert episode, 'Save a multi-transition procedure first with scripts/procedure_browser_smoke.py.'
+            trainings = context.request.get(f'{base_url}/api/learning/runs').json()['runs']
+            trained = next((run for run in trainings if run['status'] == 'completed'), None)
+            assert trained, 'Complete a policy first with scripts/procedure_browser_smoke.py. No records were changed.'
             page.goto(base_url, wait_until='networkidle')
             page.add_script_tag(path=str(source))
 
@@ -76,14 +86,52 @@ def main() -> int:
               document.querySelector('.viewport-body svg[role="img"]') ||
               document.querySelector('.viewport-body canvas')""")
             audit('desktop_procedure_spatial_state')
+            expect(page.get_by_role('group', name='Synthetic telemetry for displayed state')).to_be_visible()
+            recorded = page.get_by_label('Recorded transition', exact=True)
+            expect(recorded).to_be_enabled()
+            recorded.focus()
+            recorded.press('Home')
+            expect(page.locator('.viewport-caption')).to_contain_text('Recording inspection')
+            expect(page.get_by_role('button', name='Step', exact=True)).to_be_disabled()
+            first_transition = context.request.get(
+                f"{base_url}/api/procedure/sessions/{episode['id']}/transitions?limit=1").json()['transitions'][0]
+            page.get_by_role('button', name='Policy learning', exact=True).click()
+            expect(page.locator('.reward-total strong').first).to_be_visible()
+            assert abs(float(page.locator('.reward-total strong').nth(0).inner_text()) - first_transition['reward']) <= .00051
+            assert abs(float(page.locator('.reward-total strong').nth(1).inner_text()) - first_transition['episode_reward']) <= .00051
+            for key, value in first_transition['reward_components'].items():
+                component = page.locator('.reward-components > div').filter(
+                    has=page.locator('span', has_text=re.compile('^' + re.escape(key.replace('_', ' ')) + '$')))
+                assert abs(float(component.locator('strong').inner_text()) - value) <= .000051
+            audit('desktop_recorded_episode_inspection')
+            page.get_by_role('button', name='Return to latest', exact=True).click()
             page.get_by_role('button', name='XY nodes', exact=True).click()
             expect(page.get_by_role('img', name='Illustrative XY tissue graph showing actual simulated node positions, instrument locations, temperature and damage')).to_be_visible()
             audit('desktop_procedure_xy_state')
             page.get_by_role('button', name='Policy learning', exact=True).click()
             expect(page.get_by_role('heading', name='Train a discrete policy', exact=True)).to_be_visible()
             audit('desktop_procedure_policy_inspector')
+            page.get_by_label('Policy checkpoint', exact=True).select_option(trained['id'])
+            expect(page.get_by_role('img', name=re.compile('^Actual training returns over '))).to_be_visible()
+            audit('desktop_completed_policy_learning_curve')
+            page.get_by_role('button', name='Policy evaluation', exact=True).click()
+            evaluation = page.get_by_role('region', name='Held-out policy evaluation', exact=True)
+            expect(evaluation.get_by_role('rowheader', name='Learned policy', exact=True)).to_be_visible()
+            audit('desktop_held_out_policy_evaluation')
+            page.get_by_role('button', name='Events', exact=True).click()
             page.get_by_role('button', name='Tissue / tools', exact=True).click()
             audit('desktop_procedure_tissue_inspector')
+            archived = next((item for item in episodes if item.get('engine_compatible') is False), None)
+            if archived:
+                page.get_by_label('Saved episode', exact=True).select_option(archived['id'])
+                expect(page.locator('.archived-episode-notice')).to_be_visible()
+                expect(page.get_by_role('button', name='Step', exact=True)).to_be_disabled()
+                expect(page.get_by_role('button', name='Run policy', exact=True)).to_be_disabled()
+                expect(page.get_by_role('button', name='New episode', exact=True)).to_be_enabled()
+                expect(page.get_by_role('button', name='Reset', exact=True)).to_be_enabled()
+                expect(page.get_by_role('link', name='Episode JSON', exact=True)).to_be_visible()
+                audit('desktop_archived_episode_read_only')
+                page.get_by_label('Saved episode', exact=True).select_option(episode['id'])
 
             workspace('Cohort experiments')
             expect(page.get_by_role('heading', name='Cohort strategy study', exact=True)).to_be_visible()
@@ -112,6 +160,11 @@ def main() -> int:
               document.querySelector('.physics-frame img') ||
               document.querySelector('.physics-results .empty-state')""")
             audit('desktop_physics')
+            softening = page.get_by_role('checkbox', name=re.compile('^Experimental material softening'))
+            if softening.count() and softening.is_enabled():
+                softening.check()
+                expect(page.get_by_label('Experimental contact heat', exact=False)).to_be_visible()
+                audit('desktop_physics_softening_controls')
             details = page.locator('.physics-messages')
             if details.count():
                 details.locator('summary').click()
@@ -137,19 +190,33 @@ def main() -> int:
             page.get_by_role('button', name='XY nodes', exact=True).click()
             audit('mobile_procedure_xy')
             page.screenshot(path=str(args.output.with_name('procedure-mobile.png')), full_page=True)
+            recorded = page.get_by_label('Recorded transition', exact=True)
+            expect(recorded).to_be_enabled()
+            recorded.focus()
+            recorded.press('Home')
+            expect(page.locator('.viewport-caption')).to_contain_text('Recording inspection')
+            audit('mobile_recorded_episode_inspection')
+            page.get_by_role('button', name='Return to latest', exact=True).click()
+            page.get_by_role('button', name='Policy learning', exact=True).click()
+            page.get_by_label('Policy checkpoint', exact=True).select_option(trained['id'])
+            page.get_by_role('button', name='Policy evaluation', exact=True).click()
+            expect(page.get_by_role('region', name='Held-out policy evaluation').get_by_role('rowheader', name='Learned policy', exact=True)).to_be_visible()
+            audit('mobile_held_out_policy_evaluation')
+            page.screenshot(path=str(args.output.with_name('policy-evaluation-mobile.png')), full_page=True)
             page.set_viewport_size({'width': 1440, 'height': 1050})
             workspace('Cohort experiments')
             expect(page.locator('.metrics-grid')).to_be_visible()
             page.screenshot(path=str(args.output.with_name('cohort-desktop.png')), full_page=True)
             report['javascript_errors'] = errors
-            report['saved_record_ids'] = {'procedure': episode['id'], 'cohort': completed['id']}
+            report['unexpected_record_mutations'] = mutations
+            report['saved_record_ids'] = {'procedure': episode['id'], 'cohort': completed['id'], 'training': trained['id']}
         except Exception:
             page.screenshot(path=str(args.output.with_name('audit-failure.png')), full_page=True)
             raise
         finally:
             browser.close()
     args.output.write_text(json.dumps(report, indent=2) + '\n')
-    failed = bool(report.get('javascript_errors')) or any(
+    failed = bool(report.get('javascript_errors')) or bool(report.get('unexpected_record_mutations')) or any(
         state['violations'] for state in report['states'].values())
     print(f'Report: {args.output}')
     return 1 if failed else 0

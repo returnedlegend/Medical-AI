@@ -45,10 +45,18 @@ def main() -> int:
                 base[key] = getattr(args, key)
         configs = [normalize_training_config({**base, 'training_seed': seed}) for seed in args.seeds]
         args.output.mkdir(parents=True, exist_ok=False)
-        sources = {name: hashlib.sha256((PROJECT / 'backend/retraction' / name).read_bytes()).hexdigest()
-                   for name in ('learning.py', 'tabular.py', 'environment.py', 'tissue.py')}
+        source_bytes = {name: (PROJECT / 'backend/retraction' / name).read_bytes()
+                        for name in ('learning.py', 'tabular.py', 'environment.py', 'tissue.py')}
+        sources = {name: hashlib.sha256(data).hexdigest() for name, data in source_bytes.items()}
+        source_directory = args.output / 'source'
+        source_directory.mkdir()
+        for name, data in source_bytes.items():
+            with (source_directory / name).open('xb') as snapshot:
+                snapshot.write(data)
         protocol = {'created_at': datetime.now(timezone.utc).isoformat(), 'configs': configs,
-                    'source_sha256': sources, 'purpose': 'Exploratory synthetic RL evaluation, not clinical training'}
+                    'source_sha256': sources, 'source_directory': 'source',
+                    'training_script_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                    'purpose': 'Exploratory synthetic RL evaluation, not clinical training'}
         write_json(args.output / 'protocol.json', protocol)
         summary = []
         for index, config in enumerate(configs):

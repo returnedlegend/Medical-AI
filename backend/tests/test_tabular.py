@@ -86,3 +86,46 @@ def test_partial_state_aliasing_is_explicit_and_uses_only_supplied_observation(t
     assert policy_action(checkpoint, observation) == policy_action(checkpoint, changed)
     assert 'not a Markov' in tabular_result['metadata']['observation_encoding']
     env.close()
+
+
+def test_actual_tissue_harm_penalties_change_a_learned_return_preference():
+    """Stress fixture: two fixed macro trajectories, not a surgical-policy claim.
+
+    The real tissue simulator supplies every reward and injury measurement. A
+    terminal-return Q update should reject the injurious trajectory because of
+    its observed harm costs; removing those costs reverses that preference.
+    """
+    from retraction.environment import TissueRetractionEnv
+    totals, ablated_totals, damages = [], [], []
+    for pulling in (True, False):
+        env = TissueRetractionEnv()
+        env.reset(seed=42)
+        total, ablated = 0., 0.
+        for _ in range(200):
+            action = [1, 0, .55, 0, 0, 0, 0] if pulling else [0] * 7
+            _, reward, terminated, truncated, info = env.step(action)
+            total += reward
+            components = info['reward_components']
+            removed = sum(components.get(key, 0) for key in
+                          ('tissue_damage', 'critical_damage', 'bleeding', 'bile_leak', 'force_excess'))
+            if info['severe_harm']:
+                removed += components['terminal']
+            ablated += reward - removed
+            if terminated or truncated:
+                break
+        totals.append(total)
+        ablated_totals.append(ablated)
+        damages.append(info['state']['max_damage'])
+        env.close()
+    assert damages[0] > .6 and damages[1] == 0
+    assert totals[0] < totals[1] and ablated_totals[0] > ablated_totals[1]
+    def preference(returns):
+        first = np.zeros((1, 2), dtype=np.float32)
+        second = first.copy()
+        rng = np.random.default_rng(5)
+        for _ in range(100):
+            for action, reward in enumerate(returns):
+                double_q_update(first, second, 0, action, reward, 0, True, .2, .99, rng)
+        return int(np.argmax(first + second))
+    assert preference(totals) == 1
+    assert preference(ablated_totals) == 0

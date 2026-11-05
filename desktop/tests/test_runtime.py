@@ -31,7 +31,7 @@ def test_private_server_health_static_requests_and_stop(tmp_path):
     web = tmp_path / "bundled-frontend"
     web.mkdir()
     (web / "index.html").write_text("<html><body>desktop resources served</body></html>")
-    data = tmp_path / "persistent-user-data"
+    data = tmp_path / "persistent studies Å"
     service = runtime.LocalServer(data, web_directory=web)
     service.start()
     url = service.url
@@ -77,3 +77,21 @@ def test_private_server_health_static_requests_and_stop(tmp_path):
         assert handoff["revision"] == 4
     finally:
         reopened.stop()
+
+
+def test_diagnosis_cannot_open_an_active_study(tmp_path):
+    from PySide6.QtCore import QLockFile
+    from desktop.diagnostics import diagnose
+    data = tmp_path / "active study"
+    data.mkdir()
+    lock = QLockFile(str(data / "desktop.lock"))
+    assert lock.tryLock(0)
+    evidence = tmp_path / "diagnosis.json"
+    try:
+        assert diagnose(evidence, data) == 1
+        result = json.loads(evidence.read_text())
+        assert result["status"] == "failed"
+        assert "Another Retraction Lab window" in result["error"]
+        assert not (data / "runs.sqlite3").exists()
+    finally:
+        lock.unlock()

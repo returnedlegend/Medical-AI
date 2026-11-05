@@ -4,6 +4,8 @@ A desktop research application for studying gallbladder retraction, simulated ti
 
 The portable procedure engine is a **stateful mechanistic surrogate**, not validated human physiology. A separate optional SOFA diagnostic runs actual deformable meshes. Both identify their model and limitations explicitly.
 
+![Academic procedure laboratory with live tissue and tool state](docs/images/desktop-procedure.png)
+
 ## Windows desktop application
 
 The primary target is a self-contained **Windows x64 `.exe`**, with a per-user installer and a portable ZIP. Python, Node, and a separate browser are not required to run the packaged application. The native Qt window starts its own private authenticated local backend and stores studies in the operating system's user-data directory.
@@ -22,6 +24,8 @@ Local build outputs live under ignored `artifacts/desktop/`; compiled runtimes a
 6. Export the episode JSON, including configuration, actions, responses, events, and model provenance. A reset creates a new episode and preserves the previous record.
 
 Shortcuts: **G** grasper, **C** cautery, arrow keys move the selected tool, **Space** grasp/pulse, **Escape** pause automatic playback. A 2D node view is available alongside the illustrative 3D rendering.
+
+The [recorded thermal-injury view](docs/images/tissue-injury.png) shows the actual simulated state after tool contact, including retained injury and bleeding.
 
 **Tool/body documentation:** [tissue-response.md](docs/tissue-response.md) defines contact, crushing, strain, thermal dose, irreversible softening, vessel/duct injury, bleeding/leakage, synthetic physiology, rewards, and termination. The same mechanics drive manual control, API transitions, training, and rendering. Documentation is also available within the application and native Help menu.
 

@@ -69,8 +69,8 @@ def main() -> int:
     if not lock.tryLock(0):
         QMessageBox.information(None, "Retraction Lab is already running", "Another Retraction Lab window is using this study directory. Close it before starting a second instance.")
         return 2
-    server = LocalServer(data_directory)
     try:
+        server = LocalServer(data_directory)
         server.start()
     except Exception:
         logging.exception("Application startup failed")
@@ -149,6 +149,9 @@ def main() -> int:
                 action.triggered.connect(lambda checked=False, name=document: self.show_documentation(name))
                 help_menu.addAction(action)
             help_menu.addSeparator()
+            licenses = QAction("Third-party licenses", self)
+            licenses.triggered.connect(self.show_licenses)
+            help_menu.addAction(licenses)
             logs = QAction("Open diagnostic &logs", self)
             logs.triggered.connect(lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(log_path.parent))))
             help_menu.addAction(logs)
@@ -187,6 +190,31 @@ def main() -> int:
             selector.currentIndexChanged.connect(load_document)
             selector.setCurrentIndex(next((i for i, item in enumerate(documents) if item[1] == initial), 0))
             load_document(selector.currentIndex())
+            layout.addWidget(selector)
+            layout.addWidget(viewer)
+            buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, dialog)
+            buttons.rejected.connect(dialog.reject)
+            layout.addWidget(buttons)
+            dialog.exec()
+
+        def show_licenses(self):
+            dialog = QDialog(self)
+            dialog.setWindowTitle("Retraction Lab — Third-party licenses")
+            dialog.resize(1000, 760)
+            layout = QVBoxLayout(dialog)
+            selector = QComboBox(dialog)
+            directory = resource_root() / "desktop" / "licenses"
+            files = [path for path in sorted(directory.rglob("*")) if path.is_file() and path.suffix != ".json"]
+            for path in files:
+                selector.addItem(path.relative_to(directory).as_posix(), str(path))
+            viewer = QTextBrowser(dialog)
+            viewer.setOpenExternalLinks(False)
+            viewer.setOpenLinks(False)
+            def load_license(index):
+                path = selector.itemData(index)
+                viewer.setPlainText(Path(path).read_text(encoding="utf-8", errors="replace") if path else "No license files are present in this build.")
+            selector.currentIndexChanged.connect(load_license)
+            load_license(selector.currentIndex())
             layout.addWidget(selector)
             layout.addWidget(viewer)
             buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, dialog)
@@ -280,7 +308,6 @@ def main() -> int:
                     documentation_busy = True
                     documentation_checked = True
                     def inspect_documentation():
-                        nonlocal documentation_busy
                         dialog = app.activeModalWidget()
                         viewer = dialog.findChild(QTextBrowser) if dialog else None
                         files = ("tissue-response.md", "rl-training.md", "model.md", "desktop.md")
@@ -289,11 +316,20 @@ def main() -> int:
                         evidence["checks"]["offline_documentation"] = {"opened": readable, "all_documents_bundled": available}
                         if dialog:
                             dialog.accept()
-                        documentation_busy = False
                     QTimer.singleShot(100, inspect_documentation)
                     window.show_documentation("tissue-response.md")
+                    def inspect_licenses():
+                        dialog = app.activeModalWidget()
+                        viewer = dialog.findChild(QTextBrowser) if dialog else None
+                        evidence["checks"]["offline_licenses"] = viewer is not None and len(viewer.toPlainText()) > 100
+                        if dialog:
+                            dialog.accept()
+                    QTimer.singleShot(100, inspect_licenses)
+                    window.show_licenses()
+                    documentation_busy = False
                 try:
                     assert evidence["checks"]["offline_documentation"] == {"opened": True, "all_documents_bundled": True}
+                    assert evidence["checks"]["offline_licenses"] is True
                     evidence["checks"]["native_webview"] = True
                     evidence["checks"]["cohort_workflow"] = future.result()
                     evidence["checks"]["frontend_root"] = dom

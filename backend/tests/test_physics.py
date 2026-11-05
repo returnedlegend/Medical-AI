@@ -97,9 +97,23 @@ def test_optional_runtime_missing_returns_status_and503(tmp_path, monkeypatch):
         status = client.get('/api/physics/status').json()
         assert status['available'] is False
         assert status['model_ready'] is False
-        assert 'setup-sofa.sh' in status['reason']
+        if status['supported_platform']:
+            assert 'setup-sofa.sh' in status['reason']
+        else:
+            assert 'Linux x86_64 only' in status['reason']
         assert client.post('/api/physics/runs', json={}).status_code == 503
         assert client.get('/api/physics/runs').json()['runs'] == []
+
+
+@pytest.mark.parametrize(('system', 'machine'), [('win32', 'AMD64'), ('darwin', 'arm64'), ('linux', 'aarch64')])
+def test_optional_runtime_explicitly_rejects_unsupported_platforms(monkeypatch, system, machine):
+    monkeypatch.setattr(physics.sys, 'platform', system)
+    monkeypatch.setattr(physics.platform, 'machine', lambda: machine)
+    status = physics.runtime_status()
+    assert status['available'] is False
+    assert status['supported_platform'] is False
+    assert 'Linux x86_64 only' in status['reason']
+    assert status['model_ready'] is False
 
 
 def test_queue_capacity_and_incomplete_artifact_requests(tmp_path, monkeypatch):
@@ -168,7 +182,8 @@ def test_subprocess_success_parses_diagnostics_and_removes_absolute_paths(tmp_pa
     payload = {'steps': [{'step': 1}], 'image_path': '/etc/passwd', 'initial_image_path': '/etc/passwd',
                'diagnostics': {'error_count': 1, 'warning_count': 0,
                                'messages': [{'type': 'Error', 'sender': 'Mesh', 'message': str(tmp_path) + '/mesh bad'}]}}
-    script = f"import json,pathlib; p=pathlib.Path({str(output)!r}); p.write_text({json.dumps(payload)!r}); p.with_suffix('.png').write_bytes({physics.PNG_SIGNATURE!r}); print('[ERROR] Bad topology at {str(tmp_path)}/mesh'); print('[WARNING] Review mesh')"
+    error_message = f'[ERROR] Bad topology at {tmp_path}/mesh'
+    script = f"import json,pathlib; p=pathlib.Path({str(output)!r}); p.write_text({json.dumps(payload)!r}); p.with_suffix('.png').write_bytes({physics.PNG_SIGNATURE!r}); print({error_message!r}); print('[WARNING] Review mesh')"
     monkeypatch.setattr(physics, 'worker_command', lambda *args: [sys.executable, '-c', script])
     result = physics.execute_worker({}, output)
     assert result['diagnostic_state'] == 'needs_review'
@@ -180,6 +195,7 @@ def test_subprocess_success_parses_diagnostics_and_removes_absolute_paths(tmp_pa
     assert 'image_path' not in result and 'initial_image_path' not in result
 
 
+@pytest.mark.skipif(not hasattr(os, 'killpg'), reason='POSIX process-group signals are unavailable on Windows; the optional SOFA worker supports Linux x86_64 only.')
 def test_timeout_kills_process_group_and_reaps_worker(tmp_path, monkeypatch):
     monkeypatch.setattr(physics, 'worker_command', lambda *args: [sys.executable, '-c', 'import time; time.sleep(30)'])
     monkeypatch.setattr(physics, 'WORKER_TIMEOUT_SECONDS', 0.05)
@@ -218,6 +234,7 @@ def test_worker_review_flag_is_preserved_without_log_errors(tmp_path, monkeypatc
     assert result['model_ready'] is False
 
 
+@pytest.mark.skipif(not hasattr(os, 'killpg'), reason='POSIX process-group signals are unavailable on Windows; the optional SOFA worker supports Linux x86_64 only.')
 def test_finished_process_is_not_signaled(monkeypatch):
     class Completed:
         pid = 123456

@@ -1,6 +1,7 @@
 ; NSIS 3.11. Per-user application files; studies live in a separate user-data
 ; directory and are deliberately absent from the uninstallation manifest.
 Unicode True
+Target amd64-unicode
 !include "MUI2.nsh"
 !include "x64.nsh"
 !include "WinVer.nsh"

@@ -60,6 +60,8 @@ Several controls address obvious simulator exploits. Exposure reward is paid onl
 
 These controls do not prove the reward is complete. Immediate handoff, doing nothing, overpulling for short-term exposure, and delayed injury are observed failure modes. Severe-injury rate, maximum damage, episode outcomes and the scripted comparator remain necessary alongside reward. The negative engineering variants demonstrate why a policy should not be promoted solely because it trained or because its mean return increased.
 
+A small integration stress test checks the causal connection to learning with the actual simulator. At seed 42, repeatedly issuing `[1,0,.55,0,0,0,0]` ends after 24 actions with modeled maximum injury about .670 and return −32.64; 200 all-zero actions yield no injury, timeout, and return −3.00. A terminal-return Q update prefers the latter trajectory. Removing only the measured harm penalties and severe-injury terminal penalty reverses that learned preference. This is a two-trajectory test of reward dependence, **not a successful surgical policy or a cohort-level safety result**.
+
 ## Reproduce a study
 
 After installing the core environment:
@@ -72,8 +74,8 @@ After installing the core environment:
 
 For the smaller reactive baseline, add `--algorithm tabular_q`. Keep the algorithm, effective limits, horizon, source fingerprints, primitive library, bin/feature specification and exact patient seeds with each result bundle.
 
-The new output directory captures the complete protocol and source SHA-256 fingerprints before training, then JSON results and declarative policies for each training seed plus `summary.csv`. An absent `complete.json` means the bundle did not finish. Existing output directories are never overwritten.
+The new output directory captures the complete protocol, source SHA-256 fingerprints and exact source snapshots before training, then JSON results and declarative policies for each training seed plus `summary.csv`. An absent `complete.json` means the bundle did not finish. Existing output directories are never overwritten. The study-summary helper audits frozen source hashes, configuration equality, paired patients, checkpoint compatibility and cross-run fitting/validation disjointness before selecting or exporting a bundled example.
 
 The API runs one training worker at a time. Progress callbacks occur during demonstration collection, optimization, training and every evaluation episode, so cancellation remains cooperative throughout the job. Cancelled/failed jobs are not promoted as completed policies. Checkpoints contain inference weights; optimizer/replay state is not exported, so they are not resumable training snapshots.
 
-All model parameters and harm thresholds are inspectable simulation assumptions. The companion tissue-response documentation specifies what actions change mechanically, which injury states are irreversible, and which signals determine reward/termination. They require expert validation before any clinical interpretation.
+All model parameters and harm thresholds are inspectable simulation assumptions. The companion [tissue-response documentation](tissue-response.md) specifies what actions change mechanically, which injury states are irreversible, and which signals determine reward/termination. They require expert validation before any clinical interpretation.

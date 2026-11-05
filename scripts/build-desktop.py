@@ -75,6 +75,8 @@ def main():
     for relative in ("backend/retraction", "desktop", "frontend/dist", "docs"):
         shutil.copytree(root / relative, snapshot / relative,
                         ignore=shutil.ignore_patterns("__pycache__", "tests", "*.pyc"))
+    if (root / "examples").is_dir():
+        shutil.copytree(root / "examples", snapshot / "examples")
     for relative in ("README.md", "backend/requirements.txt", "backend/requirements-desktop.txt", "scripts/build-desktop.py"):
         destination = snapshot / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -86,6 +88,12 @@ def main():
         destination = snapshot / "desktop" / "runtime-ca" / distrust_certificate.name
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(distrust_certificate, destination)
+    sys.path.insert(0, str(snapshot))
+    from desktop.notices import collect_notices
+    collect_notices(snapshot / "desktop" / "licenses" / "python-packages")
+    python_license = Path(sys.base_prefix) / "LICENSE.txt"
+    if python_license.is_file():
+        shutil.copy2(python_license, snapshot / "desktop" / "licenses" / f"CPython-{platform.python_version()}-LICENSE.txt")
     try:
         git = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True)
         dirty = subprocess.run(["git", "status", "--porcelain"], cwd=root, capture_output=True, text=True)
@@ -97,6 +105,24 @@ def main():
     from retraction.simulation import MODEL_VERSION
     from retraction.environment import ENV_VERSION, PHYSICS_FINGERPRINT, PHYSICS_FINGERPRINT_ALGORITHM
     from retraction import __version__
+    version_tuple = tuple(int(part) for part in __version__.split("."))
+    if len(version_tuple) != 3:
+        raise SystemExit("The application version must have three numeric components")
+    file_version = (*version_tuple, 0)
+    version_resource = f'''VSVersionInfo(
+  ffi=FixedFileInfo(filevers={file_version!r}, prodvers={file_version!r},
+    mask=0x3f, flags=0x0, OS=0x40004, fileType=0x1, subtype=0x0, date=(0, 0)),
+  kids=[StringFileInfo([StringTable('040904B0', [
+    StringStruct('CompanyName', 'Retraction Lab contributors'),
+    StringStruct('FileDescription', 'Retraction Lab Research Workbench'),
+    StringStruct('FileVersion', '{__version__}'),
+    StringStruct('InternalName', 'RetractionLab'),
+    StringStruct('OriginalFilename', 'RetractionLab.exe'),
+    StringStruct('ProductName', 'Retraction Lab'),
+    StringStruct('ProductVersion', '{__version__}')])]),
+    VarFileInfo([VarStruct('Translation', [1033, 1200])])])
+'''
+    (snapshot / "desktop" / "version-info.txt").write_text(version_resource, encoding="utf-8")
     source_hashes = {path.relative_to(snapshot).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
                      for path in sorted(snapshot.rglob("*")) if path.is_file() and "__pycache__" not in path.parts}
     provenance = {
@@ -119,7 +145,8 @@ def main():
     if not executable.is_file():
         raise SystemExit(f"Build completed without expected executable: {executable}")
     archive = output / f"RetractionLab-{target}-x64.zip"
-    with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as z:
+    partial_archive = archive.with_suffix(".zip.partial")
+    with zipfile.ZipFile(partial_archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as z:
         for path in sorted(bundle.rglob("*")):
             if path.is_symlink():
                 entry = zipfile.ZipInfo(str(path.relative_to(output)).replace('\\', '/'))
@@ -128,6 +155,7 @@ def main():
                 z.writestr(entry, str(path.readlink()))
             elif path.is_file():
                 z.write(path, path.relative_to(output))
+    partial_archive.replace(archive)
     sha = hashlib.sha256(archive.read_bytes()).hexdigest()
     archive.with_suffix(".zip.sha256").write_text(f"{sha}  {archive.name}\n")
     manifest = {**provenance,

@@ -253,3 +253,9 @@ clinical safety or support the proposal's scientific conclusions. Material/heat
 calibration, verified tissue failure laws, anatomical meshes, contact-depth and
 camera models, force-unit validation, and expert-reviewed experimental criteria
 remain necessary before stronger interpretations.
+
+## Material-model choice
+
+This prototype uses monotonic loss of load-bearing stiffness for both mechanical and thermal injury. That is an explicit modeling choice: real thermal tissue response can include contraction and stiffening, and cannot be inferred from these illustrative damage variables. The portable model does not solve viscoelasticity, fluid flow, inflammation, thermal diffusion, or biological healing. New clinical or constitutive conclusions require an independently validated replacement model.
+
+The legacy cohort strategy-search engine and this sequential RL environment have different mechanics and task definitions. Their success rates cannot be combined to claim that an agent recovered the legacy grid oracle’s personalization benefit. Such a comparison requires a matched simulator, cohort, action space, limits, and exposure definition.

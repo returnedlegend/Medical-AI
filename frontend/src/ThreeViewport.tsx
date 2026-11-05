@@ -52,6 +52,7 @@ export default function ThreeViewport({
         antialias: true,
         alpha: false,
         powerPreference: "low-power",
+        preserveDrawingBuffer: true,
       });
     } catch {
       failRef.current();
@@ -80,6 +81,11 @@ export default function ThreeViewport({
     camera.position.set(36, -54, 100);
     camera.up.set(0, 1, 0);
     const controls = new OrbitControls(camera, renderer.domElement);
+    let cameraChanged = true;
+    const invalidateCamera = () => {
+      cameraChanged = true;
+    };
+    controls.addEventListener("change", invalidateCamera);
     controls.target.set(0, 6, 0);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
@@ -391,14 +397,26 @@ export default function ThreeViewport({
       renderer.setSize(mount.clientWidth, mount.clientHeight);
       camera.aspect = mount.clientWidth / mount.clientHeight;
       camera.updateProjectionMatrix();
-    });
-    resize.observe(mount);
-    let frame = 0;
-    const animate = () => {
-      frame = requestAnimationFrame(animate);
       update();
       controls.update();
       renderer.render(scene, camera);
+    });
+    resize.observe(mount);
+    let frame = 0;
+    let previousFrame = 0;
+    const animate = (timestamp = 0) => {
+      frame = requestAnimationFrame(animate);
+      if (timestamp - previousFrame < 1000 / 30) return;
+      previousFrame = timestamp;
+      const stateChanged = lastState !== stateRef.current;
+      const animated =
+        stateRef.current.physiology.bleeding_rate_ml_per_s > 0 ||
+        stateRef.current.physiology.bile_leak_rate_ml_per_s > 0;
+      if (stateChanged || animated) update();
+      controls.update();
+      if (stateChanged || animated || cameraChanged)
+        renderer.render(scene, camera);
+      cameraChanged = false;
     };
     animate();
     const pointer = new THREE.Vector2(),
@@ -427,6 +445,7 @@ export default function ThreeViewport({
       cancelAnimationFrame(frame);
       resize.disconnect();
       controls.dispose();
+      controls.removeEventListener("change", invalidateCamera);
       resetCamera.current = null;
       renderer.domElement.removeEventListener("pointerdown", onDown);
       renderer.domElement.removeEventListener("pointerup", onUp);
@@ -435,6 +454,7 @@ export default function ThreeViewport({
       tubeMeshes.forEach((m) => m.geometry.dispose());
       materials.forEach((m) => m.dispose());
       renderer.dispose();
+      renderer.forceContextLoss();
       renderer.domElement.remove();
     };
   }, []);

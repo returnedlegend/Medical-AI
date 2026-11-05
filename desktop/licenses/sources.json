@@ -53,8 +53,22 @@
     "LICENSE.Chromium": {
       "source_url": "https://raw.githubusercontent.com/qt/qtwebengine/v6.8.3/LICENSE.Chromium",
       "sha256": "f34787ef0342c614b667186a6ec2f5d6b9d650e30142a2788a589a89743e88e9"
+    },
+    "CPython-3.12.14-LICENSE.txt": {
+      "source_url": "https://raw.githubusercontent.com/python/cpython/v3.12.14/LICENSE",
+      "sha256": "3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf"
+    },
+    "CPython-3.12.15-LICENSE.txt": {
+      "source_distribution": "uv-managed cpython-3.12.15-windows-x86_64-none/LICENSE.txt",
+      "sha256": "886a0ead2d89030ee62dbff52b04e47ab91998341295bb9c56fb952b4e081c7a",
+      "upstream_reference_url": "https://raw.githubusercontent.com/python/cpython/v3.12.15/LICENSE",
+      "source_url": "https://github.com/astral-sh/python-build-standalone"
     }
   },
   "qt_webengine_chromium_gitlink": "55749ed0af5869215b88007df0cba430746583ae",
-  "qt_webengine_chromium_source_url": "https://github.com/qt/qtwebengine-chromium/tree/55749ed0af5869215b88007df0cba430746583ae"
+  "qt_webengine_chromium_source_url": "https://github.com/qt/qtwebengine-chromium/tree/55749ed0af5869215b88007df0cba430746583ae",
+  "python_versions": [
+    "3.12.14",
+    "3.12.15"
+  ]
 }

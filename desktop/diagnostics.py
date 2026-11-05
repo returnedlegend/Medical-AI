@@ -36,9 +36,10 @@ def diagnose(output: Path, data_directory: Path | None = None) -> int:
                 "platform": platform.platform(), "checks": {}}
     temporary = tempfile.TemporaryDirectory(prefix="retraction-diagnostic-") if data_directory is None else None
     directory = data_directory or Path(temporary.name)
-    server = LocalServer(directory)
+    server = None
+    lock = None
     try:
-        from PySide6.QtCore import qVersion
+        from PySide6.QtCore import QLockFile, qVersion
         from retraction import __version__
         from retraction.environment import ENV_VERSION, PHYSICS_FINGERPRINT, PHYSICS_FINGERPRINT_ALGORITHM
         evidence["version"] = __version__
@@ -46,6 +47,12 @@ def diagnose(output: Path, data_directory: Path | None = None) -> int:
         evidence["model_version"] = ENV_VERSION
         evidence["physics_fingerprint"] = PHYSICS_FINGERPRINT
         evidence["physics_fingerprint_algorithm"] = PHYSICS_FINGERPRINT_ALGORITHM
+        directory.mkdir(parents=True, exist_ok=True)
+        lock = QLockFile(str(directory / "desktop.lock"))
+        if not lock.tryLock(0):
+            raise RuntimeError("Another Retraction Lab window is using this study directory. Close it before running diagnosis.")
+        evidence["checks"]["private_study_lock"] = True
+        server = LocalServer(directory)
         if evidence["packaged"]:
             build = json.loads((resource_root() / "build-info.json").read_text(encoding="utf-8"))
             assert build["physics_fingerprint"] == PHYSICS_FINGERPRINT, "Bundled physics fingerprint differs from build provenance"
@@ -94,7 +101,10 @@ def diagnose(output: Path, data_directory: Path | None = None) -> int:
         evidence["status"] = "failed"
         evidence["error"] = f"{type(error).__name__}: {error}"
     finally:
-        server.stop()
+        if server is not None:
+            server.stop()
+        if lock is not None:
+            lock.unlock()
         if temporary is not None:
             temporary.cleanup()
         output.parent.mkdir(parents=True, exist_ok=True)
