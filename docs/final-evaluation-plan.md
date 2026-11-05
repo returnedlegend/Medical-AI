@@ -1,5 +1,12 @@
 # Fixed-policy final evaluation plan
 
+**Status: completed once on 2026-11-05 at 18:28:24 UTC.** The [final report](rl-final-001.md)
+and complete archive preserve all 1,920 rollouts and independent audits. Seeds
+20000–20127 are now consumed final data. Do not reuse them as an untouched test
+for a tuned or replacement policy. The pre-outcome JSON design, policy freeze
+and crossed-analysis plan remain unchanged; the preparation instructions below
+are retained as the historical plan, not authorization for another run.
+
 The evaluator is implemented and tested on **development patients only**.
 The reserved final patient seeds are 20000–20127, a cohort of 128. Do not execute
 that cohort until the parent/root task explicitly authorizes the final run after
@@ -162,7 +169,8 @@ zero-harm confidence bounds, bounded declarative inputs, and an actual
 `--phase development` CLI run. These checks exercised real outcomes, not a
 conditional shortcut that skipped the simulator.
 
-This plan does not assert that the reserved final evaluation has occurred.
-Its outputs, when authorized and executed, must be reported separately from
-these development checks. All results concern unvalidated analytic tissue and
-toy physiology, not patient care or proven surgical competence.
+The development checks above preceded the separately authorized final run;
+they are not final-cohort results. The completed assessment is reported in the
+linked final report and is not a new authorization to execute the cohort.
+All results concern unvalidated analytic tissue and toy physiology, not patient
+care or proven surgical competence.
