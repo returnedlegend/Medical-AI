@@ -1255,3 +1255,63 @@
     font-size: 9px;
   }
 }
+
+.protocol-description {
+  color: #354f66 !important;
+}
+.protocol-parameters {
+  margin: 14px 0;
+  color: #3f586e;
+  font-size: 10px;
+}
+.protocol-parameters > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 8px 0;
+  border-top: 1px solid #d2dce5;
+}
+.protocol-parameters > p {
+  font-size: 10px;
+  line-height: 1.6;
+}
+.procedure-properties .protocol-parameters dl {
+  display: block;
+  padding: 0;
+}
+.protocol-parameters dl > div {
+  display: grid;
+  grid-template-columns: 1fr minmax(60px, 1fr);
+  gap: 8px;
+  border-bottom: 1px solid #e0e7ed;
+  padding: 5px 0;
+  font-size: 10px;
+}
+.protocol-parameters dt {
+  color: #405a70;
+}
+.protocol-parameters dd {
+  text-align: right;
+  overflow-wrap: anywhere;
+  font-family: var(--mono);
+}
+.procedure-properties .protocol-state {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 10px 8px;
+}
+.protocol-state > dd {
+  white-space: normal;
+}
+.protocol-error {
+  color: #7e3636 !important;
+  font-size: 10px !important;
+}
+.protocol-error > button {
+  color: #315a7b;
+  text-decoration: underline;
+  border: 0;
+  background: transparent;
+  padding: 4px 0;
+  font-size: 10px;
+}

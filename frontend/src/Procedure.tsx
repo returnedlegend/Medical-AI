@@ -30,6 +30,28 @@ import { request } from "./api";
 import "./procedure.css";
 const ThreeViewport = lazy(() => import("./ThreeViewport"));
 type Tool = "grasper" | "cautery";
+type Controller = "manual" | "baseline" | "trained" | "protocol";
+interface ResponseScenario {
+  id: string;
+  title: string;
+  description: string;
+  scope: string;
+  protocol_version: string;
+  seed: number;
+  config: Record<string, unknown>;
+  parameters: Record<string, unknown>;
+}
+interface ResponseProtocol {
+  scenario_id: string;
+  version: string;
+  status: string;
+  phase: string;
+  protocol_step: number;
+  completed: boolean;
+  completion_reason: string | null;
+  target_node_id: string | null;
+  metadata?: ResponseScenario;
+}
 interface TissueNode {
   id: string;
   kind: string;
@@ -92,6 +114,8 @@ interface Episode {
   engine_compatible?: boolean;
   read_only_reason?: string | null;
   policy_context?: PolicyContext;
+  protocol?: ResponseProtocol | null;
+  source?: { type?: string; phase?: string; scenario_id?: string };
 }
 interface PolicyContext {
   training_run_id: string;
@@ -123,7 +147,9 @@ interface EvaluationSummary {
   mean_return: number;
   mean_return_ci?: number[];
   success_rate: number;
+  success_rate_ci?: number[];
   severe_harm_rate: number;
+  severe_harm_rate_ci?: number[];
   handoff_rate: number;
   mean_max_damage: number;
 }
@@ -175,8 +201,16 @@ export default function Procedure() {
     runningRef = useRef(false),
     generation = useRef(0);
   const [gripTarget, setGripTarget] = useState(0.55);
-  const [controller, setController] = useState<"baseline" | "trained">(
-    "baseline",
+  const [controller, setController] = useState<Controller>("manual");
+  const controllerRef = useRef<Controller>("manual");
+  controllerRef.current = controller;
+  const [scenarios, setScenarios] = useState<ResponseScenario[]>([]);
+  const [scenarioId, setScenarioId] = useState("");
+  const [protocolSeed, setProtocolSeed] = useState(2);
+  const [scenarioError, setScenarioError] = useState("");
+  const [scenarioRefresh, setScenarioRefresh] = useState(0);
+  const selectedScenario = scenarios.find(
+    (scenario) => scenario.id === scenarioId,
   );
   const [consoleTab, setConsoleTab] = useState<
     "events" | "rewards" | "learning"
@@ -192,7 +226,7 @@ export default function Procedure() {
   );
   const [learningError, setLearningError] = useState("");
   const [engineSpec, setEngineSpec] = useState<EngineSpec | null>(null);
-  const [algorithm, setAlgorithm] = useState<"dqn" | "tabular_q">("dqn");
+  const [algorithm, setAlgorithm] = useState<"dqn" | "tabular_q">("tabular_q");
   const [recordedFrames, setRecordedFrames] = useState<Episode[]>([]);
   const [replayIndex, setReplayIndex] = useState<number | null>(null);
   const [replayRunning, setReplayRunning] = useState(false);
@@ -231,6 +265,14 @@ export default function Procedure() {
   const accept = useCallback((data: Episode, fresh = false) => {
     current.current = data;
     setSession(data);
+    if (fresh) {
+      setSeed(data.seed);
+      if (data.protocol) {
+        setController("protocol");
+        setScenarioId(data.protocol.scenario_id);
+        setProtocolSeed(data.seed);
+      } else if (controllerRef.current === "protocol") setController("manual");
+    }
     setReplayIndex(null);
     setReplayRunning(false);
     setRecordedFrames((old) =>
@@ -274,11 +316,34 @@ export default function Procedure() {
         : [...old, ...events].slice(-120),
     );
     setSessions((old) => [data, ...old.filter((e) => e.id !== data.id)]);
-    if (data.terminated || data.truncated || data.status !== "active") {
+    if (
+      data.terminated ||
+      data.truncated ||
+      data.status !== "active" ||
+      (controllerRef.current === "protocol" && data.protocol?.completed)
+    ) {
       setRunning(false);
       runningRef.current = false;
     }
   }, []);
+  useEffect(() => {
+    const abort = new AbortController();
+    setScenarioError("");
+    request<{ scenarios: ResponseScenario[] }>("/procedure/scenarios", {
+      signal: abort.signal,
+    })
+      .then((data) => {
+        if (!abort.signal.aborted) {
+          setScenarios(data.scenarios);
+          setScenarioId((old) => old || data.scenarios[0]?.id || "");
+          setProtocolSeed(data.scenarios[0]?.seed ?? 2);
+        }
+      })
+      .catch((e) => {
+        if (!abort.signal.aborted) setScenarioError(errorMessage(e));
+      });
+    return () => abort.abort();
+  }, [scenarioRefresh]);
   useEffect(() => {
     if (!replayRunning) return;
     if ((replayIndex ?? 0) >= recordedFrames.length - 1) {
@@ -293,22 +358,26 @@ export default function Procedure() {
   }, [replayRunning, recordedFrames.length, replayIndex]);
   useEffect(() => {
     let active = true;
-    Promise.all([
+    Promise.allSettled([
       request<{ sessions: Episode[] }>("/procedure/sessions"),
       request<{ runs: TrainingRun[] }>("/learning/runs"),
       request<EngineSpec>("/procedure/spec"),
-    ])
-      .then(([history, policies, spec]) => {
-        if (!active) return;
-        setSessions(history.sessions);
-        setTrainings(policies.runs);
-        setEngineSpec(spec);
-        const complete = policies.runs.find((r) => r.status === "completed");
+    ]).then(([history, policies, spec]) => {
+      if (!active) return;
+      const failures: string[] = [];
+      if (history.status === "fulfilled") setSessions(history.value.sessions);
+      else failures.push(`Episode history: ${errorMessage(history.reason)}`);
+      if (policies.status === "fulfilled") {
+        setTrainings(policies.value.runs);
+        const complete = policies.value.runs.find(
+          (r) => r.status === "completed",
+        );
         if (complete) setTraining(complete);
-      })
-      .catch((e) => {
-        if (active) setError(errorMessage(e));
-      });
+      } else failures.push(`Policy history: ${errorMessage(policies.reason)}`);
+      if (spec.status === "fulfilled") setEngineSpec(spec.value);
+      else failures.push(`Engine specification: ${errorMessage(spec.reason)}`);
+      if (failures.length) setError(failures.join(" · "));
+    });
     return () => {
       active = false;
       generation.current++;
@@ -418,8 +487,27 @@ export default function Procedure() {
       if (token === generation.current) setBusy(false);
     }
   };
-  const initialize = async (reset = false, matched = false) => {
+  const initialize = async (
+    reset = false,
+    matched = false,
+    scenario?: string,
+  ) => {
     if (inFlight.current) return;
+    const plannedSeed = scenario ? protocolSeed : seed;
+    if (
+      !Number.isInteger(plannedSeed) ||
+      plannedSeed < 0 ||
+      plannedSeed > 4294967295
+    ) {
+      setError("Seed must be an integer from 0 to 4294967295.");
+      return;
+    }
+    if (matched && !checkpointCompatible) {
+      setError(
+        "Select a checkpoint from the current model before creating a matched episode.",
+      );
+      return;
+    }
     const token = ++generation.current;
     setRunning(false);
     setReplayRunning(false);
@@ -436,17 +524,21 @@ export default function Procedure() {
       const data = await request<Episode>(
         matched && training
           ? `/learning/runs/${training.id}/session`
-          : reset && current.current
-            ? `/procedure/sessions/${current.current.id}/reset`
-            : "/procedure/sessions",
+          : scenario
+            ? `/procedure/scenarios/${scenario}/session`
+            : reset && current.current
+              ? `/procedure/sessions/${current.current.id}/reset`
+              : "/procedure/sessions",
         {
           method: "POST",
           body: JSON.stringify(
             matched
               ? { seed }
-              : reset
-                ? { seed, expected_revision: current.current?.revision }
-                : { seed, config: {} },
+              : scenario
+                ? { seed: protocolSeed, config: {} }
+                : reset
+                  ? { seed, expected_revision: current.current?.revision }
+                  : { seed, config: {} },
           ),
         },
       );
@@ -495,7 +587,7 @@ export default function Procedure() {
             : { expected_revision: before.revision }
           : { action, expected_revision: before.revision };
         const data = await request<Episode>(
-          `/procedure/sessions/${before.id}/${policy ? (controller === "trained" ? "policy-step" : "scripted-step") : "step"}`,
+          `/procedure/sessions/${before.id}/${policy ? (controller === "trained" ? "policy-step" : controller === "protocol" ? "protocol-step" : "scripted-step") : "step"}`,
           { method: "POST", body: JSON.stringify(body) },
         );
         if (token === generation.current) {
@@ -693,7 +785,19 @@ export default function Procedure() {
           Reset
         </button>
         <span className="toolbar-separator" />
-        <button disabled={disabled} onClick={() => manual()}>
+        <button
+          disabled={
+            disabled ||
+            (controller === "trained" && !checkpointCompatible) ||
+            (controller === "protocol" &&
+              (!session?.protocol || session.protocol.completed))
+          }
+          onClick={() =>
+            controller === "manual"
+              ? manual()
+              : void step([0, 0, 0, 0, 0, 0, 0], true)
+          }
+        >
           <SkipForward size={13} />
           Step
         </button>
@@ -706,6 +810,9 @@ export default function Procedure() {
             session.status !== "active" ||
             session.terminated ||
             session.truncated ||
+            controller === "manual" ||
+            (controller === "protocol" &&
+              (!session.protocol || session.protocol.completed)) ||
             (controller === "trained" && training?.status !== "completed") ||
             (controller === "trained" && !checkpointCompatible) ||
             (controller === "trained" &&
@@ -720,7 +827,11 @@ export default function Procedure() {
           }}
         >
           {running ? <Pause size={13} /> : <Play size={13} />}{" "}
-          {running ? "Pause" : "Run policy"}
+          {running
+            ? "Pause"
+            : controller === "protocol"
+              ? "Run protocol"
+              : "Run policy"}
         </button>
         <span className="toolbar-separator" />
         <label>
@@ -742,11 +853,14 @@ export default function Procedure() {
             onChange={(e) => {
               setRunning(false);
               runningRef.current = false;
-              setController(e.target.value as "baseline" | "trained");
+              setController(e.target.value as Controller);
+              if (e.target.value === "protocol") setInspector("protocol");
             }}
           >
+            <option value="manual">Manual commands</option>
             <option value="baseline">Scripted baseline</option>
             <option value="trained">Trained policy</option>
+            <option value="protocol">Response protocol</option>
           </select>
         </label>
         <span className="procedure-clock">
@@ -998,6 +1112,13 @@ export default function Procedure() {
               Tissue / tools
             </button>
             <button
+              className={inspector === "protocol" ? "selected" : ""}
+              onClick={() => setInspector("protocol")}
+              aria-label="Response protocols"
+            >
+              Protocols
+            </button>
+            <button
               className={inspector === "policy" ? "selected" : ""}
               onClick={() => setInspector("policy")}
             >
@@ -1197,6 +1318,167 @@ export default function Procedure() {
                   </table>
                 </div>
               </details>
+            </>
+          ) : inspector === "protocol" ? (
+            <>
+              <h2>Controlled response protocols</h2>
+              <div className="inspector-group response-protocol-controls">
+                <p>
+                  Scripted interventions issue real bounded tool actions through
+                  the tissue engine. These are controlled synthetic experiments,
+                  separate from learned policies.
+                </p>
+                {scenarioError && (
+                  <p className="protocol-error" role="status">
+                    Protocol catalog unavailable: {scenarioError}{" "}
+                    <button
+                      onClick={() => setScenarioRefresh((value) => value + 1)}
+                    >
+                      Reload protocols
+                    </button>
+                  </p>
+                )}
+                <label>
+                  Response protocol
+                  <select
+                    aria-label="Response protocol"
+                    value={scenarioId}
+                    onChange={(e) => {
+                      setScenarioId(e.target.value);
+                      const chosen = scenarios.find(
+                        (item) => item.id === e.target.value,
+                      );
+                      if (chosen) setProtocolSeed(chosen.seed);
+                    }}
+                  >
+                    {!scenarios.length && (
+                      <option value="">Loading protocol catalog…</option>
+                    )}
+                    {scenarios.map((scenario) => (
+                      <option value={scenario.id} key={scenario.id}>
+                        {scenario.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Protocol seed
+                  <input
+                    aria-label="Protocol seed"
+                    type="number"
+                    min="0"
+                    max="4294967295"
+                    value={protocolSeed}
+                    onChange={(e) => setProtocolSeed(Number(e.target.value))}
+                  />
+                </label>
+                {selectedScenario && (
+                  <>
+                    <p className="protocol-description">
+                      {selectedScenario.description}
+                    </p>
+                    <button
+                      className="lab-train-button"
+                      disabled={busy || running}
+                      onClick={() =>
+                        void initialize(false, false, selectedScenario.id)
+                      }
+                    >
+                      <Plus size={13} />
+                      New protocol episode
+                    </button>
+                    <details className="protocol-parameters">
+                      <summary>
+                        Protocol parameters <ChevronDown size={12} />
+                      </summary>
+                      <p>{selectedScenario.scope}</p>
+                      <dl>
+                        {Object.entries(selectedScenario.parameters).map(
+                          ([key, value]) => (
+                            <div key={key}>
+                              <dt>{key.replaceAll("_", " ")}</dt>
+                              <dd>
+                                {typeof value === "number"
+                                  ? fmt(value, 3)
+                                  : typeof value === "object"
+                                    ? JSON.stringify(value)
+                                    : String(value)}
+                              </dd>
+                            </div>
+                          ),
+                        )}
+                      </dl>
+                      <p>
+                        Protocol version {selectedScenario.protocol_version}.
+                        Episode settings and action provenance are retained in
+                        its JSON export.
+                      </p>
+                    </details>
+                  </>
+                )}
+              </div>
+              {session?.protocol && (
+                <>
+                  <h2>Recorded intervention state</h2>
+                  <dl className="protocol-state">
+                    <dt>Scenario</dt>
+                    <dd>
+                      {session.protocol.metadata?.title ??
+                        session.protocol.scenario_id}
+                    </dd>
+                    <dt>Latest protocol status</dt>
+                    <dd>{session.protocol.status}</dd>
+                    <dt>Displayed action phase</dt>
+                    <dd>
+                      {inspectedEpisode?.source?.phase ??
+                        (replayIndex === null
+                          ? session.protocol.phase
+                          : "not recorded")}
+                    </dd>
+                    <dt>Displayed revision</dt>
+                    <dd>{inspectedEpisode?.revision ?? session.revision}</dd>
+                    <dt>Completion reason</dt>
+                    <dd>
+                      {session.protocol.completion_reason ?? "in progress"}
+                    </dd>
+                    <dt>Episode outcome</dt>
+                    <dd>
+                      {session.state.termination_reason ?? session.status}
+                    </dd>
+                  </dl>
+                  <p className="model-unit-note">
+                    Use Step or Run protocol to issue recorded actions. A
+                    completed intervention can leave the episode active.
+                    Completion does not imply modeled success. Manual
+                    intervention interrupts the protocol; Reset starts a fresh
+                    copy.
+                  </p>
+                  <h2>Observed synthetic response</h2>
+                  <dl>
+                    <dt>Peak injury</dt>
+                    <dd>
+                      {fmt(
+                        state
+                          ? Math.max(...nodes.map((node) => node.damage))
+                          : undefined,
+                        3,
+                      )}
+                    </dd>
+                    <dt>Blood loss</dt>
+                    <dd>{fmt(state?.physiology.blood_loss_ml, 3)} mL*</dd>
+                    <dt>Bile leak</dt>
+                    <dd>{fmt(state?.physiology.bile_leak_ml, 3)} mL*</dd>
+                    <dt>Displayed return</dt>
+                    <dd>{fmt(inspectedEpisode?.episode_reward, 3)}</dd>
+                  </dl>
+                  <MiniTrace
+                    data={trace}
+                    field="damage"
+                    color="#9b594a"
+                    label="Observed peak tissue injury"
+                  />
+                </>
+              )}
             </>
           ) : (
             <>
@@ -1665,8 +1947,8 @@ export default function Procedure() {
                       <th>Controller</th>
                       <th>n</th>
                       <th>Mean return [95% CI]</th>
-                      <th>Success</th>
-                      <th>Severe harm</th>
+                      <th>Success [95% CI]</th>
+                      <th>Severe harm [95% CI]</th>
                       <th>Handoff</th>
                       <th>Mean peak injury</th>
                     </tr>
@@ -1691,8 +1973,16 @@ export default function Procedure() {
                               {row.mean_return_ci &&
                                 `[${fmt(row.mean_return_ci[0])}, ${fmt(row.mean_return_ci[1])}]`}
                             </td>
-                            <td>{fmt(row.success_rate * 100, 1)}%</td>
-                            <td>{fmt(row.severe_harm_rate * 100, 1)}%</td>
+                            <td>
+                              {fmt(row.success_rate * 100, 1)}%
+                              {row.success_rate_ci &&
+                                ` [${fmt(row.success_rate_ci[0] * 100, 1)}, ${fmt(row.success_rate_ci[1] * 100, 1)}]`}
+                            </td>
+                            <td>
+                              {fmt(row.severe_harm_rate * 100, 1)}%
+                              {row.severe_harm_rate_ci &&
+                                ` [${fmt(row.severe_harm_rate_ci[0] * 100, 1)}, ${fmt(row.severe_harm_rate_ci[1] * 100, 1)}]`}
+                            </td>
                             <td>{fmt(row.handoff_rate * 100, 1)}%</td>
                             <td>{fmt(row.mean_max_damage, 3)}</td>
                           </tr>
@@ -1702,8 +1992,9 @@ export default function Procedure() {
                   </tbody>
                 </table>
                 <p>
-                  All controllers use the same held-out seeds. Reward does not
-                  establish safety; inspect harm, handoff, and success
+                  All controllers use the same evaluation seeds. Binary
+                  intervals use the Wilson method. Zero observed severe harm
+                  does not establish safety; inspect harm, handoff, and success
                   separately.
                 </p>
               </>

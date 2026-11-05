@@ -44,13 +44,19 @@ A single run represents one initialization/training seed. Use multiple independe
 
 ## Reactive tabular baseline
 
-The tabular policy bins five current public measurements: contact presence; exposure-target error (edges −.02, 0, .01, .03, .08, .2, .4); force/limit (edges .5, .85, .95, 1.05); maximum strain/limit (the same four edges); and maximum mechanical injury (edges .05, .15). This creates 1,200 bins, each with one value per declared action. The observations are reconstructed from their Box normalization and rounded to six decimals only for bin comparisons, which prevents floating-point reconstruction from moving an exact zero across a boundary.
+The original `tabular_state_encoding: "v1"` bins five current public measurements: contact presence; exposure-target error (edges −.02, 0, .01, .03, .08, .2, .4); force/limit (edges .5, .85, .95, 1.05); maximum strain/limit (the same four edges); and maximum mechanical injury (edges .05, .15). This creates 1,200 bins, each with one value per declared action. The observations are reconstructed from their Box normalization and rounded to six decimals only for those bin comparisons, which prevents floating-point reconstruction from moving an exact zero across a boundary. This version remains the default for historical configuration compatibility, and the sealed study-001 reference uses it.
 
 This representation **is not Markov**: different anatomy, thermal histories, tool positions and tissue deformations can share a bin. It is an interpretable reactive comparison, not a claim that these five measurements describe the patient sufficiently. In particular, the state can alias a displaced ungrasped tool with the initial contact location, and thermal risk is represented only through its effect on later measured rewards/outcomes. Such limitations must remain visible beside any benchmark result.
 
 Two independent Q-tables start at zero. If demonstrations are enabled, their observed discounted returns initialize the state/action entries they visited; this is a sample mean of actual trajectory returns, not an invented expert reward bonus. Each subsequent real online transition updates one table at random, while the other table evaluates the first table's greedy next action. Terminal/truncated transitions do not bootstrap. `tabular_learning_rate` defaults to .15; γ and the ε schedule are shared with DQN. One retained demonstration transition also receives a TD update per online step when assistance is enabled.
 
 Tabular training does not use a neural network, gradients, the characteristic neural encoding, or the DQN large-margin imitation loss. Its metadata explicitly records these unused DQN settings. Checkpoints export the average Q-table and a fixed, validated bin specification as JSON; the two optimization tables and online replay state are not exported. Changing the bin specification requires a version change.
+
+The optional `tabular_state_encoding: "v2"` addresses specific aliases observed in study 001. It distinguishes five acquisition contexts: an ungrasped tool far from intact tissue, an ungrasped tool near node03, an ungrasped tool near another node, contact with node03, and contact with another node. Near means within the model's 3-mm acquisition distance; intact means current combined injury below .9. All positions, contact identity, mechanical injury and thermal dose come from the public observation. Node03 is the publicly defined schematic exposure marker, not a hidden optimal grasp/angle label.
+
+Version2 retains the exposure-error/force/strain edges, replaces the mechanical-only injury feature with maximum combined mechanical/thermal injury using the documented material equation, and adds a current-temperature-above-43°C bit plus a remaining-horizon-at-or-below-20% bit. This gives 12,000 states. These features distinguish displaced tools, pending heat, cooled thermal injury and near-timeout states without consulting future outcomes. Other anatomy, contact sites and deformation histories still alias; this remains a partial reactive policy.
+
+V2 does not change the tool library, tissue equations, reward, Double-Q update, demonstration initialization or exploration schedule. The original v1 decoder remains available and replays the sealed reference exactly. A separately frozen study compares both encodings and an unassisted v2 ablation on fresh training/patient streams; improvement is a hypothesis rather than a condition for publishing the result.
 
 ## Reward-feedback and reward-hacking review
 
@@ -72,7 +78,7 @@ After installing the core environment:
   --output .data/rl-study-001
 ```
 
-For the smaller reactive baseline, add `--algorithm tabular_q`. Keep the algorithm, effective limits, horizon, source fingerprints, primitive library, bin/feature specification and exact patient seeds with each result bundle.
+For the reactive baseline, add `--algorithm tabular_q`; select the newer representation explicitly with `--tabular-state-encoding v2`. Keep the algorithm, effective limits, horizon, source fingerprints, primitive library, bin/feature specification and exact patient seeds with each result bundle. The [frozen first study](rl-study-001.md) records all ten runs, including failures, and the validation-selected bundled reference.
 
 The new output directory captures the complete protocol, source SHA-256 fingerprints and exact source snapshots before training, then JSON results and declarative policies for each training seed plus `summary.csv`. An absent `complete.json` means the bundle did not finish. Existing output directories are never overwritten. The study-summary helper audits frozen source hashes, configuration equality, paired patients, checkpoint compatibility and cross-run fitting/validation disjointness before selecting or exporting a bundled example.
 

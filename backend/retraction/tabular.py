@@ -6,6 +6,7 @@ small comparison to the full-observation neural baseline, not a clinical policy.
 """
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Callable
 
 import numpy as np
@@ -20,12 +21,27 @@ BIN_EDGES = {
 }
 STATE_SHAPE = (2, *(len(edges) + 1 for edges in BIN_EDGES.values()))
 STATE_COUNT = int(np.prod(STATE_SHAPE))
+V2_BIN_VERSION = "public-reactive-bins-2"
+V2_BIN_EDGES = {**{name: edges for name, edges in BIN_EDGES.items() if name != 'max_mechanical_damage'},
+                'max_combined_damage': [.05, .15]}
+V2_STATE_SHAPE = (5, *(len(edges) + 1 for edges in V2_BIN_EDGES.values()), 2, 2)
+STATE_ENCODINGS = {
+    BIN_VERSION: {'version': BIN_VERSION, 'edges': BIN_EDGES, 'shape': list(STATE_SHAPE)},
+    V2_BIN_VERSION: {'version': V2_BIN_VERSION, 'edges': V2_BIN_EDGES, 'shape': list(V2_STATE_SHAPE),
+                     'acquisition_contexts': ['ungrasped_far', 'ungrasped_near_node03', 'ungrasped_near_other',
+                                              'grasped_node03', 'grasped_other'],
+                     'acquisition_distance_mm': 3., 'intact_combined_damage_below': .9,
+                     'exposure_marker_node_index': 3, 'temperature_threshold_c': 43.,
+                     'late_remaining_fraction': .2},
+}
 
 
 class TabularPolicy:
-    def __init__(self, values, low, high, observation_names):
+    def __init__(self, values, low, high, observation_names, encoding_version=BIN_VERSION):
         self.values = values
         self.low, self.high = low, high
+        self.encoding_version = encoding_version
+        self.shape = tuple(STATE_ENCODINGS[encoding_version]['shape'])
         self.index = {name: i for i, name in enumerate(observation_names)}
         self.strains = [i for i, name in enumerate(observation_names) if name.endswith('_strain')]
         self.damage = [i for i, name in enumerate(observation_names) if name.endswith('_mechanical_damage')]
@@ -33,9 +49,21 @@ class TabularPolicy:
                     'force_limit_n', 'strain_limit')
         if any(name not in self.index for name in required) or not self.strains or not self.damage:
             raise ValueError('Tabular policy requires the declared public tissue measurements')
+        if encoding_version == V2_BIN_VERSION:
+            extra = ('grasper_x', 'grasper_y', 'step_count', 'max_steps')
+            prefixes = [name[:-len('_mechanical_damage')] for name in observation_names if name.endswith('_mechanical_damage')]
+            self.node_x = [self.index[f'{prefix}_x'] for prefix in prefixes]
+            self.node_y = [self.index[f'{prefix}_y'] for prefix in prefixes]
+            self.doses = [self.index[f'{prefix}_thermal_dose'] for prefix in prefixes]
+            self.temperatures = [self.index[f'{prefix}_temperature_c'] for prefix in prefixes]
+            if any(name not in self.index for name in extra) or len(prefixes) != 23:
+                raise ValueError('V2 reactive encoding requires the full public tissue/tool measurements')
 
     def state_indices(self, normalized):
         raw = (np.atleast_2d(normalized) + 1) * .5 * (self.high - self.low) + self.low
+        if self.encoding_version == V2_BIN_VERSION:
+            return self._v2_indices(raw)
+        # Preserve the original v1 arithmetic and bin order for old policies.
         measurements = [raw[:, self.index['exposure_target']] - raw[:, self.index['exposure']],
                         raw[:, self.index['contact_force_n']] / np.maximum(raw[:, self.index['force_limit_n']], 1e-6),
                         raw[:, self.strains].max(axis=1) / np.maximum(raw[:, self.index['strain_limit']], 1e-6),
@@ -46,6 +74,28 @@ class TabularPolicy:
         coordinates.extend(np.searchsorted(edges, np.round(values, 6), side='right')
                            for edges, values in zip(BIN_EDGES.values(), measurements))
         return np.ravel_multi_index(tuple(coordinates), STATE_SHAPE)
+
+    def _v2_indices(self, raw):
+        combined = 1 - (1 - raw[:, self.damage]) * np.exp(-np.maximum(raw[:, self.doses], 0) / .8)
+        dx = raw[:, self.node_x] - raw[:, self.index['grasper_x'], None]
+        dy = raw[:, self.node_y] - raw[:, self.index['grasper_y'], None]
+        distances = np.where(combined < .9, np.sqrt(dx * dx + dy * dy), np.inf)
+        nearest = np.argmin(distances, axis=1)
+        near = distances[np.arange(len(raw)), nearest] <= 3.
+        contact = np.rint(raw[:, self.index['contact_node_index']]).astype(int)
+        context = np.where(contact >= 0, np.where(contact == 3, 3, 4),
+                           np.where(near, np.where(nearest == 3, 1, 2), 0))
+        measurements = [raw[:, self.index['exposure_target']] - raw[:, self.index['exposure']],
+                        raw[:, self.index['contact_force_n']] / np.maximum(raw[:, self.index['force_limit_n']], 1e-6),
+                        raw[:, self.strains].max(axis=1) / np.maximum(raw[:, self.index['strain_limit']], 1e-6),
+                        combined.max(axis=1)]
+        coordinates = [context]
+        coordinates.extend(np.searchsorted(edges, np.round(values, 6), side='right')
+                           for edges, values in zip(V2_BIN_EDGES.values(), measurements))
+        pending_heat = raw[:, self.temperatures].max(axis=1) > 43.
+        remaining = (raw[:, self.index['max_steps']] - raw[:, self.index['step_count']]) / np.maximum(raw[:, self.index['max_steps']], 1)
+        coordinates.extend((pending_heat.astype(int), (remaining <= .2).astype(int)))
+        return np.ravel_multi_index(tuple(coordinates), self.shape)
 
     def forward(self, normalized):
         selected = self.values[self.state_indices(normalized)]
@@ -67,15 +117,21 @@ def load_tabular_checkpoint(checkpoint):
     from .learning import CHECKPOINT_FORMAT
     if checkpoint.get('format') != CHECKPOINT_FORMAT or checkpoint.get('algorithm') != TABULAR_ALGORITHM:
         raise ValueError('Unsupported tabular checkpoint format')
-    if checkpoint.get('state_encoding') != {'version': BIN_VERSION, 'edges': BIN_EDGES, 'shape': list(STATE_SHAPE)}:
+    specification = checkpoint.get('state_encoding')
+    version = specification.get('version') if isinstance(specification, dict) else None
+    if not isinstance(version, str) or version not in STATE_ENCODINGS or specification != STATE_ENCODINGS[version]:
         raise ValueError('Unsupported tabular state encoding')
+    state_count = int(np.prod(STATE_ENCODINGS[version]['shape']))
     if checkpoint.get('feature_transform') is not None:
         raise ValueError('Tabular policy must use its declared Box reconstruction')
     try:
         low = np.asarray(checkpoint['observation_low'], dtype=np.float32)
         high = np.asarray(checkpoint['observation_high'], dtype=np.float32)
         actions = np.asarray(checkpoint['action_primitives'], dtype=np.float32)
-        values = np.asarray(checkpoint['q_values'], dtype=np.float32)
+        supplied_values = checkpoint['q_values']
+        if not isinstance(supplied_values, list) or len(supplied_values) != state_count:
+            raise ValueError('Invalid tabular Q dimensions')
+        values = np.asarray(supplied_values, dtype=np.float32)
         names = checkpoint['observation_names']
         if low.ndim != 1 or not 1 <= len(low) <= 2048 or high.shape != low.shape:
             raise ValueError('Invalid tabular observation bounds')
@@ -87,9 +143,9 @@ def load_tabular_checkpoint(checkpoint):
             raise ValueError('Invalid tabular action dimensions')
         if not np.isfinite(actions).all() or np.any(np.abs(actions) > 1):
             raise ValueError('Invalid tabular actions')
-        if values.shape != (STATE_COUNT, len(actions)) or not np.isfinite(values).all() or np.any(np.abs(values) > 1e6):
+        if values.shape != (state_count, len(actions)) or not np.isfinite(values).all() or np.any(np.abs(values) > 1e6):
             raise ValueError('Invalid tabular Q values')
-        return TabularPolicy(values, low, high, names), low, high, actions
+        return TabularPolicy(values, low, high, names, version), low, high, actions
     except (KeyError, TypeError, OverflowError, IndexError) as error:
         raise ValueError('Invalid tabular checkpoint arrays') from error
 
@@ -100,6 +156,8 @@ def train_tabular_policy(config, progress_callback: Callable | None = None):
     cfg = dict(config)
     env = _make_env(cfg)
     description = _describe(env)
+    encoding_version = V2_BIN_VERSION if cfg['tabular_state_encoding'] == 'v2' else BIN_VERSION
+    state_count = int(np.prod(STATE_ENCODINGS[encoding_version]['shape']))
     low, high = _bounds(env)
     names, primitives = action_primitives()
     rng = np.random.default_rng(np.random.SeedSequence([cfg['training_seed'], 71]))
@@ -117,12 +175,12 @@ def train_tabular_policy(config, progress_callback: Callable | None = None):
         return collected
     demonstration_seeds = distinct_seeds(74, cfg['demonstration_episodes'])
     test_seeds = distinct_seeds(73, cfg['eval_episodes'])
-    first = np.zeros((STATE_COUNT, len(primitives)), dtype=np.float32)
+    first = np.zeros((state_count, len(primitives)), dtype=np.float32)
     second = first.copy()
-    policy = TabularPolicy(first, low, high, env.observation_names)
+    policy = TabularPolicy(first, low, high, env.observation_names, encoding_version)
     sums, counts = np.zeros_like(first), np.zeros_like(first, dtype=np.int32)
     demo_transitions, demo_episodes, curve = [], [], []
-    visits = np.zeros(STATE_COUNT, dtype=np.int32)
+    visits = np.zeros(state_count, dtype=np.int32)
     updates, environment_steps, reward_scale = 0, 0, 10.
     def state(observation):
         return int(policy.state_indices(_normalize(observation, low, high))[0])
@@ -205,7 +263,7 @@ def train_tabular_policy(config, progress_callback: Callable | None = None):
                       'observation_high': high.tolist(), 'feature_transform': None,
                       'action_names': list(env.action_names), 'primitive_names': names,
                       'action_primitives': primitives.tolist(),
-                      'state_encoding': {'version': BIN_VERSION, 'edges': BIN_EDGES, 'shape': list(STATE_SHAPE)},
+                      'state_encoding': deepcopy(STATE_ENCODINGS[encoding_version]),
                       'q_values': ((first + second) / 2).tolist()}
     finally:
         env.close()
@@ -226,7 +284,8 @@ def train_tabular_policy(config, progress_callback: Callable | None = None):
                          'demonstration_replay_updates_per_online_step': 1 if demo_transitions else 0,
                          'demonstration_summary': _aggregate(demo_episodes, cfg['training_seed']) if demo_episodes else None,
                          'environment_steps': environment_steps, 'gradient_updates': 0,
-                         'td_updates': updates, 'tabular_states': STATE_COUNT,
+                         'td_updates': updates, 'tabular_states': state_count,
+                         'tabular_state_encoding': encoding_version,
                          'visited_training_states': int(np.count_nonzero(visits)),
                          'reward_scale': reward_scale, 'environment_description': description,
                          'observation_encoding': 'Reactive partial-state bins, not a Markov state representation',

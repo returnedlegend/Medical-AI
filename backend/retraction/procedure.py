@@ -146,6 +146,43 @@ class MatchedPolicySessionConfig(BaseModel):
     seed: int = Field(default=42, ge=0, le=4294967295, strict=True)
 
 
+class ScenarioSessionConfig(SessionConfig):
+    seed: int | None = Field(default=None, ge=0, le=4294967295, strict=True)
+
+
+def protocol_progress(controller, previous: dict | None = None, *, episode_finished=False) -> dict:
+    state = json_safe(controller.state_dict())
+    return {**(previous or {}), 'scenario_id': controller.scenario_id,
+            'version': state['protocol_version'], 'phase': controller.phase,
+            'protocol_step': controller.steps, 'completed': bool(controller.completed),
+            'completion_reason': controller.completion_reason, 'target_node_id': state['target_node_id'],
+            'status': 'episode-finished' if episode_finished else 'completed' if controller.completed else 'active',
+            'controller_state': state, 'metadata': json_safe(controller.metadata)}
+
+
+def scenario_definition(scenario_id: str) -> dict:
+    from .scenarios import scenario_catalog
+    definition = next((item for item in scenario_catalog() if item['id'] == scenario_id), None)
+    if definition is None:
+        raise HTTPException(404, 'Controlled response protocol not found')
+    return definition
+
+
+def create_protocol_session(service, scenario_id: str, config: ScenarioSessionConfig, *, reset_from_id=None):
+    from .scenarios import MAX_PROTOCOL_STEPS, create_scenario_controller
+    definition = scenario_definition(scenario_id)
+    try:
+        settings = normalize_environment_config({**definition['config'], **config.config})
+        seed = definition['seed'] if config.seed is None else config.seed
+        controller = create_scenario_controller(scenario_id, max_steps=min(settings['max_steps'], MAX_PROTOCOL_STEPS))
+        protocol = protocol_progress(controller, {'environment_config': settings, 'configured_seed': seed,
+                                                  'patient_override': config.patient is not None})
+    except (ValueError, TypeError) as error:
+        raise HTTPException(422, str(error)) from error
+    return service.create(SessionConfig(seed=seed, config=settings, patient=config.patient),
+                          reset_from_id=reset_from_id, protocol=protocol)
+
+
 def training_environment_config(training: dict) -> dict | None:
     """Recover the effective training settings, including the episode horizon.
 
@@ -215,11 +252,13 @@ class EpisodeStore:
                 seed INTEGER NOT NULL, config TEXT NOT NULL, patient TEXT,
                 engine_version TEXT NOT NULL, status TEXT NOT NULL,
                 revision INTEGER NOT NULL, snapshot TEXT NOT NULL, reset_from_id TEXT,
-                policy_context TEXT, physics_fingerprint TEXT
+                policy_context TEXT, physics_fingerprint TEXT, protocol TEXT
             )''')
             columns = {row['name'] for row in db.execute('PRAGMA table_info(sessions)')}
             if 'policy_context' not in columns:
                 db.execute('ALTER TABLE sessions ADD COLUMN policy_context TEXT')
+            if 'protocol' not in columns:
+                db.execute('ALTER TABLE sessions ADD COLUMN protocol TEXT')
             if 'physics_fingerprint' not in columns:
                 db.execute('ALTER TABLE sessions ADD COLUMN physics_fingerprint TEXT')
                 # Preserve a fingerprint only when the historical snapshot
@@ -252,7 +291,7 @@ class EpisodeStore:
         if row is None:
             return None
         result = dict(row)
-        for field in ('config', 'patient', 'snapshot', 'policy_context'):
+        for field in ('config', 'patient', 'snapshot', 'policy_context', 'protocol'):
             result[field] = json.loads(result[field]) if result[field] is not None else None
         return result
 
@@ -273,18 +312,18 @@ class EpisodeStore:
                 (current_engine_version(), current_physics_fingerprint())).fetchone()[0]
 
     def create(self, seed: int, config: dict, patient: dict | None, snapshot: dict, version: str,
-               reset_from_id=None, context=None, physics_fingerprint=None):
+               reset_from_id=None, context=None, physics_fingerprint=None, protocol=None):
         session_id, now = str(uuid4()), timestamp()
         with self.connect() as db:
             db.execute('''INSERT INTO sessions
-                       (id,created_at,updated_at,seed,config,patient,engine_version,status,revision,snapshot,reset_from_id,policy_context,physics_fingerprint)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                       (id,created_at,updated_at,seed,config,patient,engine_version,status,revision,snapshot,reset_from_id,policy_context,physics_fingerprint,protocol)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
                        (session_id, now, now, seed, encoded(config), encoded(patient) if patient is not None else None,
                         version, 'active', 0, encoded(snapshot), reset_from_id, encoded(context) if context else None,
-                        physics_fingerprint))
+                        physics_fingerprint, encoded(protocol) if protocol else None))
         return self.get(session_id)
 
-    def append(self, record: dict, action: list, snapshot: dict, status: str, source: dict):
+    def append(self, record: dict, action: list, snapshot: dict, status: str, source: dict, *, protocol=None):
         revision = record['revision'] + 1
         transition = {'revision': revision, 'action': action, 'source': source, **snapshot}
         with self.connect() as db:
@@ -299,6 +338,18 @@ class EpisodeStore:
             if source.get('policy_context') is not None:
                 db.execute('UPDATE sessions SET policy_context=? WHERE id=?',
                            (encoded(source['policy_context']), record['id']))
+            if protocol is not None:
+                db.execute('UPDATE sessions SET protocol=? WHERE id=?', (encoded(protocol), record['id']))
+        return self.get(record['id'])
+
+    def update_protocol(self, record: dict, protocol: dict):
+        """Complete controller bookkeeping without inventing a tissue action."""
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            changed = db.execute('UPDATE sessions SET protocol=?,updated_at=? WHERE id=? AND revision=? AND status=?',
+                                 (encoded(protocol), timestamp(), record['id'], record['revision'], record['status'])).rowcount
+            if changed != 1:
+                raise EpisodeConflict('Episode changed during this operation; fetch its latest state.')
         return self.get(record['id'])
 
     def close(self, record: dict):
@@ -307,6 +358,11 @@ class EpisodeStore:
                                  (timestamp(), record['id'], record['revision'], record['status'])).rowcount
             if updated != 1:
                 raise EpisodeConflict('Episode changed during this operation; fetch its latest state.')
+            protocol = record.get('protocol')
+            if protocol and protocol['status'] == 'active':
+                interrupted = {**protocol, 'status': 'interrupted', 'completed': True,
+                               'completion_reason': 'Episode closed before the controlled response protocol completed.'}
+                db.execute('UPDATE sessions SET protocol=? WHERE id=?', (encoded(interrupted), record['id']))
         return self.get(record['id'])
 
     def transitions(self, session_id: str, *, after_revision: int = 0, limit: int | None = None):
@@ -372,7 +428,7 @@ class ProcedureService:
                                       'current_revision': record['revision']})
         return record
 
-    def create(self, config: SessionConfig, *, reset_from_id=None, context=None):
+    def create(self, config: SessionConfig, *, reset_from_id=None, context=None, protocol=None):
         with self.lock:
             if self.closed:
                 raise HTTPException(503, 'Procedure service is stopping')
@@ -387,7 +443,8 @@ class ProcedureService:
                 initial = snapshot(observation, info)
                 encoded(initial)
                 record = self.store.create(config.seed, normalized, patient, initial, current_engine_version(),
-                                           reset_from_id, context=context, physics_fingerprint=current_physics_fingerprint())
+                                           reset_from_id, context=context, physics_fingerprint=current_physics_fingerprint(),
+                                           protocol=protocol)
             except Exception as error:
                 if environment is not None and hasattr(environment, 'close'):
                     environment.close()
@@ -424,7 +481,7 @@ class ProcedureService:
         self.cache_environment(record['id'], environment, record['revision'])
         return environment
 
-    def step(self, session_id: str, action: list[float], expected_revision=None, source=None):
+    def step(self, session_id: str, action: list[float], expected_revision=None, source=None, *, protocol_controller=None):
         with self.lock:
             record = self.require(session_id, expected_revision)
             if record['status'] != 'active':
@@ -438,7 +495,20 @@ class ProcedureService:
                                    episode_reward=record['snapshot']['episode_reward'] + float(reward),
                                    terminated=terminated, truncated=truncated)
                 status = 'terminated' if terminated else 'truncated' if truncated else 'active'
-                updated = self.store.append(record, action, current, status, source or {'type': 'manual'})
+                source = dict(source or {'type': 'manual'})
+                protocol = None
+                if protocol_controller is not None:
+                    if terminated or truncated:
+                        stopped = protocol_controller.next_action(observation, info)
+                        if stopped is not None:
+                            raise ValueError('Response protocol attempted another action after episode termination')
+                    protocol = protocol_progress(protocol_controller, record.get('protocol'),
+                                                 episode_finished=terminated or truncated)
+                    source['controller_state'] = protocol['controller_state']
+                elif record.get('protocol') and record['protocol']['status'] == 'active':
+                    protocol = {**record['protocol'], 'status': 'interrupted', 'completed': True,
+                                'completion_reason': 'Episode advanced outside the controlled response protocol.'}
+                updated = self.store.append(record, action, current, status, source, protocol=protocol)
                 self.cache_revisions[session_id] = updated['revision']
             except Exception:
                 # The simulation may already have advanced. Evict it and replay
@@ -582,6 +652,17 @@ def create_session(config: SessionConfig, request: Request):
     return request.app.state.procedure.create(config)
 
 
+@router.get('/scenarios')
+def list_response_protocols():
+    from .scenarios import scenario_catalog
+    return {'scenarios': json_safe(scenario_catalog())}
+
+
+@router.post('/scenarios/{scenario_id}/session', status_code=201)
+def create_response_protocol_session(scenario_id: str, config: ScenarioSessionConfig, request: Request):
+    return create_protocol_session(request.app.state.procedure, scenario_id, config)
+
+
 @router.get('/sessions')
 def list_sessions(request: Request, limit: int = Query(50, ge=1, le=200), offset: int = Query(0, ge=0)):
     return {'sessions': [public_record(record, include_state=False)
@@ -648,6 +729,44 @@ def scripted_step(session_id: UUID, config: RevisionConfig, request: Request):
                               source={'type': 'scripted-feedback-baseline'})
 
 
+@router.post('/sessions/{session_id}/protocol-step')
+def response_protocol_step(session_id: UUID, config: RevisionConfig, request: Request):
+    from .scenarios import ScenarioController
+    procedure = request.app.state.procedure
+    with procedure.lock:
+        record = procedure.require(str(session_id), config.expected_revision)
+        incompatibility = engine_incompatibility(record)
+        if incompatibility:
+            raise HTTPException(409, incompatibility)
+        protocol = record.get('protocol')
+        if not protocol:
+            raise HTTPException(409, 'Select a controlled response protocol by creating a new protocol episode.')
+        if protocol['status'] == 'interrupted':
+            raise HTTPException(409, 'This response protocol was interrupted by another controller. Reset to create a fresh protocol episode.')
+        if protocol.get('completed'):
+            return public_record(record)
+        if record['status'] != 'active':
+            raise HTTPException(409, 'This episode is finished or closed. Reset it to create a new protocol episode.')
+        try:
+            controller = ScenarioController.from_state(protocol['controller_state'])
+            if controller.scenario_id != protocol['scenario_id'] or controller.state_dict()['protocol_version'] != protocol['version']:
+                raise ValueError('Saved response protocol identity does not match its controller state')
+            action = controller.next_action(record['snapshot']['observation'], record['snapshot']['info'])
+        except (ValueError, TypeError, KeyError) as error:
+            raise HTTPException(409, f'The saved response protocol cannot resume: {error}. Reset to create a fresh protocol episode.') from error
+        try:
+            if action is None:
+                progress = protocol_progress(controller, protocol)
+                return public_record(procedure.store.update_protocol(record, progress))
+            action = StepConfig(action=json_safe(action)).action
+            source = {'type': 'response-protocol', 'scenario_id': controller.scenario_id,
+                      'version': protocol['version'], 'phase': controller.phase, 'protocol_step': controller.steps}
+            return procedure.step(str(session_id), action, config.expected_revision, source=source,
+                                  protocol_controller=controller)
+        except EpisodeConflict as error:
+            raise HTTPException(409, str(error)) from error
+
+
 @router.post('/sessions/{session_id}/reset', status_code=201)
 def reset_session(session_id: UUID, config: ResetConfig, request: Request):
     procedure = request.app.state.procedure
@@ -656,6 +775,11 @@ def reset_session(session_id: UUID, config: ResetConfig, request: Request):
         if previous['status'] != 'closed':
             procedure.store.close(previous)
         procedure.discard(str(session_id))
+        if previous.get('protocol'):
+            return create_protocol_session(procedure, previous['protocol']['scenario_id'],
+                                           ScenarioSessionConfig(seed=config.seed if config.seed is not None else previous['seed'],
+                                                                 config=previous['config'], patient=previous['patient']),
+                                           reset_from_id=str(session_id))
         return procedure.create(SessionConfig(seed=config.seed if config.seed is not None else previous['seed'],
                                               config=previous['config'], patient=previous['patient']),
                                 reset_from_id=str(session_id))

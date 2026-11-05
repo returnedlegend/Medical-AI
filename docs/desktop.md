@@ -48,11 +48,13 @@ bound to loopback, and the embedded page blocks external HTTP navigation.
 
 Use the interface's export controls to save procedure episodes, training results,
 cohort JSON, cohort CSV, and reports through the native Save dialog. The File menu
-also exports the most recent completed cohort study. Canceling a Save dialog
+exports the selected procedure episode with **Ctrl+E**, including archived
+episodes, and labels the separate latest-cohort exports explicitly. Canceling a Save dialog
 leaves the study unchanged. Help → Open diagnostic logs opens the local log folder.
 
-Help contains offline documentation for tissue response, reinforcement learning,
-the cohort model, the desktop application, and the optional SOFA integration.
+Help contains offline documentation for tissue response, tool-response protocols,
+numerical validation, reinforcement learning, the policy study, the cohort model,
+the desktop application, and the optional SOFA integration.
 These documents are bundled with the application and require no repository
 checkout or network connection.
 
@@ -78,11 +80,13 @@ manifest recording Python, source fingerprints, Git revision/dirty status, and
 model versions. `--skip-frontend` uses an existing frontend build and should only
 be used after that build has been verified.
 
-Install NSIS 3.11 and append `--installer --makensis "C:\\Program Files (x86)\\NSIS\\makensis.exe"`
+Install NSIS 3.11 and append `--installer --require-reference --makensis "C:\\Program Files (x86)\\NSIS\\makensis.exe"`
 to create the installer as well as the portable archive. Each build first copies
 an explicit source snapshot so edits during packaging cannot change the
 application midway through analysis. Exact source hashes and the environment's
 physics fingerprint are bundled in `build-info.json` and the external manifest.
+The release check rejects a missing or modified reference policy. The desktop
+requirements include the pinned core dependency lock and exact packaging tools.
 
 ## Development and checks
 
@@ -101,7 +105,7 @@ physics fingerprint are bundled in `build-info.json` and the external manifest.
   --data-dir /tmp/desktop-smoke-data --software-rendering
 
 # Driver-independent service/model diagnosis: actual cohort, persistent episode
-# replay, 20 DQN training episodes, held-out evaluation and a trained-policy step.
+# replay, real DQN and tabular training, held-out evaluation and policy steps.
 .desktop-venv/bin/python desktop/app.py --diagnose /tmp/desktop-diagnose.json
 ```
 

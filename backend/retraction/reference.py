@@ -21,7 +21,7 @@ REFERENCE_RESOURCE = 'stateful-policy-1.1.json'
 REFERENCE_FORMAT = 'retraction-bundled-reference-v1'
 # Set only after the frozen validation protocol has selected and serialized the
 # real reference result. The seal is code-owned, never read from the same file.
-REFERENCE_SHA256: str | None = None
+REFERENCE_SHA256: str | None = 'b3d0df3723d05366cf50a57bc538b3759208356686f867ea39d5a2dac6bcb573'
 MAX_REFERENCE_BYTES = 32 * 1024 * 1024
 
 

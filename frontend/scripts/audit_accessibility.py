@@ -49,13 +49,18 @@ def main() -> int:
             assert cohorts.ok, 'Start scripts/start.sh before running this audit.'
             completed = next((run for run in cohorts.json()['runs'] if run['status'] == 'completed'), None)
             assert completed, 'Complete a cohort first with scripts/browser_smoke.py. No records were changed.'
-            episodes = context.request.get(f'{base_url}/api/procedure/sessions').json()['sessions']
+            episodes = context.request.get(f'{base_url}/api/procedure/sessions?limit=200').json()['sessions']
             assert episodes, 'Save a procedure episode first with scripts/procedure_browser_smoke.py. No records were changed.'
             episode = next((item for item in episodes if item['revision'] > 1), None)
             assert episode, 'Save a multi-transition procedure first with scripts/procedure_browser_smoke.py.'
             trainings = context.request.get(f'{base_url}/api/learning/runs').json()['runs']
-            trained = next((run for run in trainings if run['status'] == 'completed'), None)
+            reference = context.request.get(f'{base_url}/api/learning/reference').json()
+            reference_id = reference.get('run_id') if reference.get('available') else None
+            trained = next((run for run in trainings if run['id'] == reference_id), None)
+            trained = trained or next((run for run in trainings if run['status'] == 'completed'), None)
             assert trained, 'Complete a policy first with scripts/procedure_browser_smoke.py. No records were changed.'
+            training_result = context.request.get(f"{base_url}/api/learning/runs/{trained['id']}/results").json()
+            protocol_episode = next((item for item in episodes if item.get('protocol') and item['revision'] > 1), None)
             page.goto(base_url, wait_until='networkidle')
             page.add_script_tag(path=str(source))
 
@@ -117,10 +122,37 @@ def main() -> int:
             page.get_by_role('button', name='Policy evaluation', exact=True).click()
             evaluation = page.get_by_role('region', name='Held-out policy evaluation', exact=True)
             expect(evaluation.get_by_role('rowheader', name='Learned policy', exact=True)).to_be_visible()
+            if trained['id'] == reference_id:
+                expect(page.locator('.reference-provenance')).to_contain_text('selected on validation')
+                expect(evaluation.locator('caption')).to_contain_text('Training-disjoint validation')
+                learned_row = evaluation.get_by_role('row', name=re.compile('^Learned policy '))
+                expected_upper = training_result['evaluation']['learned']['severe_harm_rate_ci'][1] * 100
+                expect(learned_row.locator('td').nth(3)).to_contain_text(f'{expected_upper:.1f}')
             audit('desktop_held_out_policy_evaluation')
             page.get_by_role('button', name='Events', exact=True).click()
             page.get_by_role('button', name='Tissue / tools', exact=True).click()
             audit('desktop_procedure_tissue_inspector')
+            page.get_by_role('button', name='Response protocols', exact=True).click()
+            expect(page.get_by_role('heading', name='Controlled response protocols', exact=True)).to_be_visible()
+            expect(page.get_by_label('Response protocol', exact=True)).not_to_have_value('')
+            audit('desktop_response_protocol_catalog')
+            page.get_by_label('Response protocol', exact=True).select_option('arterial-thermal-contact')
+            page.locator('.protocol-parameters summary').click()
+            expect(page.locator('.protocol-parameters')).to_contain_text('not clinical')
+            audit('desktop_response_protocol_parameters')
+            if protocol_episode:
+                page.get_by_label('Saved episode', exact=True).select_option(protocol_episode['id'])
+                expect(page.locator('.protocol-state')).to_be_visible()
+                audit('desktop_saved_protocol_response')
+                protocol_first = context.request.get(
+                    f"{base_url}/api/procedure/sessions/{protocol_episode['id']}/transitions?limit=1").json()['transitions'][0]
+                page.get_by_label('Recorded transition', exact=True).focus()
+                page.get_by_label('Recorded transition', exact=True).press('Home')
+                expect(page.locator('.protocol-state dd').nth(2)).to_have_text(protocol_first['source']['phase'])
+                audit('desktop_saved_protocol_recorded_phase')
+                page.get_by_role('button', name='Return to latest', exact=True).click()
+                page.get_by_label('Saved episode', exact=True).select_option(episode['id'])
+            page.get_by_role('button', name='Tissue / tools', exact=True).click()
             archived = next((item for item in episodes if item.get('engine_compatible') is False), None)
             if archived:
                 page.get_by_label('Saved episode', exact=True).select_option(archived['id'])
@@ -203,6 +235,13 @@ def main() -> int:
             expect(page.get_by_role('region', name='Held-out policy evaluation').get_by_role('rowheader', name='Learned policy', exact=True)).to_be_visible()
             audit('mobile_held_out_policy_evaluation')
             page.screenshot(path=str(args.output.with_name('policy-evaluation-mobile.png')), full_page=True)
+            page.get_by_role('button', name='Response protocols', exact=True).click()
+            if protocol_episode:
+                page.get_by_label('Saved episode', exact=True).select_option(protocol_episode['id'])
+                expect(page.locator('.protocol-state')).to_be_visible()
+            expect(page.get_by_role('heading', name='Controlled response protocols', exact=True)).to_be_visible()
+            audit('mobile_response_protocol_inspector')
+            page.screenshot(path=str(args.output.with_name('response-protocol-mobile.png')), full_page=True)
             page.set_viewport_size({'width': 1440, 'height': 1050})
             workspace('Cohort experiments')
             expect(page.locator('.metrics-grid')).to_be_visible()

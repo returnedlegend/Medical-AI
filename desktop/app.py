@@ -22,6 +22,17 @@ if not getattr(sys, "frozen", False):
 from desktop.runtime import LocalServer, TOKEN_HEADER, resource_root
 from retraction import __version__
 
+DOCUMENTATION = (
+    ("Tissue response model", "tissue-response.md"),
+    ("Tool-response protocols", "response-protocols.md"),
+    ("Numerical validation", "numerical-validation.md"),
+    ("Reinforcement learning", "rl-training.md"),
+    ("Policy validation study", "rl-study-001.md"),
+    ("Analytic cohort model", "model.md"),
+    ("Desktop application guide", "desktop.md"),
+    ("SOFA integration", "sofa-integration.md"),
+)
+
 
 def configure_logging(directory: Path) -> Path:
     directory.mkdir(parents=True, exist_ok=True)
@@ -69,11 +80,14 @@ def main() -> int:
     if not lock.tryLock(0):
         QMessageBox.information(None, "Retraction Lab is already running", "Another Retraction Lab window is using this study directory. Close it before starting a second instance.")
         return 2
+    server = None
     try:
         server = LocalServer(data_directory)
         server.start()
     except Exception:
         logging.exception("Application startup failed")
+        if server is not None:
+            server.stop(timeout=None)
         QMessageBox.critical(None, "Retraction Lab could not start", f"The local research service could not start.\n\nDiagnostic log: {log_path}")
         lock.unlock()
         return 1
@@ -121,7 +135,12 @@ def main() -> int:
 
         def make_menu(self):
             file_menu = self.menuBar().addMenu("&File")
-            for label, suffix, format_name in (("Export latest results as &JSON…", "json", "json"), ("Export latest cohort as &CSV…", "csv", "csv"), ("Export latest &report…", "md", "report")):
+            procedure_export = QAction("Export selected procedure &episode…", self)
+            procedure_export.setShortcut("Ctrl+E")
+            procedure_export.triggered.connect(self.export_selected_episode)
+            file_menu.addAction(procedure_export)
+            file_menu.addSeparator()
+            for label, suffix, format_name in (("Export latest cohort as &JSON…", "json", "json"), ("Export latest cohort as &CSV…", "csv", "csv"), ("Export latest cohort &report…", "md", "report")):
                 action = QAction(label, self)
                 action.triggered.connect(lambda checked=False, ext=suffix, fmt=format_name: self.export_latest(ext, fmt))
                 file_menu.addAction(action)
@@ -144,7 +163,7 @@ def main() -> int:
                 action.triggered.connect(lambda checked=False, f=factor: self.view.setZoomFactor(max(0.6, min(1.8, self.view.zoomFactor() * f))))
                 view_menu.addAction(action)
             help_menu = self.menuBar().addMenu("&Help")
-            for label, document in (("Tissue response model", "tissue-response.md"), ("Reinforcement learning", "rl-training.md"), ("Analytic cohort model", "model.md"), ("Desktop application guide", "desktop.md")):
+            for label, document in DOCUMENTATION:
                 action = QAction(label, self)
                 action.triggered.connect(lambda checked=False, name=document: self.show_documentation(name))
                 help_menu.addAction(action)
@@ -176,7 +195,7 @@ def main() -> int:
             dialog.resize(1000, 760)
             layout = QVBoxLayout(dialog)
             selector = QComboBox(dialog)
-            documents = [("Tissue response model", "tissue-response.md"), ("Reinforcement learning", "rl-training.md"), ("Analytic cohort model", "model.md"), ("Desktop application guide", "desktop.md"), ("SOFA integration", "sofa-integration.md")]
+            documents = DOCUMENTATION
             for label, name in documents:
                 selector.addItem(label, name)
             viewer = QTextBrowser(dialog)
@@ -232,6 +251,28 @@ def main() -> int:
             request.setDownloadFileName(path.name)
             request.accept()
             request.isFinishedChanged.connect(lambda: self.statusBar().showMessage(f"Export saved: {path.name}" if request.state().name == "DownloadCompleted" else "Export interrupted", 8000))
+
+        def export_selected_episode(self):
+            def exported(value):
+                try:
+                    result = json.loads(value) if isinstance(value, str) else {}
+                except ValueError:
+                    result = {}
+                if not result.get("clicked"):
+                    QMessageBox.information(self, "Choose a procedure episode", "Open the Procedure laboratory and select or create an episode before exporting it.")
+            # Use the current page's own export link: its selected session is
+            # authoritative even when the user is viewing an archived episode
+            # or inspecting an earlier recorded frame.
+            self.page.runJavaScript("""(() => {
+                const link = [...document.querySelectorAll('a[download]')].find(a => {
+                    const url = new URL(a.href, location.href);
+                    return url.origin === location.origin &&
+                        /^\\/api\\/procedure\\/sessions\\/[0-9a-f-]{36}\\/export$/i.test(url.pathname);
+                });
+                if (!link) return JSON.stringify({clicked:false});
+                link.click();
+                return JSON.stringify({clicked:true});
+            })()""", exported)
 
         def export_latest(self, extension, format_name):
             try:
@@ -379,7 +420,9 @@ def main() -> int:
     window.page.deleteLater()
     if smoke_executor:
         smoke_executor.shutdown(wait=True)
-    server.stop()
+    # Keep the study lock until every local worker has actually stopped. A
+    # second window must not recover jobs still owned by this process.
+    server.stop(timeout=None)
     lock.unlock()
     return result
 

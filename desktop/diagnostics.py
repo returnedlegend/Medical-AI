@@ -62,6 +62,15 @@ def diagnose(output: Path, data_directory: Path | None = None) -> int:
             evidence["checks"]["physics_source_provenance"] = True
         server.start()
         evidence["checks"]["health"] = server.request("/api/health")["status"] == "ok"
+        reference = server.request("/api/learning/reference")
+        reference_file = resource_root() / "examples" / "stateful-policy-1.1.json"
+        if reference_file.is_file():
+            assert reference["available"], reference.get("reason", "Bundled reference did not load")
+            policy_session = server.request(f"/api/learning/runs/{reference['run_id']}/session", {"seed": 193})
+            stepped = server.request(f"/api/procedure/sessions/{policy_session['id']}/policy-step", {"training_run_id": reference["run_id"], "expected_revision": 0})
+            assert stepped["revision"] == 1
+            evidence["checks"]["bundled_reference"] = {"available": True, "policy_transition": True,
+                                                        "file_sha256": reference["origin"]["file_sha256"]}
         evidence["checks"]["frontend_resources"] = b"<html" in server.request_bytes("/").lower()
         documents = ("tissue-response.md", "rl-training.md", "model.md", "desktop.md")
         evidence["checks"]["offline_documents"] = all(len((resource_root() / "docs" / name).read_text(encoding="utf-8")) > 100 for name in documents)
@@ -76,7 +85,7 @@ def diagnose(output: Path, data_directory: Path | None = None) -> int:
         assert session["revision"] == 3 and session["status"] == "active"
         # Restart the actual service, replay an active persisted episode, and
         # make a further real transition rather than only re-reading a row.
-        server.stop()
+        server.stop(timeout=None)
         server = LocalServer(directory)
         server.start()
         restored = server.request(f"/api/procedure/sessions/{session['id']}")
@@ -86,14 +95,15 @@ def diagnose(output: Path, data_directory: Path | None = None) -> int:
         exported = server.request(f"/api/procedure/sessions/{session['id']}/export")
         assert len(exported["transitions"]) == 4
         evidence["checks"]["procedure"] = {"transitions": 4, "status": session["status"], "restart_replay": True}
-        learning = server.request("/api/learning/runs", {"training_seed": 7, "episodes": 20, "eval_episodes": 5, "max_steps": 20, "demonstration_episodes": 0})
-        wait_for_run(server, f"/api/learning/runs/{learning['id']}")
-        training = server.request(f"/api/learning/runs/{learning['id']}/results")
-        assert len(training["learning_curve"]) == 20 and training["checkpoint"]
-        policy_session = server.request(f"/api/learning/runs/{learning['id']}/session", {"seed": 193})
-        stepped = server.request(f"/api/procedure/sessions/{policy_session['id']}/policy-step", {"training_run_id": learning["id"], "expected_revision": 0})
-        assert stepped["revision"] == 1
-        evidence["checks"]["learning"] = {"algorithm": training["algorithm"], "episodes": 20, "held_out_episodes": 5, "policy_transition": True}
+        for algorithm, check_name in (("dqn", "learning"), ("tabular_q", "tabular_learning")):
+            learning = server.request("/api/learning/runs", {"algorithm": algorithm, "training_seed": 7, "episodes": 20, "eval_episodes": 5, "max_steps": 20, "demonstration_episodes": 0})
+            wait_for_run(server, f"/api/learning/runs/{learning['id']}")
+            training = server.request(f"/api/learning/runs/{learning['id']}/results")
+            assert len(training["learning_curve"]) == 20 and training["checkpoint"]
+            policy_session = server.request(f"/api/learning/runs/{learning['id']}/session", {"seed": 193})
+            stepped = server.request(f"/api/procedure/sessions/{policy_session['id']}/policy-step", {"training_run_id": learning["id"], "expected_revision": 0})
+            assert stepped["revision"] == 1
+            evidence["checks"][check_name] = {"algorithm": training["algorithm"], "episodes": 20, "held_out_episodes": 5, "policy_transition": True}
         assert all(value is not False for value in evidence["checks"].values())
         evidence["status"] = "passed"
     except Exception as error:
@@ -102,7 +112,7 @@ def diagnose(output: Path, data_directory: Path | None = None) -> int:
         evidence["error"] = f"{type(error).__name__}: {error}"
     finally:
         if server is not None:
-            server.stop()
+            server.stop(timeout=None)
         if lock is not None:
             lock.unlock()
         if temporary is not None:

@@ -1,6 +1,7 @@
 """Reward dependence, bounded serialization, and partial-state policy tests."""
 import copy
 import json
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -129,3 +130,68 @@ def test_actual_tissue_harm_penalties_change_a_learned_return_preference():
         return int(np.argmax(first + second))
     assert preference(totals) == 1
     assert preference(ablated_totals) == 0
+
+
+def test_v2_separates_acquisition_heat_injury_and_horizon_aliases_using_public_data():
+    from retraction.environment import TissueRetractionEnv
+    from retraction.learning import _normalize
+    from retraction.tabular import TabularPolicy, STATE_COUNT, V2_BIN_VERSION, V2_STATE_SHAPE
+    env = TissueRetractionEnv()
+    observation, _ = env.reset(seed=42)
+    low, high = env.observation_space.low, env.observation_space.high
+    first = TabularPolicy(np.zeros((STATE_COUNT, 1)), low, high, env.observation_names)
+    second = TabularPolicy(np.zeros((int(np.prod(V2_STATE_SHAPE)), 1)), low, high,
+                           env.observation_names, V2_BIN_VERSION)
+    def state(policy, values):
+        return int(policy.state_indices(_normalize(values, low, high))[0])
+    base_v1, base_v2 = state(first, observation), state(second, observation)
+    changes = [
+        {'grasper_x': 30, 'grasper_y': 40},
+        {'grasper_x': observation[env.observation_names.index('n01_x')], 'grasper_y': 3},
+        {'n03_temperature_c': 50},
+        {'n03_thermal_dose': .5},
+        {'step_count': 190},
+    ]
+    for settings in changes:
+        changed = observation.copy()
+        for name, value in settings.items():
+            changed[env.observation_names.index(name)] = value
+        assert state(first, changed) == base_v1
+        assert state(second, changed) != base_v2
+        env.reset(seed=97)
+        assert state(second, changed) != base_v2  # No internal environment access.
+    target, other = observation.copy(), observation.copy()
+    target[env.observation_names.index('contact_node_index')] = 3
+    other[env.observation_names.index('contact_node_index')] = 7
+    assert state(first, target) == state(first, other)
+    assert state(second, target) != state(second, other)
+    env.close()
+
+
+def test_v2_real_training_exports_its_exact_version_and_runs():
+    from retraction.environment import TissueRetractionEnv
+    result = train_policy({'algorithm': 'tabular_q', 'tabular_state_encoding': 'v2',
+                           'training_seed': 91, 'episodes': 20, 'max_steps': 40,
+                           'eval_episodes': 5, 'demonstration_episodes': 5})
+    assert result['metadata']['tabular_states'] == 12000
+    assert result['checkpoint']['state_encoding']['version'] == 'public-reactive-bins-2'
+    assert result['metadata']['td_updates'] > 0
+    checkpoint = json.loads(json.dumps(result['checkpoint'], allow_nan=False))
+    env = TissueRetractionEnv({'max_steps': 40})
+    observation, _ = env.reset(seed=32)
+    validate_checkpoint_compatibility(checkpoint, env.describe())
+    assert policy_action(checkpoint, observation) == policy_action(result['checkpoint'], observation)
+    broken = copy.deepcopy(checkpoint)
+    broken['state_encoding']['version'] = ['untrusted-expression']
+    with pytest.raises(ValueError, match='state encoding'):
+        load_tabular_checkpoint(broken)
+    env.close()
+
+
+def test_v1_published_reference_replays_its_recorded_outcome_after_v2_extension():
+    from retraction.learning import evaluate_policy
+    path = Path(__file__).resolve().parents[2] / 'examples/stateful-policy-1.1.json'
+    result = json.loads(path.read_text())['result']
+    expected = result['evaluation']['learned']['episodes'][0]
+    observed = evaluate_policy(result['checkpoint'], result['config'], [expected['seed']])['learned']['episodes'][0]
+    assert observed == expected

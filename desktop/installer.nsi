@@ -41,6 +41,27 @@ Function .onInit
     MessageBox MB_OK|MB_ICONSTOP "Retraction Lab requires Windows 10 or later."
     Abort
   ${EndIf}
+  Call CheckRetractionClosed
+FunctionEnd
+
+Function CheckRetractionClosed
+  check_again:
+    FindWindow $0 "" "Retraction Lab — Research Workbench"
+    IntCmp $0 0 finished
+    MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "Close Retraction Lab before installing or updating it. Your studies remain saved." /SD IDCANCEL IDRETRY check_again
+    SetErrorLevel 2
+    Abort
+  finished:
+FunctionEnd
+
+Function un.onInit
+  check_again:
+    FindWindow $0 "" "Retraction Lab — Research Workbench"
+    IntCmp $0 0 finished
+    MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "Close Retraction Lab before uninstalling it. Your studies will be preserved." /SD IDCANCEL IDRETRY check_again
+    SetErrorLevel 2
+    Abort
+  finished:
 FunctionEnd
 
 Section "Retraction Lab" MainSection

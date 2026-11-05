@@ -26,6 +26,7 @@ def main():
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--installer", action="store_true", help="Also create a Windows Setup.exe using NSIS 3.11")
     parser.add_argument("--makensis", type=Path, help="Path to the NSIS compiler")
+    parser.add_argument("--require-reference", action="store_true", help="Fail release builds unless the sealed offline policy is installed and valid")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     target = "windows" if sys.platform == "win32" else "linux" if sys.platform.startswith("linux") else "macos"
@@ -77,7 +78,7 @@ def main():
                         ignore=shutil.ignore_patterns("__pycache__", "tests", "*.pyc"))
     if (root / "examples").is_dir():
         shutil.copytree(root / "examples", snapshot / "examples")
-    for relative in ("README.md", "backend/requirements.txt", "backend/requirements-desktop.txt", "scripts/build-desktop.py"):
+    for relative in ("README.md", "backend/requirements.txt", "backend/requirements.lock", "backend/requirements-desktop.txt", "scripts/build-desktop.py"):
         destination = snapshot / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(root / relative, destination)
@@ -105,6 +106,14 @@ def main():
     from retraction.simulation import MODEL_VERSION
     from retraction.environment import ENV_VERSION, PHYSICS_FINGERPRINT, PHYSICS_FINGERPRINT_ALGORITHM
     from retraction import __version__
+    if args.require_reference:
+        from retraction.reference import REFERENCE_SHA256, reference_path, validate_reference
+        reference = reference_path()
+        if not reference.is_file() or REFERENCE_SHA256 is None:
+            raise SystemExit("A sealed offline reference policy is required for this release build")
+        if hashlib.sha256(reference.read_bytes()).hexdigest() != REFERENCE_SHA256:
+            raise SystemExit("The offline reference policy does not match its code-owned SHA256 seal")
+        validate_reference(json.loads(reference.read_text(encoding="utf-8")))
     version_tuple = tuple(int(part) for part in __version__.split("."))
     if len(version_tuple) != 3:
         raise SystemExit("The application version must have three numeric components")

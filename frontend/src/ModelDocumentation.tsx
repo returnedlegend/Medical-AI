@@ -12,6 +12,7 @@ interface Spec {
   config_limits: Record<string, number[]>;
   reward: Record<string, number>;
   assumptions: string[];
+  physics_fingerprint?: string;
 }
 export default function ModelDocumentation() {
   const [spec, setSpec] = useState<Spec | null>(null),
@@ -265,11 +266,22 @@ export default function ModelDocumentation() {
             <p>
               A scripted feedback baseline uses the public observation and is
               explicitly separate from reinforcement learning. The local NumPy
-              DQN learns among declared tool-control primitives using
-              transitions, replay, and environment reward. Training checkpoints,
-              evaluation summaries, and seed/configuration metadata are
-              inspectable. Learning does not establish a useful or safe surgical
-              policy.
+              Double DQN learns among declared tool-control primitives using
+              transitions, replay, and environment reward. The alternative
+              Double-Q table bins current contact, exposure error, force,
+              strain, and mechanical injury; this reduced state omits
+              information and is not Markov. Training checkpoints, comparator
+              rollouts, and seed/configuration metadata are inspectable.
+              Learning does not establish a useful or safe surgical policy.
+            </p>
+            <p>
+              Response protocols are scripted controlled interventions: gentle
+              traction, sustained jaw closure, artery or duct contact heating,
+              and a remote-heat control. Each action passes through the same
+              stateful engine and is retained with its protocol phase.
+              Intervention completion is separate from episode success. Manual
+              tool actions interrupt an active protocol; Reset creates a new
+              protocol episode.
             </p>
             <p>
               The modeled success gate requires sustained target exposure, low
@@ -336,9 +348,20 @@ export default function ModelDocumentation() {
             <p>
               Episode exports retain the engine version, configuration, seed,
               patient, observation, actions, transition sources, reward
-              components, events, and termination state. Loading a saved episode
-              restores its nodal state and recorded history. Reset creates a new
-              episode and retains the previous record.
+              components, events, termination state, and the exact model-source
+              fingerprint. Loading a saved episode restores its nodal state and
+              recorded history. The recording slider inspects stored transition
+              states without changing the episode. Reset creates a new episode
+              and retains the previous record. Archived model revisions remain
+              inspectable and exportable; their actions and policies cannot run
+              against changed mechanics.
+            </p>
+            <p>
+              A bundled reference, when available, is selected using
+              training-disjoint validation rollouts and is labeled accordingly.
+              Those results are not an untouched final test. Matching a
+              checkpoint’s simulator settings does not establish generalization
+              to a different tissue model or clinical use.
             </p>
             <p>
               The cohort study remains a separate static analytic strategy sweep
@@ -358,6 +381,10 @@ export default function ModelDocumentation() {
                 Engine: {spec?.engine ?? "local specification unavailable"}
               </span>
               <span>Model version: {spec?.version ?? "—"}</span>
+              <span title={spec?.physics_fingerprint}>
+                Mechanics source:{" "}
+                {spec?.physics_fingerprint?.slice(0, 16) ?? "not recorded"}
+              </span>
               <span>
                 Observation dimension: {spec?.observation_size ?? "—"}
               </span>

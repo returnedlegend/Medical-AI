@@ -115,6 +115,7 @@ def test_replay_wraps_but_keeps_transition_components_paired():
     {'episodes': True}, {'episodes': 3001}, {'eval_episodes': 1},
     {'learning_rate': float('nan')}, {'gamma': 1.1}, {'unknown': 1},
     {'environment': []}, {'environment': {'max_steps': 10}},
+    {'tabular_state_encoding': 'v3'},
 ])
 def test_training_configuration_has_bounded_cost_and_no_unknown_fields(bad):
     with pytest.raises(ValueError):

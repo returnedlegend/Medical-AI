@@ -135,6 +135,7 @@ def main():
         assert handoff['terminated'] and handoff['state']['termination_reason']=='handoff'
         checks.append('keyboard selection, grasp and motion work; handoff records an actual terminal decision')
         reset=click_response(page.get_by_role('button',name='Reset',exact=True),'/reset')
+        page.get_by_label('Playback controller',exact=True).select_option('baseline')
         run=page.get_by_role('button',name='Run policy',exact=True);expect(run).to_be_enabled();run.click()
         page.wait_for_timeout(1500)
         page.get_by_role('button',name='Pause',exact=True).click()
@@ -146,6 +147,7 @@ def main():
         assert stable['revision']==paused['revision']
         checks.append('transparent scripted feedback playback advances actual actions and pause stops subsequent steps')
         page.get_by_role('button',name='Policy learning',exact=True).click()
+        page.get_by_label('Learning algorithm',exact=True).select_option('dqn')
         page.get_by_label('Training episodes',exact=True).fill('20')
         trained=click_response(page.get_by_role('button',name='Train policy',exact=True),'/learning/runs')
         training_id=trained['id']

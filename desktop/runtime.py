@@ -127,7 +127,7 @@ class LocalServer:
     def request(self, path: str, data: dict | None = None, timeout: float = 30):
         return json.loads(self.request_bytes(path, data, timeout))
 
-    def stop(self, timeout: float = 15) -> None:
+    def stop(self, timeout: float | None = 15) -> None:
         if self._server is not None:
             self._server.should_exit = True
         if self._thread is not None and self._thread is not threading.current_thread():

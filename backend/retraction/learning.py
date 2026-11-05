@@ -23,6 +23,7 @@ DEFAULT_TRAINING_CONFIG = {
     "demonstration_margin": .1, "demonstration_weight": .5,
     "observation_encoding": "characteristic",
     "tabular_learning_rate": .15,
+    "tabular_state_encoding": "v1",
     "environment": {},
 }
 
@@ -39,6 +40,8 @@ def normalize_training_config(config: dict | None = None) -> dict:
         raise ValueError("algorithm must be dqn or tabular_q")
     if result["observation_encoding"] not in ("box", "characteristic"):
         raise ValueError("observation_encoding must be box or characteristic")
+    if result["tabular_state_encoding"] not in ("v1", "v2"):
+        raise ValueError("tabular_state_encoding must be v1 or v2")
     for key, lo, hi in (("training_seed", 0, 2**32 - 1), ("episodes", 20, 3000),
                         ("eval_episodes", 5, 100), ("max_steps", 20, 300),
                         ("demonstration_episodes", 0, 300)):
@@ -626,7 +629,8 @@ def train_policy(config: dict | None = None, progress_callback: Callable | None 
                            "observation_names": list(env.observation_names), "primitive_names": names,
                            "feature_transform": feature_spec,
                            "environment_description": description,
-                           "evaluation": "Held-out seeds are never used for fitting, checkpoint selection, or exploration schedules.",
+                           "unused_tabular_settings": ["tabular_learning_rate", "tabular_state_encoding"],
+                           "evaluation": "Per-run holdout is excluded from fitting and exploration. This function returns the final checkpoint; inspecting or selecting with these results makes the cohort validation data.",
                            "limitations": ["Synthetic, illustrative tissue dynamics; not clinical training or a validated surgical policy.",
                                            "A discrete primitive wrapper limits the continuous environment action space.",
                                            "One training seed per run; use independent runs before judging learning stability.",

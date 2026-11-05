@@ -32,6 +32,7 @@ def main() -> int:
     parser.add_argument('--demonstration-episodes', type=int, help='Training-only scripted replay trajectories; zero disables assistance')
     parser.add_argument('--observation-encoding', choices=['box', 'characteristic'])
     parser.add_argument('--algorithm', choices=['dqn', 'tabular_q'])
+    parser.add_argument('--tabular-state-encoding', choices=['v1', 'v2'])
     parser.add_argument('--output', type=Path, required=True, help='New bundle directory; refuses overwrite')
     args = parser.parse_args()
     try:
@@ -40,7 +41,7 @@ def main() -> int:
             raise ValueError('Training config must be a JSON object')
         if not 1 <= len(args.seeds) <= 10 or len(set(args.seeds)) != len(args.seeds):
             raise ValueError('Use 1–10 distinct training seeds')
-        for key in ('episodes', 'eval_episodes', 'max_steps', 'demonstration_episodes', 'observation_encoding', 'algorithm'):
+        for key in ('episodes', 'eval_episodes', 'max_steps', 'demonstration_episodes', 'observation_encoding', 'algorithm', 'tabular_state_encoding'):
             if getattr(args, key) is not None:
                 base[key] = getattr(args, key)
         configs = [normalize_training_config({**base, 'training_seed': seed}) for seed in args.seeds]
