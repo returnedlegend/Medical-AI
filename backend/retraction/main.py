@@ -21,6 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .storage import Store
+from .procedure import router as procedure_router, learning_router, initialize_procedure, shutdown_procedure
 from .physics import router as physics_router, initialize_physics, shutdown_physics
 
 logger = logging.getLogger(__name__)
@@ -97,7 +98,7 @@ def execute_experiment(config: dict, progress_callback):
     return run_experiment(config, progress_callback=progress_callback)
 
 
-def create_app(data_dir: str | Path | None = None) -> FastAPI:
+def create_app(data_dir: str | Path | None = None, web_dist: str | Path | None = None) -> FastAPI:
     directory = Path(data_dir or os.environ.get("RETRACTION_DATA_DIR", Path(__file__).resolve().parents[2] / ".data"))
 
     @asynccontextmanager
@@ -107,7 +108,9 @@ def create_app(data_dir: str | Path | None = None) -> FastAPI:
         app.state.executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="retraction")
         app.state.submit_lock = threading.Lock()
         initialize_physics(app, directory)
+        initialize_procedure(app, directory)
         yield
+        shutdown_procedure(app)
         shutdown_physics(app)
         app.state.executor.shutdown(wait=True, cancel_futures=False)
 
@@ -252,10 +255,12 @@ def create_app(data_dir: str | Path | None = None) -> FastAPI:
         return Response(output.getvalue(), media_type="text/csv", headers=headers)
 
     app.include_router(physics_router)
+    app.include_router(procedure_router)
+    app.include_router(learning_router)
 
     # API routes are registered before the static catch-all. Build the web app to
     # enable a single-process production server; development uses Vite's proxy.
-    web_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+    web_dist = Path(web_dist or os.environ.get("RETRACTION_WEB_DIST", Path(__file__).resolve().parents[2] / "frontend" / "dist"))
     if (web_dist / "index.html").is_file():
         app.mount("/", StaticFiles(directory=web_dist, html=True), name="web")
     return app
