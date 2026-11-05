@@ -1,0 +1,1110 @@
+.procedure-toolbar > button,
+.procedure-toolbar > a {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #c2ced9;
+  background: #fff;
+  padding: 6px 9px;
+  border-radius: 3px;
+  color: #36556e;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.procedure-toolbar > button:hover:not(:disabled) {
+  background: #e5eef6;
+}
+.procedure-toolbar > button.lab-primary {
+  background: #315f82;
+  border-color: #315f82;
+  color: #fff;
+}
+.procedure-toolbar > button.is-running {
+  background: #e9f1e7;
+  border-color: #9cb797;
+  color: #35613a;
+}
+.procedure-toolbar .toolbar-separator {
+  display: block;
+  height: 21px;
+  width: 1px;
+  background: #cad6e0;
+  flex-shrink: 0;
+}
+.procedure-toolbar > label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+}
+.procedure-toolbar > label > input {
+  width: 72px;
+  padding: 5px 7px;
+  font-size: 10px;
+  border-radius: 2px;
+  background: #fff;
+  border-color: #bccbd8;
+  color: #344d62;
+}
+.procedure-toolbar .procedure-clock {
+  margin-left: auto;
+  white-space: nowrap;
+  font-family: Consolas, monospace;
+  font-size: 10px;
+  color: #465e73;
+}
+.procedure-toolbar > a {
+  margin-left: 2px;
+}
+.viewport-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tissue-scene {
+  width: 100%;
+  height: 100%;
+  display: block;
+  max-height: 100%;
+  cursor: crosshair;
+  flex: 1;
+}
+.scene-scale text,
+.scene-labels text,
+.scene-legend text {
+  font-family: "Segoe UI", Arial, sans-serif;
+  fill: #c9d8df;
+  font-size: 10px;
+}
+.scene-labels text {
+  font-size: 9px;
+  letter-spacing: 0.6px;
+  fill: #c4cfbf;
+}
+.scene-legend text {
+  font-size: 11px;
+  fill: #d5e0e5;
+}
+.viewport-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  background: #101c27c9;
+  font-size: 8px;
+  color: #c1d0db;
+  gap: 10px;
+  pointer-events: none;
+}
+.tool-dock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 9px;
+  background: #e4ebf1;
+  border-top: 1px solid #aabac9;
+  flex-shrink: 0;
+}
+.tool-dock > button,
+.tool-select > button,
+.move-pad > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 9px;
+  min-height: 31px;
+  border: 1px solid #b9c9d6;
+  background: #f8fafb;
+  color: #3a566c;
+  font-size: 10px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.tool-select {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.tool-select > button.selected {
+  border-color: #5d88aa;
+  background: #d6e7f4;
+  color: #234c6e;
+}
+.tool-dock kbd {
+  font-family: inherit;
+  font-size: 8px;
+  color: #5f7890;
+  background: #edf2f6;
+  border: 1px solid #c7d4e0;
+  padding: 1px 3px;
+  border-radius: 2px;
+  margin-left: 4px;
+}
+.tool-dock .move-pad {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+.move-pad > button {
+  padding: 6px;
+  width: 29px;
+}
+.tool-dock > button.handoff-button {
+  background: #f5ede5;
+  color: #7e5439;
+  border-color: #d0b59c;
+}
+.tool-dock button:hover:not(:disabled) {
+  background: #cfe1ef;
+}
+.lab-error {
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #d8b5a8;
+  background: #fbefea;
+  color: #864f3e;
+  font-size: 10px;
+  line-height: 1.7;
+  flex-shrink: 0;
+}
+.lab-error > button {
+  margin-left: auto;
+  flex-shrink: 0;
+  border: 1px solid #cfb0a4;
+  padding: 3px 6px;
+  background: #fff8f3;
+  color: #885641;
+  border-radius: 2px;
+  font-size: 9px;
+}
+.procedure-properties .inspector-tabs {
+  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #e8eef4;
+  border-bottom: 1px solid #c8d4df;
+}
+.inspector-tabs > button {
+  flex: 1;
+  padding: 11px 6px;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: #526b80;
+  font-size: 10px;
+}
+.inspector-tabs > button.selected {
+  background: #fff;
+  border-bottom-color: #4c7ca1;
+  color: #294f6f;
+  font-weight: 600;
+}
+.inspector-group {
+  padding: 14px;
+}
+.inspector-group > label {
+  display: block;
+  font-size: 10px;
+  color: #425f76;
+  margin-bottom: 18px;
+}
+.inspector-group > label > strong {
+  float: right;
+  font-size: 9px;
+  font-weight: 400;
+  color: #5a7185;
+}
+.inspector-group input[type="range"] {
+  width: 100%;
+  height: 3px;
+  display: block;
+  accent-color: #527b9b;
+  margin: 14px 0 0;
+}
+.inspector-group input[type="number"],
+.inspector-group select {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid #c4d2df;
+  border-radius: 2px;
+  font-size: 10px;
+  background: #fff;
+  color: #36576f;
+  margin-top: 9px;
+}
+.inspector-group > p {
+  font-size: 9px;
+  color: #5c7386;
+  line-height: 1.8;
+  margin: 5px 0 18px;
+}
+.procedure-properties dl {
+  margin: 0;
+  padding: 13px 14px;
+  font-size: 10px;
+  gap: 13px 9px;
+  grid-template-columns: 1fr 1fr;
+}
+.procedure-properties dl > dt {
+  font-size: 9px;
+  color: #526d83;
+}
+.procedure-properties dl > dd {
+  font-family: Consolas, monospace;
+  font-size: 10px;
+  color: #354f64;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.procedure-properties .model-unit-note {
+  font-size: 8px;
+  line-height: 1.8;
+  color: #755f49;
+  padding: 0 14px 15px;
+}
+.vital-readings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 15px 14px 10px;
+}
+.vital-readings > span {
+  font-size: 9px;
+  color: #546d83;
+  line-height: 1.5;
+}
+.vital-readings strong {
+  display: block;
+  font-family: Consolas, monospace;
+  font-size: 23px;
+  font-weight: 500;
+  margin-top: 6px;
+  color: #38556d;
+}
+.vital-readings strong small {
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 8px;
+  display: block;
+  font-weight: 400;
+  color: #5e768b;
+  margin-top: 3px;
+}
+.mini-trace {
+  padding: 8px 14px 5px;
+}
+.mini-trace > span {
+  font-size: 8px;
+  color: #526f86;
+  display: block;
+}
+.mini-trace svg {
+  display: block;
+  width: 100%;
+  height: 55px;
+  margin-top: 6px;
+}
+.mini-trace .trace-range {
+  font-size: 7px;
+  text-align: right;
+  color: #587386;
+  margin-top: 1px;
+}
+.tissue-node-details {
+  border-top: 1px solid #d6dfe8;
+}
+.tissue-node-details > summary {
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #49667f;
+  cursor: pointer;
+  list-style: none;
+}
+.node-table {
+  max-height: 230px;
+  overflow: auto;
+  padding: 0 14px 12px;
+}
+.node-table table {
+  font-size: 8px;
+}
+.node-table th {
+  color: #59738b;
+  font-size: 8px;
+  padding: 8px 10px 8px 0;
+}
+.node-table td {
+  color: #3d5b72;
+  font-family: Consolas, monospace;
+  padding: 9px 10px 9px 0;
+}
+.lab-start-button,
+.lab-train-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: #335e7d;
+  color: #fff;
+  border: 1px solid #547e9c;
+  padding: 9px 15px;
+  font-size: 11px;
+  border-radius: 3px;
+  margin-top: 8px;
+}
+.lab-train-button {
+  width: 100%;
+  font-size: 10px;
+  margin: 10px 0 21px;
+}
+.learning-progress {
+  height: 4px;
+  overflow: hidden;
+  background: #dee7ee;
+  margin-top: 13px;
+}
+.learning-progress > span {
+  display: block;
+  background: #5e84a1;
+  height: 100%;
+}
+.training-status {
+  font-size: 8px;
+  color: #4c6981;
+  display: block;
+  margin-top: 7px;
+}
+.inspector-group > dl {
+  display: block;
+  margin-top: 12px;
+  padding: 0;
+}
+.inspector-group > dl > div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #e0e7ed;
+  font-size: 9px;
+}
+.inspector-group > dl dt {
+  color: #4a647a;
+  line-height: 1.6;
+}
+.inspector-group > dl dd {
+  font-family: Consolas, monospace;
+  font-size: 9px;
+  color: #35576f;
+  line-height: 1.6;
+  margin: 0;
+}
+.learning-export {
+  font-size: 9px;
+  color: #326b98;
+  display: block;
+  margin-top: 14px;
+  text-decoration: underline;
+}
+.reward-total {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 14px;
+  border-bottom: 1px solid #d5dfe7;
+  font-size: 10px;
+  color: #526e82;
+}
+.reward-total strong {
+  font-family: Consolas, monospace;
+  color: #365b79;
+  font-weight: 500;
+  font-size: 14px;
+}
+.reward-components {
+  padding: 6px 14px 15px;
+}
+.reward-components > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid #e0e7ed;
+  font-size: 9px;
+  color: #48647a;
+  padding: 8px 0;
+}
+.reward-components strong {
+  font-family: Consolas, monospace;
+  font-size: 10px;
+  font-weight: 400;
+  color: #376b53;
+}
+.reward-components strong.negative {
+  color: #994f41;
+}
+.procedure-console {
+  display: flex;
+  flex-direction: column;
+}
+.console-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #cbd7e2;
+  background: #f0f4f7;
+  padding-right: 10px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.console-heading h2 {
+  border: 0;
+  white-space: nowrap;
+}
+.console-heading > div {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  font-size: 8px;
+  color: #536c80;
+}
+.console-heading select {
+  border: 1px solid #c1cfdc;
+  font-size: 8px;
+  color: #426078;
+  background: #fff;
+  border-radius: 2px;
+  padding: 3px 6px;
+  max-width: 240px;
+}
+.event-log {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  padding: 3px 11px 8px;
+  font-family: Consolas, monospace;
+}
+.event-log > div {
+  display: flex;
+  gap: 13px;
+  border-bottom: 1px solid #edf0f3;
+  padding: 5px 0;
+  align-items: flex-start;
+}
+.event-log > div > span {
+  font-size: 9px;
+  color: #5e7a90;
+  min-width: 28px;
+  margin-top: 2px;
+}
+.event-log > div > p {
+  padding: 0;
+  font-size: 9px;
+  color: #3d596e;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.event-log > p {
+  font-size: 10px;
+  padding: 7px 0;
+  color: #5b7285;
+}
+@media (max-width: 1200px) {
+  .procedure-toolbar {
+    gap: 7px;
+    padding: 0 8px;
+  }
+  .procedure-toolbar > button,
+  .procedure-toolbar > a {
+    font-size: 9px;
+    padding: 6px 7px;
+  }
+  .procedure-toolbar .procedure-clock {
+    font-size: 9px;
+  }
+  .tool-dock {
+    gap: 5px;
+    padding: 7px;
+  }
+  .tool-dock > button,
+  .tool-select > button {
+    font-size: 9px;
+    padding: 6px;
+  }
+  .tool-dock kbd {
+    font-size: 7px;
+    margin-left: 1px;
+  }
+  .tool-dock .move-pad {
+    margin-left: 0;
+  }
+  .move-pad > button {
+    width: 25px;
+    padding: 5px;
+  }
+  .procedure-properties .model-unit-note {
+    font-size: 8px;
+  }
+}
+@media (max-width: 850px) {
+  .procedure-toolbar > label {
+    font-size: 9px;
+  }
+  .procedure-toolbar .procedure-clock {
+    display: none;
+  }
+  .procedure-toolbar > a {
+    margin-left: auto;
+  }
+  .console-heading > div > span {
+    display: none;
+  }
+  .tool-dock .move-pad {
+    margin-left: auto;
+  }
+}
+@media (max-width: 620px) {
+  .procedure-toolbar {
+    height: auto;
+    min-height: 37px;
+    flex-wrap: wrap;
+    padding: 7px;
+    gap: 6px;
+  }
+  .procedure-toolbar .toolbar-separator {
+    height: 19px;
+  }
+  .procedure-toolbar > label {
+    margin-left: auto;
+  }
+  .procedure-toolbar > label > input {
+    width: 59px;
+    font-size: 9px;
+  }
+  .procedure-toolbar > a {
+    font-size: 8px;
+  }
+  .procedure-viewport {
+    height: 470px;
+    min-height: 470px;
+  }
+  .viewport-body {
+    min-height: 300px;
+  }
+  .tool-dock {
+    gap: 5px;
+  }
+  .tool-dock .move-pad {
+    margin-left: auto;
+  }
+  .tool-select > button {
+    font-size: 9px;
+    padding: 6px 8px;
+  }
+  .tool-dock > button {
+    font-size: 9px;
+  }
+  .tool-dock kbd {
+    display: none;
+  }
+  .scene-scale text,
+  .scene-labels text {
+    font-size: 11px;
+  }
+  .viewport-caption {
+    font-size: 6px;
+    padding: 6px 8px;
+  }
+  .procedure-properties {
+    max-height: none;
+  }
+  .procedure-properties dl {
+    grid-template-columns: 1fr 1fr;
+    padding: 15px;
+    gap: 16px;
+  }
+  .procedure-properties dl > dt,
+  .procedure-properties dl > dd {
+    font-size: 11px;
+  }
+  .inspector-group > label {
+    font-size: 11px;
+  }
+  .procedure-properties .model-unit-note {
+    font-size: 9px;
+  }
+  .mini-trace {
+    padding: 9px 15px;
+  }
+  .mini-trace > span {
+    font-size: 9px;
+  }
+  .mini-trace svg {
+    height: 65px;
+  }
+  .vital-readings > span {
+    font-size: 10px;
+  }
+  .vital-readings strong {
+    font-size: 24px;
+  }
+  .inspector-tabs > button {
+    font-size: 11px;
+  }
+  .procedure-console {
+    max-height: 200px;
+  }
+  .console-heading > div {
+    gap: 5px;
+  }
+  .console-heading select {
+    font-size: 7px;
+    max-width: 170px;
+  }
+  .console-heading h2 {
+    font-size: 9px;
+  }
+  .event-log > div > p {
+    font-size: 9px;
+  }
+  .procedure-lab .lab-error {
+    font-size: 9px;
+  }
+  .procedure-initializing h1 {
+    font-size: 17px;
+  }
+  .procedure-initializing p {
+    font-size: 10px;
+  }
+  .lab-start-button {
+    font-size: 11px;
+  }
+}
+
+.three-tissue-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  flex: 1;
+  align-self: stretch;
+}
+.three-tissue-viewport canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.three-controls-caption {
+  position: absolute;
+  bottom: 30px;
+  left: 12px;
+  right: 12px;
+  color: #bfd2df;
+  font-size: 8px;
+  line-height: 1.7;
+  pointer-events: none;
+  z-index: 1;
+  text-shadow: 0 1px 3px #000;
+}
+.viewport-header > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.viewport-header button {
+  background: #314754;
+  color: #c2d7e5;
+  border: 1px solid #527085;
+  border-radius: 2px;
+  padding: 3px 6px;
+  font-size: 8px;
+}
+.viewport-header button.selected {
+  background: #53788f;
+  color: #fff;
+  border-color: #9db8ca;
+}
+@media (max-width: 620px) {
+  .three-tissue-viewport {
+    min-height: 300px;
+  }
+  .three-controls-caption {
+    font-size: 6px;
+    bottom: 25px;
+    left: 8px;
+  }
+  .viewport-header > span:first-child {
+    gap: 5px;
+    font-size: 8px;
+  }
+  .viewport-header button {
+    font-size: 7px;
+    padding: 3px 5px;
+  }
+}
+
+.procedure-toolbar > button.lab-primary:hover:not(:disabled) {
+  background: #254e6e;
+  border-color: #254e6e;
+}
+.toolbar-controller select {
+  font-size: 10px;
+  background: #fff;
+  border: 1px solid #bdcbd6;
+  padding: 5px 6px;
+  border-radius: 2px;
+  color: #38586f;
+  max-width: 150px;
+}
+@media (max-width: 1200px) {
+  .toolbar-controller select {
+    font-size: 9px;
+    max-width: 125px;
+  }
+}
+@media (max-width: 620px) {
+  .procedure-toolbar > .toolbar-controller {
+    margin-left: 0;
+  }
+  .toolbar-controller select {
+    font-size: 8px;
+    max-width: 130px;
+  }
+}
+
+.console-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: auto;
+}
+.console-tabs > button {
+  padding: 5px 10px;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: #536e84;
+  font-size: 9px;
+}
+.console-tabs > button.selected {
+  border-bottom-color: #4b7ea3;
+  color: #2e587a;
+  background: #e5edf5;
+}
+.hidden-console {
+  display: none;
+}
+.console-reward-traces {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: auto;
+  min-height: 0;
+  flex: 1;
+}
+.console-reward-traces > .mini-trace {
+  border-right: 1px solid #dce4ec;
+}
+.console-reward-traces .mini-trace svg {
+  height: 46px;
+  margin-top: 2px;
+}
+.console-reward-traces .mini-trace > span {
+  font-size: 8px;
+}
+.tissue-node-details > dl {
+  display: block;
+}
+.tissue-node-details > dl > div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 9px;
+  padding: 7px 0;
+  border-bottom: 1px solid #e4e9ef;
+}
+.tissue-node-details > dl dt {
+  color: #4c667c;
+  line-height: 1.6;
+}
+.tissue-node-details > dl dd {
+  margin: 0;
+  font-family: Consolas, monospace;
+  font-size: 9px;
+  color: #35536b;
+  line-height: 1.6;
+}
+@media (max-width: 620px) {
+  .console-tabs > button {
+    font-size: 8px;
+    padding: 5px 7px;
+  }
+  .console-heading > div:last-child select {
+    max-width: 115px;
+  }
+  .console-reward-traces {
+    grid-template-columns: 1fr 1fr;
+  }
+  .console-reward-traces > .mini-trace:last-child {
+    display: none;
+  }
+  .tissue-node-details > dl > div {
+    font-size: 10px;
+  }
+}
+
+.tool-dock kbd {
+  color: #405b73;
+}
+.viewport-header button {
+  background: #263d4d;
+  color: #edf5fb;
+}
+.viewport-header button.selected {
+  background: #36576d;
+  color: #fff;
+}
+.viewport-header > span:last-child {
+  font-size: 9px;
+}
+.three-controls-caption {
+  font-size: 9px;
+}
+.viewport-caption {
+  font-size: 9px;
+}
+.procedure-properties dl > dt {
+  font-size: 10px;
+}
+.procedure-properties dl > dd {
+  font-size: 11px;
+}
+.procedure-properties .model-unit-note {
+  font-size: 9px;
+}
+.mini-trace > span {
+  font-size: 9px;
+}
+.mini-trace .trace-range {
+  font-size: 8px;
+}
+.console-heading > div {
+  font-size: 9px;
+}
+.event-log > div > p {
+  font-size: 10px;
+}
+.inspector-group > p {
+  font-size: 10px;
+}
+.procedure-toolbar > button,
+.procedure-toolbar > a {
+  font-size: 11px;
+}
+.tool-dock > button,
+.tool-select > button {
+  font-size: 11px;
+}
+@media (max-width: 620px) {
+  .procedure-toolbar > button,
+  .procedure-toolbar > a {
+    font-size: 10px;
+  }
+  .tool-dock > button,
+  .tool-select > button {
+    font-size: 10px;
+  }
+  .viewport-header > span:last-child {
+    font-size: 7px;
+  }
+  .viewport-caption {
+    font-size: 8px;
+  }
+  .three-controls-caption {
+    font-size: 8px;
+  }
+  .console-heading select {
+    font-size: 8px;
+  }
+}
+
+.policy-context-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  background: #fff2d9;
+  color: #704d18;
+  border-bottom: 1px solid #dbc79f;
+  font-size: 11px;
+}
+.policy-context-notice > svg {
+  flex: none;
+}
+.policy-context-notice > span {
+  flex: 1;
+}
+.policy-context-notice > button {
+  border: 1px solid #ab8d52;
+  border-radius: 3px;
+  background: #fffbf1;
+  color: #604318;
+  font-size: 10px;
+  white-space: nowrap;
+  padding: 4px 7px;
+}
+.policy-context {
+  border: 1px solid #b9cbd7;
+  background: #f2f7fa;
+  padding: 8px;
+  font-size: 10px;
+  color: #36556d;
+}
+.policy-context.outside {
+  border-color: #d5bd91;
+  background: #fff7e9;
+  color: #704d18;
+}
+.policy-context strong {
+  font-size: 11px;
+}
+.policy-context p {
+  margin: 5px 0;
+  line-height: 1.5;
+}
+.policy-context dl > div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+.policy-context-error {
+  color: #8c3836 !important;
+}
+@media (max-width: 600px) {
+  .policy-context-notice {
+    flex-wrap: wrap;
+    font-size: 10px;
+  }
+  .policy-context-notice > span {
+    min-width: 200px;
+  }
+}
+
+.learning-evaluation {
+  overflow: auto;
+  max-height: 215px;
+  padding: 8px 12px;
+  background: #f7f9fb;
+}
+.learning-evaluation table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  color: #2d465c;
+}
+.learning-evaluation caption {
+  text-align: left;
+  padding: 0 0 6px;
+  color: #526a7e;
+  font-size: 10px;
+}
+.learning-evaluation th,
+.learning-evaluation td {
+  text-align: right;
+  border-bottom: 1px solid #dce3e9;
+  padding: 5px 8px;
+  white-space: nowrap;
+  font-family: var(--mono);
+}
+.learning-evaluation th:first-child {
+  text-align: left;
+  font-family: inherit;
+}
+.learning-evaluation thead th {
+  background: #e8eef3;
+  color: #344f66;
+  font-family: inherit;
+  font-size: 10px;
+}
+.learning-evaluation tbody th {
+  font-weight: 500;
+}
+.learning-evaluation p {
+  padding: 4px 0;
+  margin: 2px 0;
+  font-family: inherit;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #4f657a;
+}
+.learning-method {
+  font-size: 10px;
+  color: #405e76;
+}
+.learning-curve {
+  margin: 8px 0;
+  background: #f5f8fa;
+  border: 1px solid #d5dfe7;
+  padding: 6px;
+}
+.learning-curve > span {
+  font-size: 10px;
+  color: #425f76;
+}
+.learning-curve > svg {
+  display: block;
+  width: 100%;
+  height: 82px;
+}
+.learning-curve > div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #526a7f;
+}
+
+.three-reset-view {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  z-index: 2;
+  border: 1px solid #5b7483;
+  border-radius: 3px;
+  background: #243c4b;
+  color: #edf5fb;
+  padding: 5px 8px;
+  font-size: 10px;
+  cursor: pointer;
+}
+.three-reset-view:hover {
+  background: #345469;
+}
+.three-reset-view:focus-visible {
+  outline: 2px solid #b9e0f8;
+  outline-offset: 2px;
+}
+
+.archived-episode-notice {
+  padding: 8px 12px;
+  font-size: 11px;
+  line-height: 1.5;
+  background: #edf3f8;
+  color: #36536c;
+  border-bottom: 1px solid #bccddb;
+}

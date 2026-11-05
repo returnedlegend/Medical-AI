@@ -1,103 +1,80 @@
-# Retraction Lab
+# Retraction Laboratory
 
-A working computational research workbench for **“Does one retraction fit all?”** Compare a shared gallbladder-retraction strategy with patient-specific grid search, then test whether a one-second force probe predicts who needs adaptation.
+A desktop research application for studying gallbladder retraction, simulated tissue injury, and reinforcement-learning feedback. The application has an academic simulation interface: a live 3D procedure view, tool controls, patient/tissue state, reward traces, episode records, and reproducible experiments.
 
-**The cohort study engine uses an analytic surrogate.** A separate optional sandbox runs an actual LapGym/SOFA scene; it is not yet the proposed parameterized retraction study. All cohort patients are synthetic. Patient-dependent pull directions are imposed by the model equations, so gains demonstrate pipeline behavior and cannot validate the original physical or clinical hypothesis. No reinforcement-learning agent is included.
+The portable procedure engine is a **stateful mechanistic surrogate**, not validated human physiology. A separate optional SOFA diagnostic runs actual deformable meshes. Both identify their model and limitations explicitly.
 
-![Retraction Lab running a seeded synthetic cohort](docs/images/workbench.png)
+## Windows desktop application
 
-## Quick start
+The primary target is a self-contained **Windows x64 `.exe`**, with a per-user installer and a portable ZIP. Python, Node, and a separate browser are not required to run the packaged application. The native Qt window starts its own private authenticated local backend and stores studies in the operating system's user-data directory.
 
-Requires **Python 3.12** and **Node.js 22 or 24**, with npm. No GPU, database server, external API, or secret is needed.
+The [Windows desktop workflow](https://github.com/returnedlegend/Medical-AI/actions/workflows/desktop.yml) builds the executable and records packaged checks. Download its `RetractionLab-windows-x64` artifact after a successful run, then run the included installer or extract the portable package and launch `RetractionLab.exe`. Keep the portable application's supporting files together. See [desktop installation and build details](docs/desktop.md) for exact artifact names, verification, and platform limits.
+
+Local build outputs live under ignored `artifacts/desktop/`; compiled runtimes and patient/session data are not committed to GitHub. The development log distinguishes locally built Windows PE files, Wine checks, and native Windows CI results rather than assuming they are equivalent.
+
+## Procedure laboratory
+
+1. Create a seeded episode. Select **Grasper** or **Cautery**.
+2. Move with the tool buttons, arrow keys, or a bounded viewport target. Close/release the grasper or activate a cautery pulse.
+3. Observe actual state transitions: deformation, force, heat, accumulated injury, bleeding or bile leakage, and explicitly synthetic vital signs.
+4. Inspect each reward component and the episode trace. Injury persists after tool release or cooling and changes future stiffness and mechanics.
+5. Run the transparent scripted baseline or train and replay an experimental learned policy. The interface distinguishes them and shows held-out success, harm, handoff, and return separately.
+6. Export the episode JSON, including configuration, actions, responses, events, and model provenance. A reset creates a new episode and preserves the previous record.
+
+Shortcuts: **G** grasper, **C** cautery, arrow keys move the selected tool, **Space** grasp/pulse, **Escape** pause automatic playback. A 2D node view is available alongside the illustrative 3D rendering.
+
+**Tool/body documentation:** [tissue-response.md](docs/tissue-response.md) defines contact, crushing, strain, thermal dose, irreversible softening, vessel/duct injury, bleeding/leakage, synthetic physiology, rewards, and termination. The same mechanics drive manual control, API transitions, training, and rendering. Documentation is also available within the application and native Help menu.
+
+## Reinforcement-learning scope
+
+The Gymnasium environment exposes reset/step/observation/reward/termination. Policies learn from observed transitions; JSON checkpoints contain declarative parameters and weights, not executable pickle data. Training seeds and evaluation seeds are recorded and separated. Playback reports changed environment conditions and can create an episode matching a checkpoint's settings.
+
+The research agents are experimental. Some development runs learned to hand off or caused substantial harm rather than solving the task; these outcomes are retained and documented. A successful scripted baseline, a supervised demonstration component, and a trained RL policy are different results. See [the training reference](docs/rl-training.md).
+
+## Cohort experiments and real-physics diagnostics
+
+The cohort module retains seeded patient distributions, exhaustive 75-strategy sweeps, training-selected shared strategies, held-out personalization benefit, force-probe prediction/calibration, subgroup analysis, threshold sensitivity, and JSON/CSV/research-report exports. Its analytic exposure model is described in [model.md](docs/model.md).
+
+The optional Linux x86_64 SOFA runtime renders actual gallbladder/liver meshes, scripted grasping, bounded motions, and raw telemetry. An independently audited wrapper derives complete connectivity from unchanged upstream tetrahedra. The experimental material-softening variant changes actual element stiffness in response to strain/heat and has an elementary elasticity reference. It is separate from the portable RL engine and does not yet implement the proposal's full patient-specific CVS study. See [SOFA setup](docs/sofa-integration.md), [connectivity diagnosis](docs/physics-diagnostics.md), and [material-softening experiments](docs/sofa-softening.md).
+
+## Run from source
+
+Requires Python 3.12 and Node.js 22/24 for development. No GPU, external database, clinical data, or application API key is needed for the portable laboratory.
 
 ```bash
 ./scripts/setup.sh
 ./scripts/start.sh
 ```
 
-The single-process server listens on port **8000** and serves the built dashboard plus the API. `GET /api/health` must return `status: ok`. Open the service in your local browser when running locally. API reference is at `/docs`.
-
-1. Choose cohort size, seed, and assumed threshold profile.
-2. Run the experiment and inspect held-out success, personalization gain, and grid bail-out cases.
-3. Compare the reference, training-selected shared strategy, and personalized grid strategy for each patient.
-4. Inspect the force probe, calibration, and threshold sensitivity. Export complete JSON or patient-level CSV.
-
-Run history persists in `.data/` when using the startup script. Startup processes must be restarted after restoring a cloud snapshot.
-
-## What works
-
-- Deterministic virtual cohorts varying attachment length, adhesion count/stiffness, and distension.
-- An exhaustive **75-strategy grid**: 3 grasp points × 5 pull angles × 5 pull distances.
-- Geometric exposure proxy with simultaneous modeled force and strain constraints.
-- Fixed reference, best shared strategy selected on training patients, and per-patient grid optimum.
-- Held-out paired personalization benefit with a seeded bootstrap interval.
-- Fixed one-second force probe, training-only logistic regression, held-out AUROC/Brier score/calibration, and a separate grid-bail-out classifier.
-- Three assumed threshold profiles, saved runs, background jobs, JSON/CSV exports, and an interactive dashboard.
-- Reproducible command-line experiments and multi-seed study bundles.
-
-## Development and tests
+The development server serves the complete interface and API on port 8000; API documentation is at `/docs`. It is a local development option; the Windows distribution uses the native embedded window. For hot reloading:
 
 ```bash
-./scripts/check.sh
-```
-
-This runs the backend tests and the TypeScript/production frontend build. For hot reloading, use two terminals:
-
-```bash
-# Terminal 1
+# Terminal 1, repository root
 cd backend
 ../.venv/bin/python -m uvicorn retraction.main:app --reload --host 127.0.0.1 --port 8000
-# Terminal 2, from the repository root
+# Terminal 2, repository root
 npm --prefix frontend run dev
 ```
 
-Vite proxies `/api` to port 8000. Use **one API server process**: job recovery assumes a single coordinator, so multiple workers or replicas are unsupported. Interrupted jobs are marked failed after restart rather than silently completed.
+Use one API coordinator process. Studies and episodes persist in `.data/` for the source launcher. `RETRACTION_DATA_DIR`, `RETRACTION_VENV_DIR`, `HOST`, and `PORT` override source-launcher defaults. The packaged application uses per-user writable paths instead. Core dependency versions are locked in `backend/requirements.lock` and `frontend/package-lock.json`; desktop dependencies are listed separately.
 
-`RETRACTION_VENV_DIR` overrides the virtual environment path for the scripts. `RETRACTION_DATA_DIR` overrides local run storage. `HOST` and `PORT` override startup binding. The default is a local research app with no authentication; an authenticated hosting layer is required for shared deployment.
-
-The direct backend dependencies live in `backend/requirements.txt`; setup installs the tested full resolution in `backend/requirements.lock`. The frontend uses `npm ci` with its lockfile.
-
-## Headless experiments
-
-Run from `backend/`:
+## Validation and headless research
 
 ```bash
-../.venv/bin/python -m retraction --patients 240 --seed 42 --profile nominal --output ../.data/example.json
-../.venv/bin/python -m retraction.study --seeds 42 43 44 --patients 240 --output ../.data/study-001
-```
-
-The study runner evaluates all three threshold profiles for each seed. It writes its full protocol and source fingerprints **before** running, then individual JSON results, `summary.csv`, `report.md`, and a completion marker. Outputs refuse to overwrite previous experiments. A bundle without `complete.json` is incomplete. Protocol capture is local and exploratory; it does not establish external preregistration.
-
-Use `--config path/to/config.json` to set patient distributions; API `/api/presets` returns defaults. Custom force/strain/exposure limits are supported for individual experiments. Named threshold profiles are required for batch sensitivity studies.
-
-## Interpretation and next steps
-
-“Success” means a **model exposure proxy** meets assumed limits, not clinical CVS achievement. “Bail-out” means no strategy in the finite grid succeeds, not that every surgical option would fail. The probe is quasi-static and noise-free, with any modeled probe-limit violations reported. Bootstrapping quantifies synthetic patient sampling, not uncertainty in tissue mechanics or model design.
-
-A separate optional Physics sandbox now runs a real LapGym/SOFA gallbladder scene, including rendered frames, scripted grasping, and bounded instrument motion. It does not yet implement this study’s cohort parameters, CVS proxy, or force thresholds. The next research milestones are validated tissue mechanics, anatomical/camera landmark visibility, mesh convergence, expert-reviewed thresholds, probe noise/stop rules, and independently trained RL agents. See [the research plan](docs/research-plan.md) and [model reference](docs/model.md).
-
-## Browser validation
-
-After starting the built app, optionally install `backend/requirements-browser.txt` into `.venv`, install a Chromium browser with `python -m playwright install --with-deps chromium`, and run:
-
-```bash
+./scripts/check.sh
+# After starting the app, with optional Playwright/Chromium installed:
+.venv/bin/python scripts/procedure_browser_smoke.py
 .venv/bin/python scripts/browser_smoke.py
+.venv/bin/python frontend/scripts/audit_accessibility.py
 ```
 
-The script uses system Chromium if available, otherwise Playwright-managed Chromium. `--chromium /path/to/browser` overrides it. It creates a real 40-patient run, verifies downloads and saved history, checks mobile layout, and tests explicitly intercepted offline/error states. CI runs this check and preserves screenshots and a JSON report.
+Native desktop lifecycle/resource tests and packaged diagnostics are documented in [desktop.md](docs/desktop.md). Browser tests perform real tool actions and verify saved state, exports, policy training, harm, mobile layout, and error recovery. Automated accessibility results retain incomplete/manual findings separately.
 
-## Optional real-physics sandbox
-
-On Linux x86_64 with `uv`, EGL/OpenGL, and standard download tools:
+Headless cohort studies remain available from `backend/`:
 
 ```bash
-bash scripts/setup-sofa.sh
+../.venv/bin/python -m retraction --patients 240 --seed 42 --output ../.data/example.json
+../.venv/bin/python -m retraction.study --seeds 42 43 44 --output ../.data/study-001
 ```
 
-The optional installer creates an isolated Python 3.10 runtime with the pinned upstream source and a checksum-verified SOFA 24.06 distribution. In this cloud workspace it is already installed under `/workspace/.sofa-runtime`; the main application continues to use Python 3.12. Open **Physics sandbox** in the app to run an actual scene and inspect initial/final rendered frames, gripper pose, grasp state, and per-step mesh telemetry. The API isolates each scene in its own bounded subprocess, preserves history separately, and stops timed-out process groups.
-
-The upstream mesh files contain incomplete/inconsistent lower-dimensional connectivity. A documented wrapper derives full face/edge connectivity from their unchanged tetrahedra. Independent connectivity checks and real grasp/pull runs pass with zero SOFA errors; nonfatal warnings and `Undefined` component states remain visible. **This repairs an identified adjacency issue, not tissue-model validation.** Raw internal-force sums are not calibrated tool forces in newtons.
-
-Read [the setup and integration reference](docs/sofa-integration.md) and [the independent mesh diagnosis](docs/physics-diagnostics.md) for provenance, limitations, and repeatable audit commands. The optional browser test `python scripts/physics_browser_smoke.py --exercise-grasp` runs real neutral and scripted-grasp scenes; it is separate from the lightweight core CI suite. Dependencies are about 2 GB and are retained outside the repository; they are not committed to GitHub.
-
-For an automated accessibility check against the running app, install the optional browser requirements and run `npm --prefix frontend run audit:a11y` (Python Playwright must be available to that command). It uses locally pinned axe-core and reports violations separately from incomplete/manual checks. See [the validation record](docs/validation.md) for tested capabilities and their limits.
+Study bundles save their protocol and source fingerprints before execution and refuse to overwrite previous results. They are exploratory local records, not external preregistration. See [the research plan](docs/research-plan.md) and [validation record](docs/validation.md). The proposal's validated anatomy, calibrated tissue/force limits, mesh-convergence study, and clinically meaningful outcomes remain research milestones.

@@ -21,6 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .storage import Store
+from . import __version__
 from .procedure import router as procedure_router, learning_router, initialize_procedure, shutdown_procedure
 from .physics import router as physics_router, initialize_physics, shutdown_physics
 
@@ -116,8 +117,8 @@ def create_app(data_dir: str | Path | None = None, web_dist: str | Path | None =
 
     app = FastAPI(
         title="Retraction Lab API",
-        version="0.1.0",
-        description="Exploratory analytic surrogate, not a clinical tool or a SOFA tissue simulation.",
+        version=__version__,
+        description="Local surgical robotics research: stateful tissue surrogate, cohort studies, and optional SOFA diagnostics.",
         lifespan=lifespan,
     )
 
@@ -154,7 +155,7 @@ def create_app(data_dir: str | Path | None = None, web_dist: str | Path | None =
     def health():
         # Read the store as well: service health requires its durable job store.
         app.state.store.active_count()
-        return {"status": "ok", "version": "0.1.0", "simulator": "analytic-surrogate", "clinical_use": False}
+        return {"status": "ok", "version": __version__, "simulator": "analytic-surrogate", "clinical_use": False}
 
     @app.get("/api/presets")
     def presets():

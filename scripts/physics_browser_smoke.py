@@ -49,8 +49,8 @@ def main() -> int:
             assert runtime['purpose'] == 'upstream-physics-diagnostic'
             initial_cohorts = {r['id'] for r in context.request.get(f'{base_url}/api/runs?limit=200').json()['runs']}
             page.goto(base_url, wait_until='networkidle')
-            page.get_by_role('button', name='Physics sandbox', exact=True).click()
-            expect(page.get_by_role('heading', name='Physics sandbox', exact=True)).to_be_visible()
+            page.get_by_role('navigation', name='Research workspaces').get_by_role('button', name='SOFA diagnostics', exact=True).click()
+            expect(page.get_by_role('heading', name='SOFA scene diagnostics', exact=True)).to_be_visible()
             expect(page.get_by_text('Runtime installed', exact=True)).to_be_visible()
             expect(page.get_by_text('Tissue-model validation remains incomplete.', exact=True)).to_be_visible()
             steps_input = page.get_by_label('Simulation steps', exact=True)
@@ -136,7 +136,7 @@ def main() -> int:
             # Refresh remounts the analytic view first. Returning to the physics
             # view must restore its separate persisted history and latest run.
             page.reload(wait_until='networkidle')
-            page.get_by_role('button', name='Physics sandbox', exact=True).click()
+            page.get_by_role('navigation', name='Research workspaces').get_by_role('button', name='SOFA diagnostics', exact=True).click()
             expect(page.get_by_role('heading', name=f'Diagnostic {selected_id[:8]}', exact=True)).to_be_visible()
             expect(page.get_by_role('heading', name='Rendered scene', exact=True)).to_be_visible()
             history = page.locator('.physics-history')
@@ -167,13 +167,13 @@ def main() -> int:
                 'available': False, 'model_ready': False, 'purpose': 'upstream-physics-diagnostic',
                 'reason': 'Optional runtime missing. Run scripts/setup-sofa.sh.'}))
             missing.goto(base_url, wait_until='networkidle')
-            missing.get_by_role('button', name='Physics sandbox', exact=True).click()
+            missing.get_by_role('navigation', name='Research workspaces').get_by_role('button', name='SOFA diagnostics', exact=True).click()
             expect(missing.get_by_role('heading', name='The optional runtime is not installed.', exact=True)).to_be_visible()
             expect(missing.locator('.physics-unavailable code')).to_have_text('bash scripts/setup-sofa.sh')
             expect(missing.get_by_role('button', name='Run physics diagnostic', exact=True)).to_have_count(0)
             assert posts == []
-            missing.get_by_role('button', name=re.compile(r'^Experiments')).click()
-            expect(missing.get_by_role('heading', name='Experiment workbench', exact=True)).to_be_visible()
+            missing.get_by_role('navigation', name='Research workspaces').get_by_role('button', name='Cohort experiments', exact=True).click()
+            expect(missing.get_by_role('heading', name='Cohort strategy study', exact=True)).to_be_visible()
             missing.close()
             checks.append('missing-runtime UI explains optional setup and leaves analytic workflow available (mocked status)')
             assert not errors, f'Unhandled browser errors: {errors}'

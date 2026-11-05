@@ -40,6 +40,13 @@ def main() -> int:
         context = browser.new_context(viewport={'width': 1440, 'height': 1050}, accept_downloads=True)
         page = context.new_page()
         page.on('pageerror', lambda error: javascript_errors.append(str(error)))
+
+        def workspace(name):
+            page.get_by_role('navigation', name='Research workspaces').get_by_role('button', name=name, exact=True).click()
+
+        def open_study():
+            workspace('Cohort experiments')
+            expect(page.get_by_role('heading', name='Cohort strategy study', exact=True)).to_be_visible()
         try:
             health = context.request.get(f'{base_url}/api/health')
             assert health.ok, f'Start the service first: health returned {health.status}'
@@ -58,7 +65,8 @@ def main() -> int:
             # exist. No persistent application data is cleared or fabricated.
             page.route(runs_url, empty_history)
             page.goto(base_url, wait_until='networkidle')
-            expect(page.get_by_role('heading', name='Experiment workbench')).to_be_visible()
+            open_study()
+            expect(page.get_by_role('heading', name='Cohort strategy study')).to_be_visible()
             expect(page.get_by_role('heading', name='When does personalization matter?')).to_be_visible()
             expect(page.get_by_role('button', name='Run experiment', exact=True)).to_be_enabled()
             page.unroute(runs_url, empty_history)
@@ -234,7 +242,7 @@ def main() -> int:
 
             page.screenshot(path=str(args.output_dir / 'results-desktop.png'), full_page=True)
 
-            page.get_by_role('button', name='Virtual patients', exact=True).click()
+            page.get_by_role('button', name='Patient records', exact=True).click()
             expect(page.get_by_role('heading', name='Cohort ledger', exact=True)).to_be_visible()
             cohort_filter = page.get_by_label('Filter cohort', exact=True)
             ledger_rows = page.locator('.cohort-panel tbody tr')
@@ -251,10 +259,11 @@ def main() -> int:
             expect(patient_select).to_have_value(next(p['id'] for p in results['patients'] if p['split'] == 'test'))
             checks.append('cohort ledger filtering agrees with exported held-out and outcome labels')
 
-            page.get_by_role('button', name='Methods & limits', exact=True).click()
+            page.get_by_role('button', name='Study methods', exact=True).click()
             expect(page.get_by_role('heading', name='Methods & limitations', exact=True)).to_be_visible()
-            expect(page.get_by_text('Research use only', exact=True)).to_be_visible()
+            expect(page.get_by_role('heading', name='Research use only', exact=True)).to_be_visible()
             page.reload(wait_until='networkidle')
+            open_study()
             expect(page.get_by_role('heading', name=f'Run {run_id[:8]}', exact=False)).to_be_visible()
             expect(page.get_by_text('Complete', exact=True)).to_be_visible()
             page.get_by_role('button', name=re.compile(r'^Run history')).click()
@@ -294,37 +303,43 @@ def main() -> int:
 
             page.set_viewport_size({'width': 390, 'height': 844})
             page.reload(wait_until='networkidle')
+            open_study()
             expect(page.get_by_text('Complete', exact=True)).to_be_visible()
             assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'), 'Mobile page overflows horizontally'
-            expect(page.get_by_role('heading', name='Experiment workbench')).to_be_visible()
+            expect(page.get_by_role('heading', name='Cohort strategy study')).to_be_visible()
             page.screenshot(path=str(args.output_dir / 'results-mobile.png'), full_page=True)
-            page.get_by_role('button', name='Virtual patients', exact=True).click()
+            page.get_by_role('button', name='Patient records', exact=True).click()
             expect(page.get_by_role('heading', name='Cohort ledger', exact=True)).to_be_visible()
             assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'), 'Mobile patient ledger overflows horizontally'
             checks.append('390px mobile results and ledger remain usable without page overflow')
 
             health_url = f'{base_url}/api/health'
             page.route(health_url, lambda route: route.fulfill(status=503, json={'detail': 'Smoke test: service offline'}))
-            page.reload(wait_until='networkidle')
+            workspace('Model documentation')
+            open_study()
             expect(page.get_by_role('alert')).to_contain_text('research service is unavailable')
             expect(page.get_by_role('button', name='Run experiment', exact=True)).to_be_disabled()
             page.unroute(health_url)
-            page.get_by_role('button', name='Service offline', exact=True).click()
-            expect(page.get_by_role('button', name='Service connected', exact=True)).to_be_visible()
+            workspace('Model documentation')
+            open_study()
             expect(page.get_by_text('Complete', exact=True)).to_be_visible()
+            expect(page.get_by_role('button', name='Run experiment', exact=True)).to_be_enabled()
             expect(page.get_by_role('alert')).to_have_count(0)
-            checks.append('offline launch is disabled and connection retry recovers (intercepted 503)')
-            # Repeat the outage without reloading so an already selected run
-            # cannot leave a stale service-unavailable alert after recovery.
-            page.route(health_url, lambda route: route.fulfill(status=503, json={'detail': 'Smoke test: transient outage'}))
-            page.get_by_role('button', name='Service connected', exact=True).click()
-            expect(page.get_by_role('alert')).to_contain_text('research service is unavailable')
-            page.unroute(health_url)
-            page.get_by_role('button', name='Service offline', exact=True).click()
-            expect(page.get_by_role('button', name='Service connected', exact=True)).to_be_visible()
-            expect(page.get_by_role('alert')).to_have_count(0)
-            checks.append('transient service retry clears stale alert while retaining selected results')
+            checks.append('offline study disables launch and workspace reconnection recovers (intercepted 503)')
 
+            # Reopening saved results is the academic view's explicit retry path.
+            result_url = f'{base_url}/api/runs/{run_id}/results'
+            page.route(result_url, lambda route: route.fulfill(status=503, json={'detail': 'Smoke test: result temporarily unavailable'}))
+            page.get_by_role('button', name=re.compile(r'^Run history')).click()
+            history_dialog = page.get_by_role('dialog', name='Experiment history')
+            history_dialog.get_by_role('button', name=re.compile(rf'^Run {run_id[:8]}')).click()
+            expect(page.get_by_role('alert')).to_contain_text('Smoke test: result temporarily unavailable')
+            page.unroute(result_url)
+            page.get_by_role('button', name=re.compile(r'^Run history')).click()
+            history_dialog.get_by_role('button', name=re.compile(rf'^Run {run_id[:8]}')).click()
+            expect(page.get_by_role('heading', name='Patient explorer', exact=True)).to_be_visible()
+            expect(page.get_by_role('alert')).to_have_count(0)
+            checks.append('reselecting persisted result clears transient fetch error without changing the run')
             assert not javascript_errors, f'Unhandled browser errors: {javascript_errors}'
             report = {'status': 'passed', 'run_id': run_id, 'checks': checks,
                       'javascript_errors': javascript_errors, 'artifacts': str(args.output_dir)}

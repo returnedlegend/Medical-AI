@@ -19,7 +19,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .storage import Store
 
@@ -36,11 +36,19 @@ class PhysicsConfig(BaseModel):
     seed: int = Field(default=42, ge=0, le=4294967295, strict=True)
     steps: int = Field(default=3, ge=1, le=50, strict=True)
     start_grasped: bool = False
+    damage_model: bool = False
+    cautery_power: float = Field(default=0, ge=0, le=1)
     pan: float = Field(default=0, ge=-0.5, le=0.5)
     tilt: float = Field(default=0, ge=-0.5, le=0.5)
     spin: float = Field(default=0, ge=-0.5, le=0.5)
     insertion: float = Field(default=0, ge=-0.5, le=0.5)
     jaw: float = Field(default=0, ge=-0.5, le=0.5)
+
+    @model_validator(mode='after')
+    def thermal_requires_damage(self):
+        if self.cautery_power and not self.damage_model:
+            raise ValueError('Thermal contact requires the experimental damage model')
+        return self
 
 
 def runtime_root() -> Path:
@@ -75,6 +83,10 @@ def worker_command(config: dict, output_path: Path) -> list[str]:
                "--steps", str(config["steps"]), "--size", "256"]
     if config["start_grasped"]:
         command.append("--start-grasped")
+    if config["damage_model"]:
+        command.append("--damage-model")
+    if config["cautery_power"]:
+        command.extend(["--cautery-power", str(config["cautery_power"])])
     for key in ("pan", "tilt", "spin", "insertion", "jaw"):
         command.extend([f"--{key}", str(config[key])])
     return command

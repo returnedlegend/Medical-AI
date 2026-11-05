@@ -1,7 +1,7 @@
 {
   "name": "retraction-lab",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
@@ -15,11 +15,13 @@
   "dependencies": {
     "lucide-react": "0.468.0",
     "react": "19.0.0",
-    "react-dom": "19.0.0"
+    "react-dom": "19.0.0",
+    "three": "0.174.0"
   },
   "devDependencies": {
     "@types/react": "19.0.3",
     "@types/react-dom": "19.0.2",
+    "@types/three": "0.174.0",
     "@vitejs/plugin-react": "4.3.4",
     "axe-core": "4.10.3",
     "prettier": "3.6.2",

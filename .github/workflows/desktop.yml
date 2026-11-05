@@ -1,0 +1,80 @@
+name: Build Windows desktop application
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['desktop-v*']
+    branches: [main]
+    paths:
+      - 'desktop/**'
+      - 'backend/**'
+      - 'frontend/**'
+      - 'scripts/build-desktop.py'
+      - '.github/workflows/desktop.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  windows-desktop:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install desktop dependencies
+        run: python -m pip install -r backend/requirements-desktop.txt
+      - name: Test desktop lifecycle and resources
+        run: python -m pytest desktop/tests -q
+      - name: Build Windows executable and interface
+        run: python scripts/build-desktop.py
+      - name: Check packaged service, replay and actual DQN training
+        shell: pwsh
+        run: |
+          $evidence = Join-Path $env:RUNNER_TEMP 'retraction-desktop-diagnose.json'
+          $data = Join-Path $env:RUNNER_TEMP 'retraction-desktop-diagnose-data'
+          $process = Start-Process -FilePath 'artifacts/desktop/windows/RetractionLab/RetractionLab.exe' -ArgumentList @('--diagnose', $evidence, '--data-dir', $data) -PassThru
+          if (-not $process.WaitForExit(180000)) {
+            $process.Kill($true)
+            throw 'Packaged service diagnosis timed out'
+          }
+          if ($process.ExitCode -ne 0) { throw "Service diagnosis exited $($process.ExitCode)" }
+          $result = Get-Content $evidence -Raw | ConvertFrom-Json
+          if ($result.status -ne 'passed' -or -not $result.packaged -or -not $result.checks.physics_source_provenance) { throw 'Packaged model diagnosis did not pass' }
+      - name: Exercise the packaged native application
+        shell: pwsh
+        run: |
+          $evidence = Join-Path $env:RUNNER_TEMP 'retraction-desktop-smoke.json'
+          $data = Join-Path $env:RUNNER_TEMP 'retraction-desktop-data'
+          $process = Start-Process -FilePath 'artifacts/desktop/windows/RetractionLab/RetractionLab.exe' -ArgumentList @('--smoke-test', $evidence, '--data-dir', $data, '--software-rendering') -PassThru
+          if (-not $process.WaitForExit(120000)) {
+            $process.Kill($true)
+            throw 'Packaged application smoke test timed out'
+          }
+          if ($process.ExitCode -ne 0) { throw "Native application exited $($process.ExitCode)" }
+          $result = Get-Content $evidence -Raw | ConvertFrom-Json
+          if ($result.status -ne 'passed' -or -not $result.packaged) { throw 'Native smoke evidence did not pass' }
+      - name: Upload Windows application and checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: RetractionLab-windows-x64
+          path: |
+            artifacts/desktop/windows/RetractionLab-windows-x64.zip
+            artifacts/desktop/windows/RetractionLab-windows-x64.zip.sha256
+            artifacts/desktop/windows/build-manifest.json
+      - name: Preserve desktop smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-smoke-evidence
+          path: |
+            ${{ runner.temp }}/retraction-desktop-smoke.*
+            ${{ runner.temp }}/retraction-desktop-diagnose.json
+            ${{ runner.temp }}/retraction-desktop-data/logs/

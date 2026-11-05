@@ -25,6 +25,8 @@ def main() -> None:
     parser.add_argument("--size", type=int, default=256)
     parser.add_argument("--start-grasped", action="store_true", help="Use upstream's bounded scripted grasp during reset")
     parser.add_argument("--topology-mode", choices=("upstream", "derived"), default="derived")
+    parser.add_argument("--damage-model", action="store_true", help="Experimental strain-driven element softening; distinct FEM variant")
+    parser.add_argument("--cautery-power", type=float, default=0, help="Experimental thermal source at actual cauter tip, 0..1")
     for name in ("pan", "tilt", "spin", "insertion", "jaw"):
         parser.add_argument(f"--{name}", type=float, default=0, help="Normalized gripper velocity in [-0.5,0.5]")
     args = parser.parse_args()
@@ -33,6 +35,13 @@ def main() -> None:
     commands = [getattr(args, key) for key in ("pan", "tilt", "spin", "insertion", "jaw")]
     if not all(-0.5 <= command <= 0.5 for command in commands):
         parser.error("All normalized gripper commands must be finite and in [-0.5,0.5]")
+
+    if not 0 <= args.cautery_power <= 1:
+        parser.error("Cautery power must be finite and in [0,1]")
+    if args.damage_model and args.topology_mode != "derived":
+        parser.error("The damage model requires derived topology")
+    if args.cautery_power and not args.damage_model:
+        parser.error("Thermal contact requires --damage-model")
 
     started = time.monotonic()
     import Sofa
@@ -57,7 +66,8 @@ def main() -> None:
     handler.__enter__()
     from sofa_env.scenes.grasp_lift_touch.grasp_lift_touch_env import GraspLiftTouchEnv, ObservationType, RenderMode, Phase
 
-    scene_options = {"scene_path": Path(__file__).with_name("sofa_scene.py")} if args.topology_mode == "derived" else {}
+    scene_file = "sofa_damage_scene.py" if args.damage_model else "sofa_scene.py"
+    scene_options = {"scene_path": Path(__file__).with_name(scene_file)} if args.topology_mode == "derived" else {}
     env = GraspLiftTouchEnv(
         **scene_options,
         observation_type=ObservationType.RGB,
@@ -89,6 +99,12 @@ def main() -> None:
                 assert topology[name]["component_state"] != "Invalid", f"{name} topology is Invalid"
         initial_image = np.asarray(env.render()).copy()
         initial_gripper_pose = env.gripper.get_pose().tolist()
+        damage_model = None
+        if args.damage_model:
+            sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
+            from retraction.sofa_damage import TetraDamageModel
+            damage_model = TetraDamageModel(initial_vertices, env.gallbladder.topology_container.tetrahedra.array(),
+                                           base_young_modulus=env.gallbladder.material.young_modulus)
         steps = []
         for index in range(args.steps):
             # The first five commands control only the gripper. The cauter
@@ -102,6 +118,14 @@ def main() -> None:
             positions = env.gallbladder.mechanical_object.position.array()
             assert np.isfinite(positions).all(), "Mesh positions are nonfinite"
             displacement = np.linalg.norm(positions - initial_vertices, axis=1)
+            injury = None
+            if damage_model is not None:
+                injury = damage_model.update(positions, env.time_step * env.frame_skip,
+                                             heat_position=env.cauter.get_pose()[:3], power=args.cautery_power)
+                if injury['inverted_element_count']:
+                    raise RuntimeError('Experimental damage scene produced an inverted element; refusing to continue')
+                application = damage_model.apply_to_sofa(env.gallbladder.deformation_force_field)
+                injury.update(application)
             steps.append({
                 "step": index + 1, "reward": float(reward), "terminated": bool(terminated),
                 "truncated": bool(truncated), "target_visible": bool(info["target_visible"]),
@@ -114,6 +138,8 @@ def main() -> None:
                 "gripper_pose": env.gripper.get_pose().tolist(),
                 "gripper_ptsda_state": env.gripper.get_ptsda_state().tolist(),
             })
+            if injury is not None:
+                steps[-1]["element_injury"] = injury
             if terminated or truncated:
                 break
         image = np.asarray(env.render())
@@ -130,7 +156,7 @@ def main() -> None:
             return hashlib.sha256(path.read_bytes()).hexdigest()
         provenance = {
             "worker_sha256": file_hash(Path(__file__)),
-            "wrapper_sha256": file_hash(Path(__file__).with_name("sofa_scene.py")) if args.topology_mode == "derived" else None,
+            "wrapper_sha256": file_hash(Path(__file__).with_name(scene_file)) if args.topology_mode == "derived" else None,
             "python_lock_sha256": file_hash(Path(__file__).with_name("requirements-sofa.lock")),
             "source_asset_sha256": {path.name: file_hash(path) for path in sorted(mesh_directory.iterdir()) if path.suffix in (".vtk", ".stl")},
             "sofa_archive_sha256_expected": "9d515e2f25f657c744821be8a5361e22803c18947b33af7a0b357c259202236a",
@@ -140,6 +166,8 @@ def main() -> None:
             "diagnostic_state": "needs_review" if diagnostics["error_count"] else "infrastructure_checked",
             "diagnostics": diagnostics,
             "topology_mode": args.topology_mode,
+            "damage_model": "experimental-element-softening-1.0" if args.damage_model else None,
+            "thermal_power": args.cautery_power,
             "topology": topology,
             "provenance": provenance,
             "sofa_version": "24.06.00", "sofa_env_commit": commit_file.read_text().strip(),
@@ -163,6 +191,7 @@ def main() -> None:
                 "Raw internal-force sum is not a calibrated tool force in newtons; upstream reward scales it by 1e-9.",
                 "A scripted upstream grasp and bounded actuator motion do not demonstrate clinical exposure or enforce tissue force limits.",
                 "Inspect diagnostics: finite state and rendered frames do not validate mesh topology or physical fidelity.",
+                "Optional damage uses a distinct vector-valued FEM variant and an illustrative strain/thermal softening law, not calibrated rupture or actual blood-flow simulation.",
             ],
         }
         args.output.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n")

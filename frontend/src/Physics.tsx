@@ -23,6 +23,8 @@ interface PhysicsConfig {
   spin: number;
   insertion: number;
   jaw: number;
+  damage_model: boolean;
+  cautery_power: number;
 }
 interface PhysicsRun {
   id: string;
@@ -50,6 +52,14 @@ interface Step {
   max_vertex_displacement_scene_units: number;
   gripper_pose: number[];
   gripper_ptsda_state: number[];
+  element_injury?: {
+    max_damage: number;
+    damaged_element_count: number;
+    max_peak_tensile_strain: number;
+    minimum_young_modulus_scene_units: number;
+    max_temperature_c: number;
+    mean_volume_weighted_damage: number;
+  } | null;
 }
 interface PhysicsResult {
   model_ready: false;
@@ -79,6 +89,7 @@ interface PhysicsResult {
   requested_steps: number;
   limitations: string[];
   start_grasped: boolean;
+  damage_model?: string | null;
 }
 const defaultConfig: PhysicsConfig = {
   seed: 42,
@@ -89,6 +100,8 @@ const defaultConfig: PhysicsConfig = {
   spin: 0,
   insertion: 0,
   jaw: 0,
+  damage_model: false,
+  cautery_power: 0,
 };
 const when = (value: string) =>
   new Date(value).toLocaleString(undefined, {
@@ -221,7 +234,7 @@ export default function Physics() {
         </span>
         <div>
           <span className="eyebrow">OPTIONAL UPSTREAM PHYSICS DIAGNOSTIC</span>
-          <h2>Look inside the SOFA scene.</h2>
+          <h2>SOFA gallbladder scene</h2>
           <p>
             Run the upstream LapGym gallbladder scene in its own process.
             Inspect rendered frames, gripper motion, and raw mesh telemetry.
@@ -408,6 +421,50 @@ export default function Physics() {
                     normalized velocities, not position or force targets.
                   </p>
                 </div>
+                <label className="physics-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={config.damage_model}
+                    onChange={(e) =>
+                      setConfig((old) => ({
+                        ...old,
+                        damage_model: e.target.checked,
+                        cautery_power: e.target.checked ? old.cautery_power : 0,
+                      }))
+                    }
+                  />
+                  <span>
+                    Experimental material softening
+                    <small>
+                      Distinct FEM variant with persistent per-element injury
+                      and stiffness updates. Separate from the portable RL
+                      environment.
+                    </small>
+                  </span>
+                </label>
+                {config.damage_model && (
+                  <div className="explorer-slider physics-thermal-control">
+                    <label htmlFor="physics-cautery-power">
+                      Experimental contact heat{" "}
+                      <span>{fixed(config.cautery_power, 2)}</span>
+                    </label>
+                    <input
+                      id="physics-cautery-power"
+                      type="range"
+                      min="0"
+                      max="1"
+                      step=".05"
+                      value={config.cautery_power}
+                      onChange={(e) =>
+                        change("cautery_power", Number(e.target.value))
+                      }
+                    />
+                    <p>
+                      Heat is applied near the actual cauter tip. No contact
+                      means no burn; this model does not cut tissue.
+                    </p>
+                  </div>
+                )}
                 <button
                   className="primary-button launch"
                   disabled={busy || !status?.available}
@@ -477,7 +534,7 @@ export default function Physics() {
                 <h2>
                   {selected
                     ? `Diagnostic ${selected.id.slice(0, 8)}`
-                    : "An independent physics view"}
+                    : "Physics diagnostic"}
                 </h2>
                 {selected && (
                   <p>
@@ -532,7 +589,7 @@ export default function Physics() {
                   <Box size={31} />
                 </span>
                 <span className="eyebrow">ACTUAL UPSTREAM RENDERING</span>
-                <h3>Observe before you infer.</h3>
+                <h3>No diagnostic selected</h3>
                 <p>
                   Run a short diagnostic to inspect the gallbladder mesh and
                   instrument state. This view generates no cohort-study success
@@ -557,6 +614,7 @@ export default function Physics() {
                     </div>
                     <div className="physics-frame-controls">
                       <div
+                        role="group"
                         className="segmented"
                         aria-label="Physics image frame"
                       >
@@ -647,6 +705,71 @@ export default function Physics() {
                   />
                 </div>
                 <div className="panel physics-diagnostics">
+                  {result.damage_model && (
+                    <div className="physics-material-result">
+                      <h2>Experimental FEM material response</h2>
+                      <p>
+                        {result.damage_model} · damage changes element modulus
+                        for subsequent SOFA steps. Maximum injury is local;
+                        volume-weighted injury describes the whole mesh.
+                      </p>
+                      {final?.element_injury ? (
+                        <dl>
+                          <div>
+                            <dt>Maximum element damage</dt>
+                            <dd>{number(final.element_injury.max_damage)}</dd>
+                          </div>
+                          <div>
+                            <dt>Volume-weighted mean damage</dt>
+                            <dd>
+                              {number(
+                                final.element_injury
+                                  .mean_volume_weighted_damage,
+                              )}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>Damaged elements</dt>
+                            <dd>
+                              {final.element_injury.damaged_element_count}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>Peak tensile strain</dt>
+                            <dd>
+                              {number(
+                                final.element_injury.max_peak_tensile_strain,
+                              )}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>Minimum requested modulus</dt>
+                            <dd>
+                              {number(
+                                final.element_injury
+                                  .minimum_young_modulus_scene_units,
+                              )}{" "}
+                              raw scene units
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>Maximum temperature</dt>
+                            <dd>
+                              {number(final.element_injury.max_temperature_c)}{" "}
+                              °C*
+                            </dd>
+                          </div>
+                        </dl>
+                      ) : (
+                        <p>No per-element injury telemetry was recorded.</p>
+                      )}
+                      <p>
+                        * Illustrative heat and damage laws. Material softening
+                        does not represent cutting, rupture, vascular flow, or
+                        validated tissue response.
+                      </p>
+                    </div>
+                  )}
                   <div className="panel-heading">
                     <div>
                       <h2>

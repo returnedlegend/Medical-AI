@@ -227,3 +227,16 @@ def test_finished_process_is_not_signaled(monkeypatch):
         pytest.fail('A reaped process must not be signaled')
     monkeypatch.setattr(physics.os, 'killpg', forbidden)
     physics.kill_process_group(Completed())
+
+
+def test_experimental_damage_controls_are_explicit_and_bounded(tmp_path):
+    from retraction.physics import worker_command, PhysicsConfig
+    from pydantic import ValidationError
+    config = PhysicsConfig(damage_model=True, cautery_power=.25)
+    command = worker_command(config.model_dump(), tmp_path / 'out.json')
+    assert '--damage-model' in command
+    assert command[command.index('--cautery-power') + 1] == '0.25'
+    with pytest.raises(ValidationError):
+        PhysicsConfig(cautery_power=.5)
+    with pytest.raises(ValidationError):
+        PhysicsConfig(damage_model=True, cautery_power=1.1)
