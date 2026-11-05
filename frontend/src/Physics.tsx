@@ -126,15 +126,19 @@ export default function Physics() {
     [result, setResult] = useState<PhysicsResult | null>(null);
   const [config, setConfig] = useState<PhysicsConfig>(defaultConfig),
     [error, setError] = useState(""),
+    [historyError, setHistoryError] = useState(""),
     [starting, setStarting] = useState(false),
     [loading, setLoading] = useState(false),
     [refresh, setRefresh] = useState(0),
     [retry, setRetry] = useState(0),
     [frame, setFrame] = useState<"initial" | "final">("final");
   const selectedId = selected?.id;
+  const hasActiveHistory = runs.some(
+    (run) => run.status === "queued" || run.status === "running",
+  );
   const busy =
     starting ||
-    runs.some((r) => r.status === "queued" || r.status === "running") ||
+    hasActiveHistory ||
     selected?.status === "queued" ||
     selected?.status === "running";
   useEffect(() => {
@@ -150,6 +154,7 @@ export default function Physics() {
         if (abort.signal.aborted) return;
         setStatus(state);
         setRuns(history.runs);
+        setHistoryError("");
         if (!selectedId && history.runs[0]) setSelected(history.runs[0]);
       })
       .catch((e) => {
@@ -158,13 +163,53 @@ export default function Physics() {
     return () => abort.abort();
   }, [refresh]);
   useEffect(() => {
+    if (!hasActiveHistory) {
+      setHistoryError("");
+      return;
+    }
+    const abort = new AbortController();
+    let timer: number | undefined;
+    let retryDelay = 1000;
+    const pollHistory = async () => {
+      try {
+        const history = await request<{ runs: PhysicsRun[] }>("/physics/runs", {
+          signal: abort.signal,
+        });
+        if (abort.signal.aborted) return;
+        setRuns(history.runs);
+        setHistoryError("");
+        retryDelay = 1000;
+        if (
+          history.runs.some(
+            (run) => run.status === "queued" || run.status === "running",
+          )
+        ) {
+          timer = window.setTimeout(() => void pollHistory(), 1000);
+        }
+      } catch (e) {
+        if (!abort.signal.aborted) {
+          setHistoryError(`Physics history: ${message(e)}`);
+          timer = window.setTimeout(() => void pollHistory(), retryDelay);
+          retryDelay = Math.min(retryDelay * 2, 10000);
+        }
+      }
+    };
+    timer = window.setTimeout(() => void pollHistory(), 1000);
+    return () => {
+      abort.abort();
+      window.clearTimeout(timer);
+    };
+  }, [hasActiveHistory]);
+  useEffect(() => {
     if (!selectedId) return;
     const abort = new AbortController();
     let timer: number | undefined;
+    let retryDelay = 1000;
     setResult(null);
     setLoading(true);
     setError("");
     const poll = async () => {
+      setLoading(true);
       try {
         const run = await request<PhysicsRun>(`/physics/runs/${selectedId}`, {
           signal: abort.signal,
@@ -184,6 +229,7 @@ export default function Physics() {
           if (!abort.signal.aborted) {
             setResult(data);
             setLoading(false);
+            setError("");
           }
         } else if (run.status === "failed") {
           setLoading(false);
@@ -192,12 +238,16 @@ export default function Physics() {
               "The physics subprocess failed. Inspect the server log before retrying.",
           );
         } else {
+          setError("");
+          retryDelay = 1000;
           timer = window.setTimeout(() => void poll(), 1000);
         }
       } catch (e) {
         if (!abort.signal.aborted) {
           setLoading(false);
           setError(message(e));
+          timer = window.setTimeout(() => void poll(), retryDelay);
+          retryDelay = Math.min(retryDelay * 2, 10000);
         }
       }
     };
@@ -264,10 +314,10 @@ export default function Physics() {
           </p>
         </div>
       </div>
-      {error && (
+      {(error || historyError) && (
         <div className="error-banner" role="alert">
           <TriangleAlert size={17} />
-          <span>{error}</span>
+          <span>{error || historyError}</span>
           <button
             className="physics-retry"
             onClick={() => {
@@ -290,7 +340,10 @@ export default function Physics() {
           </p>
           <code>bash scripts/setup-sofa.sh</code>
           <span>
-            Run from the repository root, then check the runtime again.
+            The standalone Windows application includes the portable procedure
+            and cohort engines. This optional scene needs a separate runtime;
+            run this setup command from a repository checkout on a supported
+            host, then check again.
           </span>
           <button
             className="secondary-button"

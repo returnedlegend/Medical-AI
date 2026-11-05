@@ -115,7 +115,7 @@ interface Episode {
   read_only_reason?: string | null;
   policy_context?: PolicyContext;
   protocol?: ResponseProtocol | null;
-  source?: { type?: string; phase?: string; scenario_id?: string };
+  source?: { type?: string; phase?: string; scenario_id?: string } | null;
 }
 interface PolicyContext {
   training_run_id: string;
@@ -182,7 +182,7 @@ const errorMessage = (e: unknown) =>
 export default function Procedure() {
   const [session, setSession] = useState<Episode | null>(null),
     [sessions, setSessions] = useState<Episode[]>([]),
-    [seed, setSeed] = useState(42),
+    [seed, setSeed] = useState(2),
     [tool, setTool] = useState<Tool>("grasper"),
     [distance, setDistance] = useState(0.5),
     [power, setPower] = useState(0.35),
@@ -204,6 +204,8 @@ export default function Procedure() {
   const [controller, setController] = useState<Controller>("manual");
   const controllerRef = useRef<Controller>("manual");
   controllerRef.current = controller;
+  const selectedTrainingId = useRef<string | null>(null);
+  selectedTrainingId.current = training?.id ?? null;
   const [scenarios, setScenarios] = useState<ResponseScenario[]>([]);
   const [scenarioId, setScenarioId] = useState("");
   const [protocolSeed, setProtocolSeed] = useState(2);
@@ -221,11 +223,27 @@ export default function Procedure() {
   );
   const [contextError, setContextError] = useState("");
   const [contextSessionId, setContextSessionId] = useState("");
-  const [learningResult, setLearningResult] = useState<LearningResult | null>(
-    null,
-  );
-  const [learningError, setLearningError] = useState("");
+  const [contextRetry, setContextRetry] = useState(0);
+  const [learningRecord, setLearningRecord] = useState<{
+    runId: string;
+    result: LearningResult;
+  } | null>(null);
+  const learningResult =
+    learningRecord && learningRecord.runId === training?.id
+      ? learningRecord.result
+      : null;
+  const [learningFailure, setLearningFailure] = useState<{
+    runId: string;
+    message: string;
+  } | null>(null);
+  const learningError =
+    learningFailure?.runId === training?.id
+      ? (learningFailure?.message ?? "")
+      : "";
+  const [learningRetry, setLearningRetry] = useState(0);
   const [engineSpec, setEngineSpec] = useState<EngineSpec | null>(null);
+  const [specError, setSpecError] = useState("");
+  const [specRetry, setSpecRetry] = useState(0);
   const [algorithm, setAlgorithm] = useState<"dqn" | "tabular_q">("tabular_q");
   const [recordedFrames, setRecordedFrames] = useState<Episode[]>([]);
   const [replayIndex, setReplayIndex] = useState<number | null>(null);
@@ -253,6 +271,19 @@ export default function Procedure() {
       learningResult.checkpoint?.physics_fingerprint ===
         engineSpec.physics_fingerprint)
   );
+  const checkpointArchived = !!(
+    learningResult &&
+    engineSpec &&
+    !checkpointCompatible
+  );
+  const trainedReady = !!(
+    session &&
+    training?.status === "completed" &&
+    checkpointCompatible &&
+    policyContext &&
+    contextSessionId === session.id &&
+    policyContext.training_run_id === training.id
+  );
   const referenceOrigin = training?.summary?.origin;
   const referenceProvenance =
     referenceOrigin &&
@@ -271,6 +302,7 @@ export default function Procedure() {
         setController("protocol");
         setScenarioId(data.protocol.scenario_id);
         setProtocolSeed(data.seed);
+        setConsoleTab("rewards");
       } else if (controllerRef.current === "protocol") setController("manual");
     }
     setReplayIndex(null);
@@ -361,8 +393,7 @@ export default function Procedure() {
     Promise.allSettled([
       request<{ sessions: Episode[] }>("/procedure/sessions"),
       request<{ runs: TrainingRun[] }>("/learning/runs"),
-      request<EngineSpec>("/procedure/spec"),
-    ]).then(([history, policies, spec]) => {
+    ]).then(([history, policies]) => {
       if (!active) return;
       const failures: string[] = [];
       if (history.status === "fulfilled") setSessions(history.value.sessions);
@@ -374,8 +405,6 @@ export default function Procedure() {
         );
         if (complete) setTraining(complete);
       } else failures.push(`Policy history: ${errorMessage(policies.reason)}`);
-      if (spec.status === "fulfilled") setEngineSpec(spec.value);
-      else failures.push(`Engine specification: ${errorMessage(spec.reason)}`);
       if (failures.length) setError(failures.join(" · "));
     });
     return () => {
@@ -384,6 +413,19 @@ export default function Procedure() {
       runningRef.current = false;
     };
   }, []);
+  useEffect(() => {
+    const abort = new AbortController();
+    setEngineSpec(null);
+    setSpecError("");
+    request<EngineSpec>("/procedure/spec", { signal: abort.signal })
+      .then((data) => {
+        if (!abort.signal.aborted) setEngineSpec(data);
+      })
+      .catch((e) => {
+        if (!abort.signal.aborted) setSpecError(errorMessage(e));
+      });
+    return () => abort.abort();
+  }, [specRetry]);
   useEffect(() => {
     setPolicyContext(null);
     setContextSessionId("");
@@ -404,23 +446,25 @@ export default function Procedure() {
         if (!abort.signal.aborted) setContextError(errorMessage(e));
       });
     return () => abort.abort();
-  }, [session?.id, training?.id, training?.status]);
+  }, [session?.id, training?.id, training?.status, contextRetry]);
   useEffect(() => {
-    setLearningResult(null);
-    setLearningError("");
+    setLearningRecord(null);
+    setLearningFailure(null);
     if (training?.status !== "completed") return;
     const abort = new AbortController();
     request<LearningResult>(`/learning/runs/${training.id}/results`, {
       signal: abort.signal,
     })
       .then((data) => {
-        if (!abort.signal.aborted) setLearningResult(data);
+        if (!abort.signal.aborted)
+          setLearningRecord({ runId: training.id, result: data });
       })
       .catch((e) => {
-        if (!abort.signal.aborted) setLearningError(errorMessage(e));
+        if (!abort.signal.aborted)
+          setLearningFailure({ runId: training.id, message: errorMessage(e) });
       });
     return () => abort.abort();
-  }, [training?.id, training?.status]);
+  }, [training?.id, training?.status, learningRetry]);
   const load = async (id: string) => {
     const token = ++generation.current;
     setRunning(false);
@@ -562,6 +606,11 @@ export default function Procedure() {
   };
   const step = useCallback(
     async (action: number[], policy = false) => {
+      if (policy && controller === "trained" && !trainedReady) {
+        setRunning(false);
+        runningRef.current = false;
+        return;
+      }
       if (
         legacy ||
         replayIndex !== null ||
@@ -592,7 +641,11 @@ export default function Procedure() {
         );
         if (token === generation.current) {
           accept(data);
-          if (data.policy_context) setPolicyContext(data.policy_context);
+          if (
+            data.policy_context &&
+            data.policy_context.training_run_id === selectedTrainingId.current
+          )
+            setPolicyContext(data.policy_context);
         }
       } catch (e) {
         setRunning(false);
@@ -613,7 +666,7 @@ export default function Procedure() {
         setBusy(false);
       }
     },
-    [accept, training?.id, controller, legacy, replayIndex],
+    [accept, training?.id, controller, legacy, replayIndex, trainedReady],
   );
   const manual = useCallback(
     (dx = 0, dy = 0, grip = 0, cautery = 0) => {
@@ -649,10 +702,16 @@ export default function Procedure() {
   }, [running, step]);
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setRunning(false);
+        setReplayRunning(false);
+        runningRef.current = false;
+        return;
+      }
+      const target = e.target instanceof Element ? e.target : null;
       if (
-        (e.target as HTMLElement).closest(
-          "input,select,textarea,[contenteditable=true]",
-        ) ||
+        !target ||
+        target.closest("input,select,textarea,[contenteditable=true]") ||
         e.ctrlKey ||
         e.altKey ||
         e.metaKey
@@ -678,6 +737,11 @@ export default function Procedure() {
         e.preventDefault();
         return;
       }
+      if (
+        !target.matches("canvas,.tissue-scene") &&
+        !target.closest(".tool-dock")
+      )
+        return;
       const moves: Record<string, number[]> = {
         ArrowLeft: [-distance, 0],
         ArrowRight: [distance, 0],
@@ -688,7 +752,7 @@ export default function Procedure() {
         e.preventDefault();
         manual(...moves[e.key]);
       } else if (e.code === "Space") {
-        if ((e.target as HTMLElement).closest("button")) return;
+        if (target.closest("button")) return;
         e.preventDefault();
         manual(
           0,
@@ -700,9 +764,6 @@ export default function Procedure() {
             : 0,
           tool === "cautery" ? power : 0,
         );
-      } else if (e.key === "Escape") {
-        setRunning(false);
-        runningRef.current = false;
       }
     };
     window.addEventListener("keydown", key);
@@ -788,7 +849,7 @@ export default function Procedure() {
         <button
           disabled={
             disabled ||
-            (controller === "trained" && !checkpointCompatible) ||
+            (controller === "trained" && !trainedReady) ||
             (controller === "protocol" &&
               (!session?.protocol || session.protocol.completed))
           }
@@ -813,12 +874,7 @@ export default function Procedure() {
             controller === "manual" ||
             (controller === "protocol" &&
               (!session.protocol || session.protocol.completed)) ||
-            (controller === "trained" && training?.status !== "completed") ||
-            (controller === "trained" && !checkpointCompatible) ||
-            (controller === "trained" &&
-              (!policyContext ||
-                contextSessionId !== session.id ||
-                policyContext.training_run_id !== training?.id)) ||
+            (controller === "trained" && !trainedReady) ||
             (busy && !running)
           }
           onClick={() => {
@@ -838,6 +894,7 @@ export default function Procedure() {
           Seed
           <input
             aria-label="Procedure random seed"
+            title="Demonstration default: seed 2. Change it to explore other synthetic anatomy."
             type="number"
             min="0"
             max="4294967295"
@@ -973,6 +1030,10 @@ export default function Procedure() {
                   Initialize a seeded environment to manipulate tissue and
                   record persistent mechanical, thermal, and physiological
                   responses.
+                </p>
+                <p className="demonstration-seed-note">
+                  Seed 2 is an illustrative demonstration case. Change the seed
+                  to explore other synthetic patients.
                 </p>
                 <button
                   className="lab-start-button"
@@ -1127,7 +1188,7 @@ export default function Procedure() {
           </div>
           {inspector === "tissue" ? (
             <>
-              <h2>Instrument parameters</h2>
+              <h2>Manual tool settings</h2>
               <div className="inspector-group">
                 <label>
                   Motion command <strong>{fmt(distance)} normalized</strong>
@@ -1167,9 +1228,14 @@ export default function Procedure() {
                   />
                 </label>
                 <p>
-                  Arrow keys move the selected tool. Click the viewport to move
-                  one bounded step toward a point. Escape pauses policy
+                  Press G or C to select a tool and focus the viewport. Arrow
+                  keys then move it; click the viewport for one bounded step
+                  toward a point. Escape pauses controller or recording
                   playback.
+                </p>
+                <p>
+                  These sliders apply to manual inputs. Automated controllers
+                  use their recorded tool commands.
                 </p>
               </div>
               <details className="tissue-node-details">
@@ -1428,9 +1494,14 @@ export default function Procedure() {
                     </dd>
                     <dt>Latest protocol status</dt>
                     <dd>{session.protocol.status}</dd>
-                    <dt>Displayed action phase</dt>
+                    <dt>
+                      {inspectedEpisode?.source
+                        ? "Displayed action"
+                        : "Controller phase"}
+                    </dt>
                     <dd>
                       {inspectedEpisode?.source?.phase ??
+                        inspectedEpisode?.source?.type ??
                         (replayIndex === null
                           ? session.protocol.phase
                           : "not recorded")}
@@ -1487,7 +1558,8 @@ export default function Procedure() {
                 <p>
                   The learning service fits a policy from environment
                   transitions. Training and held-out evaluation remain
-                  synthetic.
+                  synthetic. Playback uses fixed checkpoint weights; manual
+                  episodes are not automatically used for training.
                 </p>
                 <label>
                   Learning algorithm
@@ -1513,6 +1585,62 @@ export default function Procedure() {
                     onChange={(e) => setEpisodes(Number(e.target.value))}
                   />
                 </label>
+                {!engineSpec && (
+                  <div
+                    className="policy-load-state"
+                    role="status"
+                    aria-label="Engine specification status"
+                  >
+                    <strong>
+                      {specError
+                        ? "Engine specification unavailable"
+                        : "Loading engine specification…"}
+                    </strong>
+                    {specError && (
+                      <>
+                        <p>{specError}</p>
+                        <button
+                          onClick={() => {
+                            setRunning(false);
+                            runningRef.current = false;
+                            setSpecError("");
+                            setSpecRetry((value) => value + 1);
+                          }}
+                        >
+                          Retry engine specification
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+                {training?.status === "completed" && !learningResult && (
+                  <div
+                    className="policy-load-state"
+                    role="status"
+                    aria-label="Checkpoint results status"
+                  >
+                    <strong>
+                      {learningError
+                        ? "Checkpoint results unavailable"
+                        : "Loading checkpoint results…"}
+                    </strong>
+                    {learningError && (
+                      <>
+                        <p>{learningError}</p>
+                        <button
+                          onClick={() => {
+                            setRunning(false);
+                            runningRef.current = false;
+                            setLearningFailure(null);
+                            setLearningRetry((value) => value + 1);
+                          }}
+                        >
+                          Retry checkpoint results
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
                 <button
                   className="lab-train-button"
                   disabled={
@@ -1530,7 +1658,7 @@ export default function Procedure() {
                   Train policy
                 </button>
                 <label>
-                  Playback controller
+                  Policy checkpoint
                   <select
                     aria-label="Policy checkpoint"
                     value={
@@ -1577,7 +1705,7 @@ export default function Procedure() {
                   <Plus size={13} />
                   New matched episode
                 </button>
-                {learningResult && !checkpointCompatible && (
+                {checkpointArchived && (
                   <div
                     className="policy-context archived-checkpoint"
                     role="status"
@@ -1634,6 +1762,15 @@ export default function Procedure() {
                 {contextError && (
                   <p className="policy-context-error">
                     Policy context could not be checked: {contextError}
+                    <button
+                      onClick={() => {
+                        setRunning(false);
+                        runningRef.current = false;
+                        setContextRetry((value) => value + 1);
+                      }}
+                    >
+                      Retry policy context
+                    </button>
                   </p>
                 )}
                 {training && (
@@ -1924,13 +2061,16 @@ export default function Procedure() {
           >
             {learningError ? (
               <p role="alert">
-                Could not load policy evaluation: {learningError}
+                Checkpoint results unavailable: {learningError}. Retry in the
+                Policy learning inspector.
               </p>
             ) : !learningResult ? (
               <p>
-                {training && ["queued", "running"].includes(training.status)
-                  ? "Training and evaluating actual environment rollouts. Results appear after completion."
-                  : "Select a completed policy checkpoint to inspect its held-out evaluation."}
+                {training?.status === "completed"
+                  ? "Loading checkpoint results…"
+                  : training && ["queued", "running"].includes(training.status)
+                    ? "Training and evaluating actual environment rollouts. Results appear after completion."
+                    : "Select a completed policy checkpoint to inspect its held-out evaluation."}
               </p>
             ) : (
               <>

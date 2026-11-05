@@ -275,6 +275,14 @@ export default function ModelDocumentation() {
               Learning does not establish a useful or safe surgical policy.
             </p>
             <p>
+              Playback reacts to current observations with fixed checkpoint
+              weights. New training jobs perform the learning updates; saved
+              manual episodes are not automatically demonstrations. The declared
+              action primitives use a fixed 0.55 grasp command and 0.35 cautery
+              command, so these policies do not learn continuous jaw-pressure or
+              power optimization.
+            </p>
+            <p>
               Response protocols are scripted controlled interventions: gentle
               traction, sustained jaw closure, artery or duct contact heating,
               and a remote-heat control. Each action passes through the same

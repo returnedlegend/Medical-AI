@@ -371,7 +371,7 @@ export default function ThreeViewport({
         heat.scale.setScalar(1 + c.power * 4);
         lastState = s;
       }
-      const clock = performance.now() / 1000;
+      const clock = s.time_s;
       particles.forEach((p, i) => {
         const bleeding = i < 22,
           rate = bleeding
@@ -409,13 +409,9 @@ export default function ThreeViewport({
       if (timestamp - previousFrame < 1000 / 30) return;
       previousFrame = timestamp;
       const stateChanged = lastState !== stateRef.current;
-      const animated =
-        stateRef.current.physiology.bleeding_rate_ml_per_s > 0 ||
-        stateRef.current.physiology.bile_leak_rate_ml_per_s > 0;
-      if (stateChanged || animated) update();
+      if (stateChanged) update();
       controls.update();
-      if (stateChanged || animated || cameraChanged)
-        renderer.render(scene, camera);
+      if (stateChanged || cameraChanged) renderer.render(scene, camera);
       cameraChanged = false;
     };
     animate();
@@ -471,7 +467,8 @@ export default function ThreeViewport({
         Drag: orbit · wheel: zoom · click: bounded tool motion
         <br />
         Depth and surface shading are illustrative. XY displacement,
-        temperature, and damage follow environment state.
+        temperature, and damage follow environment state. Flow markers follow
+        model time.
       </div>
     </div>
   );

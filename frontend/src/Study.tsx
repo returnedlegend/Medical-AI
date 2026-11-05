@@ -259,7 +259,7 @@ export default function Study() {
           </h1>
           <p>
             {tab === "overview"
-              ? "Explore how patient variation changes safe exposure in a simplified model."
+              ? "Explore patient variation, modeled exposure, and force/strain constraints."
               : tab === "patients"
                 ? "Inspect individual mechanics, retraction choices, and probe responses."
                 : tab === "physics"
@@ -1333,8 +1333,9 @@ function ProbePanel({ results }: { results: Results }) {
       </div>
       <div className="panel-footnote">
         <TriangleAlert size={14} />
-        No trained RL agent or clinically validated confidence estimate is
-        included in this MVP.
+        These cohort results use analytic strategy sweeps. Stateful learned
+        policies are evaluated separately in the Procedure laboratory; the model
+        is not clinically validated.
       </div>
     </div>
   );
@@ -1387,7 +1388,7 @@ function Methods() {
           {
             icon: <Sparkles size={21} />,
             title: "06 · What comes next",
-            body: "Patient-parameterized LapGym/SOFA experiments, mesh convergence studies, expert review of mechanics, independently seeded reinforcement-learning agents, and external validation are extensions. The optional Physics sandbox displays upstream renders and raw telemetry separately; no validated patient-specific SOFA study or trained reinforcement-learning result is represented.",
+            body: "The Procedure laboratory separately evaluates stateful synthetic tool control and learned policies. SOFA diagnostics render an upstream scene, with an optional experimental material-softening adapter. Patient-specific FEM studies, tissue-law validation, mesh convergence, and external validation remain future research.",
           },
         ].map((item) => (
           <article className="panel method-card" key={item.title}>
