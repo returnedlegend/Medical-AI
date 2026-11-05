@@ -117,6 +117,19 @@ def main() -> int:
             assert {row['run_id'] for row in rows} == {run_id}
             assert {row['id'] for row in rows} == {p['id'] for p in results['patients']}
             checks.append('real JSON/CSV downloads match persisted run and all patient IDs')
+            with page.expect_download() as downloaded:
+                page.get_by_role('link', name='Report', exact=True).click()
+            report_path = args.output_dir / f'{run_id}.md'
+            downloaded.value.save_as(report_path)
+            report = report_path.read_text()
+            assert report.startswith('# Retraction Lab · Exploratory experiment report')
+            assert f'Run: `{run_id}`' in report
+            assert f'Seed: {exported["run"]["config"]["seed"]}' in report
+            assert f'{results["summary"]["personalization_gain"] * 100:.1f} percentage points' in report
+            assert 'Analytic surrogate only' in report
+            assert 'clinical safety' in report
+            checks.append('Markdown report download matches selected run, primary gain, and research limitations')
+
             # Subgroup rows must display held-out values from the genuine export.
             subgroup_panel = page.locator('.subgroup-panel')
             expect(subgroup_panel).to_be_visible()

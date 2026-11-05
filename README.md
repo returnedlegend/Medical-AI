@@ -2,7 +2,9 @@
 
 A working computational research workbench for **“Does one retraction fit all?”** Compare a shared gallbladder-retraction strategy with patient-specific grid search, then test whether a one-second force probe predicts who needs adaptation.
 
-**This MVP uses an analytic surrogate, not LapGym/SOFA.** All patients are synthetic. Patient-dependent pull directions are imposed by the model equations, so gains demonstrate pipeline behavior and cannot validate the original physical or clinical hypothesis. No reinforcement-learning agent is included.
+**The cohort study engine uses an analytic surrogate.** A separate optional sandbox runs an actual LapGym/SOFA scene; it is not yet the proposed parameterized retraction study. All cohort patients are synthetic. Patient-dependent pull directions are imposed by the model equations, so gains demonstrate pipeline behavior and cannot validate the original physical or clinical hypothesis. No reinforcement-learning agent is included.
+
+![Retraction Lab running a seeded synthetic cohort](docs/images/workbench.png)
 
 ## Quick start
 
@@ -72,7 +74,7 @@ Use `--config path/to/config.json` to set patient distributions; API `/api/prese
 
 “Success” means a **model exposure proxy** meets assumed limits, not clinical CVS achievement. “Bail-out” means no strategy in the finite grid succeeds, not that every surgical option would fail. The probe is quasi-static and noise-free, with any modeled probe-limit violations reported. Bootstrapping quantifies synthetic patient sampling, not uncertainty in tissue mechanics or model design.
 
-The next research milestones are independently validated LapGym/SOFA mechanics, anatomical/camera landmark visibility, mesh convergence, expert-reviewed thresholds, probe noise/stop rules, and independently trained RL agents. See [the research plan](docs/research-plan.md) and [model reference](docs/model.md).
+A separate optional Physics sandbox now runs a real LapGym/SOFA gallbladder scene, including rendered frames, scripted grasping, and bounded instrument motion. It does not yet implement this study’s cohort parameters, CVS proxy, or force thresholds. The next research milestones are validated tissue mechanics, anatomical/camera landmark visibility, mesh convergence, expert-reviewed thresholds, probe noise/stop rules, and independently trained RL agents. See [the research plan](docs/research-plan.md) and [model reference](docs/model.md).
 
 ## Browser validation
 
@@ -83,3 +85,19 @@ After starting the built app, optionally install `backend/requirements-browser.t
 ```
 
 The script uses system Chromium if available, otherwise Playwright-managed Chromium. `--chromium /path/to/browser` overrides it. It creates a real 40-patient run, verifies downloads and saved history, checks mobile layout, and tests explicitly intercepted offline/error states. CI runs this check and preserves screenshots and a JSON report.
+
+## Optional real-physics sandbox
+
+On Linux x86_64 with `uv`, EGL/OpenGL, and standard download tools:
+
+```bash
+bash scripts/setup-sofa.sh
+```
+
+The optional installer creates an isolated Python 3.10 runtime with the pinned upstream source and a checksum-verified SOFA 24.06 distribution. In this cloud workspace it is already installed under `/workspace/.sofa-runtime`; the main application continues to use Python 3.12. Open **Physics sandbox** in the app to run an actual scene and inspect initial/final rendered frames, gripper pose, grasp state, and per-step mesh telemetry. The API isolates each scene in its own bounded subprocess, preserves history separately, and stops timed-out process groups.
+
+The upstream mesh files contain incomplete/inconsistent lower-dimensional connectivity. A documented wrapper derives full face/edge connectivity from their unchanged tetrahedra. Independent connectivity checks and real grasp/pull runs pass with zero SOFA errors; nonfatal warnings and `Undefined` component states remain visible. **This repairs an identified adjacency issue, not tissue-model validation.** Raw internal-force sums are not calibrated tool forces in newtons.
+
+Read [the setup and integration reference](docs/sofa-integration.md) and [the independent mesh diagnosis](docs/physics-diagnostics.md) for provenance, limitations, and repeatable audit commands. The optional browser test `python scripts/physics_browser_smoke.py --exercise-grasp` runs real neutral and scripted-grasp scenes; it is separate from the lightweight core CI suite. Dependencies are about 2 GB and are retained outside the repository; they are not committed to GitHub.
+
+For an automated accessibility check against the running app, install the optional browser requirements and run `npm --prefix frontend run audit:a11y` (Python Playwright must be available to that command). It uses locally pinned axe-core and reports violations separately from incomplete/manual checks. See [the validation record](docs/validation.md) for tested capabilities and their limits.

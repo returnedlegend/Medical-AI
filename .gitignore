@@ -20,3 +20,6 @@ dist/
 .DS_Store
 playwright-report/
 test-results/
+
+# Optional isolated physics runtime
+.sofa-runtime/

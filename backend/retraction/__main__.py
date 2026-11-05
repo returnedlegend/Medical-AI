@@ -20,6 +20,8 @@ def main() -> int:
     args = parser.parse_args()
     try:
         raw = json.loads(args.config.read_text()) if args.config else {}
+        if not isinstance(raw, dict):
+            raise ValueError('Configuration JSON must be an object')
         if args.patients is not None:
             raw['n_patients'] = args.patients
         if args.seed is not None:

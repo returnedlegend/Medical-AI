@@ -86,6 +86,8 @@ def main() -> int:
     args = parser.parse_args()
     try:
         base = json.loads(args.config.read_text()) if args.config else {}
+        if not isinstance(base, dict):
+            raise ValueError('Configuration JSON must be an object')
         if args.patients is not None:
             base['n_patients'] = args.patients
         # Threshold overrides would obscure the profile sensitivity comparison.

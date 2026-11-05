@@ -21,6 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .storage import Store
+from .physics import router as physics_router, initialize_physics, shutdown_physics
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +98,7 @@ def execute_experiment(config: dict, progress_callback):
 
 
 def create_app(data_dir: str | Path | None = None) -> FastAPI:
-    directory = Path(data_dir or os.environ.get("RETRACTION_DATA_DIR", "/workspace/.retraction-data"))
+    directory = Path(data_dir or os.environ.get("RETRACTION_DATA_DIR", Path(__file__).resolve().parents[2] / ".data"))
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -105,7 +106,9 @@ def create_app(data_dir: str | Path | None = None) -> FastAPI:
         app.state.store.recover_interrupted()
         app.state.executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="retraction")
         app.state.submit_lock = threading.Lock()
+        initialize_physics(app, directory)
         yield
+        shutdown_physics(app)
         app.state.executor.shutdown(wait=True, cancel_futures=False)
 
     app = FastAPI(
@@ -247,6 +250,8 @@ def create_app(data_dir: str | Path | None = None) -> FastAPI:
             flat = {key: json.dumps(value, allow_nan=False) if isinstance(value, (dict, list)) else value for key, value in row.items()}
             writer.writerow({"run_id": str(run_id), "seed": record["config"]["seed"], **flat})
         return Response(output.getvalue(), media_type="text/csv", headers=headers)
+
+    app.include_router(physics_router)
 
     # API routes are registered before the static catch-all. Build the web app to
     # enable a single-process production server; development uses Vite's proxy.
