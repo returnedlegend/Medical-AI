@@ -1,0 +1,24 @@
+{
+  "commit": "d36eaf7ae710966b5ec49cd78f0b3ee4f807fac3",
+  "run_id": 42088113747,
+  "job_id": 127458599550,
+  "run_url": "https://github.com/returnedlegend/Medical-AI/actions/runs/42088113747",
+  "browser_readiness": {
+    "status": "success",
+    "started_at": "2026-11-05T18:52:24Z",
+    "completed_at": "2026-11-05T18:53:06Z"
+  },
+  "browser_suites": {
+    "status": "success",
+    "started_at": "2026-11-05T18:53:06Z",
+    "completed_at": "2026-11-05T18:55:18Z",
+    "suites": [
+      "cohort",
+      "procedure",
+      "accessibility"
+    ]
+  },
+  "evidence_upload": "success",
+  "job_completed_at": "2026-11-05T18:55:21Z",
+  "verification": "Public GitHub check-step data; all three unconditionally serial suite subprocesses fail on nonzero return."
+}

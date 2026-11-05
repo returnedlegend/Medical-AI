@@ -1,0 +1,43 @@
+{
+  "release_version": "0.2.0",
+  "source_commit": "e62f26c44d964a360e057338ad8ce7c6a4e039b1",
+  "created_at_utc": "2026-11-05T18:56:19.286956+00:00",
+  "primary_download": {
+    "platform": "Windows x64",
+    "workflow_url": "https://github.com/returnedlegend/Medical-AI/actions/runs/42085408337",
+    "workflow_status": "success",
+    "artifact_name": "RetractionLab-windows-x64-Setup",
+    "artifact_url": "https://github.com/returnedlegend/Medical-AI/actions/runs/42085408337/artifacts/13443587116",
+    "artifact_zip_sha256": "1abf17f67b52f030627bf0b0ffa0b8e4bda24f8144ff41acaac4210beae466a2",
+    "download_requires_github_sign_in": true,
+    "runtime": "CPython 3.12.10 / Qt 6.8.3 on native GitHub Windows runner",
+    "validation": "Native Windows Qt GUI and model smoke, fresh per-user install, installed model smoke, uninstall preserving unrelated files and saved study databases"
+  },
+  "local_backup_artifacts": [
+    {
+      "path": "windows/RetractionLab-0.2.0-windows-x64-Setup.exe",
+      "bytes": 158941334,
+      "sha256": "998e4324f665ebdf280fa84b510c769b510d07d53d265358d36a47e32cb897b3"
+    },
+    {
+      "path": "windows/RetractionLab-windows-x64.zip",
+      "bytes": 231940859,
+      "sha256": "80320be9d4e4ef79f0790c20b3ccf12114e7f4b4d0f4e99f46d2ef775ffdbf93"
+    },
+    {
+      "path": "linux/RetractionLab-linux-x64.zip",
+      "bytes": 285468468,
+      "sha256": "6e4fc3d55b9b98ad9c4bd9a9601a455d2803ccdf67cc6170d5fe7b655cd3345c"
+    }
+  ],
+  "local_backup_validation": {
+    "windows": "Actual Windows PE executables under Wine; no Wine graphical success claim. Runtime CPython 3.12.15 differs from native CI, so binary checksums differ.",
+    "linux": "Actual standalone native Qt GUI, offline Help, episode actions and model diagnosis. Runtime CPython 3.12.14."
+  },
+  "qa_directory": "qa-e62f26c",
+  "limitations": [
+    "Unsigned research MVP; not a calibrated clinical model.",
+    "Windows native 3D hardware rendering was not validated in this cloud host; working Qt XY body fallback was verified.",
+    "Chromium additional third-party notice collection is explicitly partial, not a completeness certification."
+  ]
+}

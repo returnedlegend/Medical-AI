@@ -1,0 +1,49 @@
+{
+  "scope": "packaged-service-and-models",
+  "status": "passed",
+  "ui_validation": "not_requested",
+  "packaged": true,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "checks": {
+    "private_study_lock": true,
+    "license_notice_provenance": {
+      "verified": true,
+      "files": 18
+    },
+    "physics_source_provenance": true,
+    "health": true,
+    "bundled_reference": {
+      "available": true,
+      "policy_transition": true,
+      "file_sha256": "b3d0df3723d05366cf50a57bc538b3759208356686f867ea39d5a2dac6bcb573"
+    },
+    "frontend_resources": true,
+    "offline_documents": true,
+    "cohort": {
+      "patients": 40,
+      "export_bytes": 173217
+    },
+    "procedure": {
+      "transitions": 4,
+      "status": "terminated",
+      "restart_replay": true
+    },
+    "learning": {
+      "algorithm": "numpy-dqn-1.0",
+      "episodes": 20,
+      "held_out_episodes": 5,
+      "policy_transition": true
+    },
+    "tabular_learning": {
+      "algorithm": "numpy-tabular-double-q-1.0",
+      "episodes": 20,
+      "held_out_episodes": 5,
+      "policy_transition": true
+    }
+  },
+  "version": "0.2.0",
+  "qt_version": "6.8.3",
+  "model_version": "tissue-retraction-1.1",
+  "physics_fingerprint": "99bcc146975fff6221c65ee927d4bc38373a18069e56ce8cd45bf7a75c984898",
+  "physics_fingerprint_algorithm": "sha256-labeled-source-v1"
+}

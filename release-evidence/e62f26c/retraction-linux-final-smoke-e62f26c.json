@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "checks": {
+    "procedure_workflow": {
+      "session_id": "3b8dcf16-bf06-4062-a336-0d3f7c9faf33",
+      "transitions": 4,
+      "status": "terminated"
+    },
+    "offline_documentation": {
+      "opened": true,
+      "all_documents_bundled": true
+    },
+    "offline_licenses": true,
+    "native_webview": true,
+    "cohort_workflow": {
+      "run_id": "f102d701-9131-49a4-bacc-7538f802ebc1",
+      "patient_count": 40,
+      "status": "completed"
+    },
+    "frontend_root": {
+      "title": "Retraction Lab \u00b7 Research Workbench",
+      "rendered": true,
+      "episodeActive": true,
+      "manualStep": true,
+      "clock": "t = 0.10 s \u00b7 step 1",
+      "excerpt": "Retraction Laboratory\nComputational surgical research\nLocal research application\nLaboratory\nExperiments\nPhysics\nMethods\nProcedure laboratory\nCohort experiments\n"
+    }
+  },
+  "packaged": true,
+  "last_dom": {
+    "title": "Retraction Lab \u00b7 Research Workbench",
+    "rendered": true,
+    "episodeActive": true,
+    "manualStep": true,
+    "clock": "t = 0.10 s \u00b7 step 1",
+    "excerpt": "Retraction Laboratory\nComputational surgical research\nLocal research application\nLaboratory\nExperiments\nPhysics\nMethods\nProcedure laboratory\nCohort experiments\n"
+  },
+  "screenshot": "/tmp/retraction-linux-final-smoke-e62f26c.png"
+}

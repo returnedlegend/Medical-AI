@@ -1,0 +1,48 @@
+{
+  "source_commit": "e62f26c44d964a360e057338ad8ce7c6a4e039b1",
+  "local_windows_validation": "Actual Windows CPython/PE executables and installer under Wine; no Wine graphical-success claim",
+  "local_linux_validation": "Actual standalone Qt6.8.3 graphical window and models on the cloud Linux host",
+  "independent_native_windows_workflow": "https://github.com/returnedlegend/Medical-AI/actions/runs/42085408337",
+  "local_tests": {
+    "retraction-linux-final-smoke-e62f26c.json": "passed",
+    "retraction-linux-final-diagnose-e62f26c.json": "passed",
+    "retraction-windows-final-diagnose-e62f26c.json": "passed",
+    "retraction-final-installer-e62f26c.json": "passed",
+    "retraction-final-installed-diagnose-e62f26c.json": "passed",
+    "retraction-native-final-idle-e62f26c.json": "passed"
+  },
+  "independent_native_windows_workflow_status": "success",
+  "native_windows_setup_artifact": "https://github.com/returnedlegend/Medical-AI/actions/runs/42085408337/artifacts/13443587116",
+  "idle_soak": {
+    "scope": "source-hosted native Qt with production frontend build",
+    "controller": "Controlled arterial-thermal-contact protocol, development seed2; not a learned RL policy",
+    "elapsed_s": 1200.015895008999,
+    "unchanged_state_revision_svg_and_pixels": true,
+    "js_console_messages": 0,
+    "mean_cpu_percent_one_core": 1.9058080893027252,
+    "rss_growth_mb": -20.92578125,
+    "resource_definition": "Host plus descendants, including1Hz frame/state checks; sum RSS can count shared pages more than once",
+    "files": [
+      {
+        "name": "retraction-native-final-idle-e62f26c.json",
+        "bytes": 7762,
+        "sha256": "4224ecbaf359d93ee9eb76c53da649f5d7bb02d9665c8d5cf11c231ac43e025e"
+      },
+      {
+        "name": "retraction-native-final-idle-e62f26c-baseline.png",
+        "bytes": 177514,
+        "sha256": "ac51bc6e74e811570be036b63d5b9b9eafa0c1381c9326fb806b4978f60eab45"
+      },
+      {
+        "name": "retraction-native-final-idle-e62f26c-final.png",
+        "bytes": 177514,
+        "sha256": "ac51bc6e74e811570be036b63d5b9b9eafa0c1381c9326fb806b4978f60eab45"
+      },
+      {
+        "name": "retraction-native-final-idle-e62f26c-episode.json",
+        "bytes": 409410,
+        "sha256": "b099aa7a6658bc445bb7b0b006a013614e1a9c9a22e0a9d05a658cf791b4eec7"
+      }
+    ]
+  }
+}

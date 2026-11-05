@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "source_commit": "e62f26c44d964a360e057338ad8ce7c6a4e039b1",
+  "setup_sha256": "998e4324f665ebdf280fa84b510c769b510d07d53d265358d36a47e32cb897b3",
+  "checks": {
+    "actual_install_into_spaced_path": true,
+    "all_payload_files_match": {
+      "count": 3437,
+      "verified": true
+    },
+    "installed_models_and_reference": true,
+    "pinned_notices_verified": 18,
+    "all_installed_files_removed": true,
+    "all_study_databases_byte_identical": {
+      "count": 4,
+      "verified": true
+    },
+    "unrelated_root_and_nested_files_preserved": true
+  }
+}

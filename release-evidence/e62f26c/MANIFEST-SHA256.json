@@ -1,0 +1,114 @@
+{
+  "format": "retraction-release-evidence-v1",
+  "published_at": "2026-11-05T19:05:34.340465+00:00",
+  "app_release_commit": "e62f26c44d964a360e057338ad8ce7c6a4e039b1",
+  "later_ci_only_commit": "d36eaf7",
+  "scope": "Curated historical verification receipts; no application binaries or credentials. Native Windows CI, Windows-Python/Wine backup and native Linux/source-hosted tests are distinct.",
+  "files": [
+    {
+      "file": "release-index.json",
+      "source_record": "artifacts/desktop/release-index.json",
+      "source_sha256": "8f203bb7bc1c324f2f2443a19aff615067e8a97c417879acb2c8655a6c2aca01",
+      "published_sha256": "8f203bb7bc1c324f2f2443a19aff615067e8a97c417879acb2c8655a6c2aca01",
+      "transformation": "Universal text newlines normalized to LF"
+    },
+    {
+      "file": "validation-scope.json",
+      "source_record": "artifacts/desktop/qa-e62f26c/validation-scope.json",
+      "source_sha256": "5963ec92c3184aac24380124c5781460b397df96ed29c362f55994f99ae6dabd",
+      "published_sha256": "5963ec92c3184aac24380124c5781460b397df96ed29c362f55994f99ae6dabd",
+      "transformation": "Universal text newlines normalized to LF"
+    },
+    {
+      "file": "windows-build-manifest.json",
+      "source_record": "artifacts/desktop/qa-e62f26c/windows-build-manifest.json",
+      "source_sha256": "92860346ddc35416d3c9dc6a9214cf597cad617b1604d1207c181b73bd55d1a5",
+      "published_sha256": "92860346ddc35416d3c9dc6a9214cf597cad617b1604d1207c181b73bd55d1a5",
+      "transformation": "Universal text newlines normalized to LF"
+    },
+    {
+      "file": "linux-build-manifest.json",
+      "source_record": "artifacts/desktop/qa-e62f26c/linux-build-manifest.json",
+      "source_sha256": "29c653433e5b7a36de097dd047e8d4c5ae62c4cba861680458c64caa6ffaf320",
+      "published_sha256": "29c653433e5b7a36de097dd047e8d4c5ae62c4cba861680458c64caa6ffaf320",
+      "transformation": "Universal text newlines normalized to LF"
+    },
+    {
+      "file": "retraction-windows-final-diagnose-e62f26c.json",
+      "source_record": "artifacts/desktop/qa-e62f26c/retraction-windows-final-diagnose-e62f26c.json",
+      "source_sha256": "030bfd490d1be17dc72441194d1a07d68b273bf2d0149fb043b3b9a12fea358b",
+      "published_sha256": "7b8d7f1fce39b21b53f524dbd916e3d092015e928c64dcce153b4b53211f35f9",
+      "transformation": "Universal text newlines normalized to LF"
+    },
+    {
+      "file": "retraction-final-installed-diagnose-e62f26c.json",
+      "source_record": "artifacts/desktop/qa-e62f26c/retraction-final-installed-diagnose-e62f26c.json",
+      "source_sha256": "030bfd490d1be17dc72441194d1a07d68b273bf2d0149fb043b3b9a12fea358b",
+      "published_sha256": "7b8d7f1fce39b21b53f524dbd916e3d092015e928c64dcce153b4b53211f35f9",
+      "transformation": "Universal text newlines normalized to LF"
+    },
+    {
+      "file": "retraction-final-installer-e62f26c.json",
+      "source_record": "artifacts/desktop/qa-e62f26c/retraction-final-installer-e62f26c.json",
+      "source_sha256": "1493b2d71ab576a5d5ef0fd15684661d76d784b65e0422b89fe1d74c469cd0fc",
+      "published_sha256": "1493b2d71ab576a5d5ef0fd15684661d76d784b65e0422b89fe1d74c469cd0fc",
+      "transformation": "Universal text newlines normalized to LF"
+    },
+    {
+      "file": "retraction-linux-final-smoke-e62f26c.json",
+      "source_record": "artifacts/desktop/qa-e62f26c/retraction-linux-final-smoke-e62f26c.json",
+      "source_sha256": "56c7e69f1eccb3703ddcf398372f1644431103129cb52289fdb7bb21c66d67a4",
+      "published_sha256": "56c7e69f1eccb3703ddcf398372f1644431103129cb52289fdb7bb21c66d67a4",
+      "transformation": "Universal text newlines normalized to LF"
+    },
+    {
+      "file": "retraction-linux-final-diagnose-e62f26c.json",
+      "source_record": "artifacts/desktop/qa-e62f26c/retraction-linux-final-diagnose-e62f26c.json",
+      "source_sha256": "e722769c055068f478b959dcd8fcfc52fb6448d2123d499ae987fef35f59f0e3",
+      "published_sha256": "e722769c055068f478b959dcd8fcfc52fb6448d2123d499ae987fef35f59f0e3",
+      "transformation": "Universal text newlines normalized to LF"
+    },
+    {
+      "file": "retraction-linux-final-smoke-e62f26c.png",
+      "source_record": "artifacts/desktop/qa-e62f26c/retraction-linux-final-smoke-e62f26c.png",
+      "source_sha256": "a72633d80d33c76e9921576c72ceb710cb491b0d4c3811a2595758ff081a42c8",
+      "published_sha256": "a72633d80d33c76e9921576c72ceb710cb491b0d4c3811a2595758ff081a42c8",
+      "transformation": "None; exact bytes"
+    },
+    {
+      "file": "retraction-native-final-idle-e62f26c.json",
+      "source_record": "artifacts/desktop/qa-e62f26c/retraction-native-final-idle-e62f26c.json",
+      "source_sha256": "4224ecbaf359d93ee9eb76c53da649f5d7bb02d9665c8d5cf11c231ac43e025e",
+      "published_sha256": "4224ecbaf359d93ee9eb76c53da649f5d7bb02d9665c8d5cf11c231ac43e025e",
+      "transformation": "Universal text newlines normalized to LF"
+    },
+    {
+      "file": "retraction-native-final-idle-e62f26c-baseline.png",
+      "source_record": "artifacts/desktop/qa-e62f26c/retraction-native-final-idle-e62f26c-baseline.png",
+      "source_sha256": "ac51bc6e74e811570be036b63d5b9b9eafa0c1381c9326fb806b4978f60eab45",
+      "published_sha256": "ac51bc6e74e811570be036b63d5b9b9eafa0c1381c9326fb806b4978f60eab45",
+      "transformation": "None; exact bytes"
+    },
+    {
+      "file": "retraction-native-final-idle-e62f26c-final.png",
+      "source_record": "artifacts/desktop/qa-e62f26c/retraction-native-final-idle-e62f26c-final.png",
+      "source_sha256": "ac51bc6e74e811570be036b63d5b9b9eafa0c1381c9326fb806b4978f60eab45",
+      "published_sha256": "ac51bc6e74e811570be036b63d5b9b9eafa0c1381c9326fb806b4978f60eab45",
+      "transformation": "None; exact bytes"
+    },
+    {
+      "file": "retraction-native-final-idle-e62f26c-episode.json",
+      "source_record": "artifacts/desktop/qa-e62f26c/retraction-native-final-idle-e62f26c-episode.json",
+      "source_sha256": "b099aa7a6658bc445bb7b0b006a013614e1a9c9a22e0a9d05a658cf791b4eec7",
+      "published_sha256": "b099aa7a6658bc445bb7b0b006a013614e1a9c9a22e0a9d05a658cf791b4eec7",
+      "transformation": "Universal text newlines normalized to LF"
+    },
+    {
+      "file": "retraction-ci-d36-public-proof.json",
+      "source_record": "retraction-ci-d36-public-proof.json",
+      "source_sha256": "a902425d0a0180078e211b6be51d8d91022260c0b9ef7cbd7c07357c71d1c3ee",
+      "published_sha256": "a902425d0a0180078e211b6be51d8d91022260c0b9ef7cbd7c07357c71d1c3ee",
+      "transformation": "Universal text newlines normalized to LF"
+    }
+  ]
+}
