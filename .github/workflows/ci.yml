@@ -20,6 +20,9 @@ jobs:
         run: scripts/setup.sh
       - name: Test and typecheck
         run: scripts/check.sh
+      - name: Summarize backend test evidence
+        if: always()
+        run: python scripts/summarize_test_results.py
       - name: Install browser test dependencies
         run: |
           .venv/bin/python -m pip install -r backend/requirements-browser.txt
@@ -55,3 +58,4 @@ jobs:
             /tmp/retraction-accessibility
             /tmp/retraction-procedure-browser
             /tmp/retraction-ci-browser
+            test-results/backend.xml

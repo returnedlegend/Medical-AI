@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import hashlib
+import argparse
 import json
+import os
 from pathlib import Path
 import shutil
+import re
 import subprocess
 import sys
 
@@ -15,6 +18,8 @@ def nsis_literal(value: str) -> str:
 
 
 def build_installer(bundle: Path, output: Path, work: Path, version: str, makensis: Path | None = None) -> Path:
+    if not re.fullmatch(r"\d+\.\d+\.\d+", version):
+        raise ValueError("Installer version must contain three numeric components")
     if not (bundle / "RetractionLab.exe").is_file():
         raise ValueError("The Windows application bundle is missing RetractionLab.exe")
     compiler = str(makensis) if makensis else shutil.which("makensis")
@@ -45,7 +50,15 @@ def build_installer(bundle: Path, output: Path, work: Path, version: str, makens
                    "UNINSTALL_INCLUDE": uninstall.resolve(), "VERSION": version}
     script = Path(__file__).with_name("installer.nsi")
     try:
-        subprocess.run([compiler, f"{switch}V2", f"{switch}WX", *[f"{switch}D{key}={value}" for key, value in definitions.items()], str(script)], check=True)
+        result = subprocess.run([compiler, f"{switch}V2", f"{switch}WX", *[f"{switch}D{key}={value}" for key, value in definitions.items()], str(script)], capture_output=True, text=True)
+        if result.stdout:
+            print(result.stdout, end="")
+        if result.stderr:
+            print(result.stderr, end="", file=sys.stderr)
+        if result.returncode and os.environ.get("GITHUB_STEP_SUMMARY"):
+            with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as handle:
+                handle.write("\n### Installer compilation failed\n\n```text\n" + (result.stdout + result.stderr)[-12000:] + "\n```\n")
+        result.check_returncode()
         partial.replace(installer)
     finally:
         partial.unlink(missing_ok=True)
@@ -60,3 +73,19 @@ def build_installer(bundle: Path, output: Path, work: Path, version: str, makens
                     installer_compiler_sha256=hashlib.sha256(Path(compiler).read_bytes()).hexdigest())
         manifest.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     return installer
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--bundle", type=Path, required=True)
+    parser.add_argument("--makensis", type=Path)
+    parser.add_argument("--work-dir", type=Path, required=True)
+    args = parser.parse_args()
+    bundle = args.bundle.resolve()
+    output = bundle.parent
+    manifest = json.loads((output / "build-manifest.json").read_text(encoding="utf-8"))
+    print(build_installer(bundle, output, args.work_dir, manifest["version"], args.makensis))
+
+
+if __name__ == "__main__":
+    main()
