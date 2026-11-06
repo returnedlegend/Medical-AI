@@ -1,0 +1,46 @@
+name: Publish verified Windows release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-desktop-release.yml'
+      - '.github/release-notes/desktop-v0.2.0.md'
+      - 'scripts/publish_desktop_release.py'
+      - 'scripts/tests/test_publish_desktop_release.py'
+
+permissions: {}
+
+concurrency:
+  group: verified-desktop-v0.2.0-publication
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test release validation
+        run: python -m unittest discover -s scripts/tests -p 'test_publish_desktop_release.py' -v
+      - name: Verify the native build and publish its installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python scripts/publish_desktop_release.py
+          --notes-file .github/release-notes/desktop-v0.2.0.md
+          --output-json "${{ runner.temp }}/desktop-release-result.json"
+      - name: Preserve publication receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-publication-receipt
+          path: ${{ runner.temp }}/desktop-release-result.json
+          if-no-files-found: warn
