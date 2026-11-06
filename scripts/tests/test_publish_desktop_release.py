@@ -163,6 +163,33 @@ class ValidateReleaseArchiveTests(unittest.TestCase):
 
 
 class ExistingReleaseTagTests(unittest.TestCase):
+    def test_draft_lookup_retries_an_initially_stale_empty_page(self):
+        draft = {"tag_name": publisher.TAG, "id": 123, "draft": True}
+        with patch.object(publisher, "gh", side_effect=["[[]]", json.dumps([[draft]])]) as command, \
+             patch.object(publisher.time, "sleep"):
+            self.assertEqual(publisher.get_release(), draft)
+            self.assertEqual(command.call_count, 2)
+            self.assertIn("Cache-Control: no-cache", command.call_args.args)
+
+    def test_asset_visibility_poll_waits_without_weakening_validation(self):
+        path = Path("example.exe")
+        draft = {"id": 123, "draft": True}
+        with patch.object(publisher, "api", return_value=draft), \
+             patch.object(publisher, "check_release") as provenance, \
+             patch.object(publisher, "check_assets", side_effect=[set(), {path.name}]), \
+             patch.object(publisher.time, "sleep"):
+            self.assertEqual(publisher.wait_for_release(123, "notes", [path], Path(".")), draft)
+            self.assertEqual(provenance.call_count, 2)
+
+    def test_asset_poll_rejects_integrity_errors_immediately(self):
+        with patch.object(publisher, "api", return_value={"id": 123, "draft": True}), \
+             patch.object(publisher, "check_release"), \
+             patch.object(publisher, "check_assets", side_effect=publisher.ReleaseError("Digest mismatch")), \
+             patch.object(publisher.time, "sleep") as sleep:
+            with self.assertRaisesRegex(publisher.ReleaseError, "Digest mismatch"):
+                publisher.wait_for_release(123, "notes", [Path("example.exe")], Path("."))
+            sleep.assert_not_called()
+
     def test_main_metadata_requires_the_actual_frozen_tag(self):
         release = {"tag_name": publisher.TAG, "target_commitish": "main",
                    "name": publisher.TITLE, "body": "Controlled notes", "prerelease": False}

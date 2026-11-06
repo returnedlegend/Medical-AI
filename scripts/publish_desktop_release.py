@@ -17,6 +17,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import time
 import zipfile
 
 REPOSITORY = "returnedlegend/Medical-AI"
@@ -134,14 +135,20 @@ def gh(*arguments: str, destination: Path | None = None) -> str:
 
 
 def api(endpoint: str) -> dict | list:
-    return json.loads(gh("api", endpoint))
+    return json.loads(gh("api", endpoint, "-H", "Cache-Control: no-cache"))
 
 
-def get_release() -> dict | None:
-    pages = json.loads(gh("api", f"repos/{REPOSITORY}/releases?per_page=100", "--paginate", "--slurp"))
-    matches = [release for page in pages for release in page if release.get("tag_name") == TAG]
-    require(len(matches) <= 1, "Multiple releases use the frozen tag")
-    return matches[0] if matches else None
+def get_release(attempts: int = 4) -> dict | None:
+    for attempt in range(attempts):
+        pages = json.loads(gh("api", f"repos/{REPOSITORY}/releases?per_page=100", "--paginate", "--slurp",
+                              "-H", "Cache-Control: no-cache"))
+        matches = [release for page in pages for release in page if release.get("tag_name") == TAG]
+        require(len(matches) <= 1, "Multiple releases use the frozen tag")
+        if matches:
+            return matches[0]
+        if attempt + 1 < attempts:
+            time.sleep(1)
+    return None
 
 
 def check_tag(*, required: bool = False) -> None:
@@ -195,6 +202,22 @@ def check_assets(release: dict, assets: list[Path], work: Path, *, complete: boo
         seen.add(name)
     require(not complete or seen == set(expected), "Release assets are incomplete")
     return seen
+
+
+def wait_for_release(release_id: int, notes: str, assets: list[Path], work: Path,
+                     *, published: bool = False, attempts: int = 10) -> dict:
+    """Poll only visibility/state; any provenance or checksum mismatch fails immediately."""
+    expected = {path.name for path in assets}
+    for attempt in range(attempts):
+        release = api(f"repos/{REPOSITORY}/releases/{release_id}")
+        check_release(release, notes)
+        present = check_assets(release, assets, work, complete=False)
+        if present == expected and (not published or release.get("draft") is False):
+            return release
+        if attempt + 1 < attempts:
+            time.sleep(2)
+    state = "published release visibility" if published else "uploaded asset visibility"
+    raise ReleaseError(f"Timed out waiting for {state}; no assets were overwritten")
 
 
 def download_native_artifact(destination: Path) -> dict:
@@ -261,25 +284,25 @@ def main(argv: list[str] | None = None) -> int:
                 if not release.get("draft"):
                     check_tag(required=True)
             else:
-                notes_path = work / "release-notes.md"
-                notes_path.write_text(notes, encoding="utf-8")
-                gh("release", "create", TAG, "--repo", REPOSITORY, "--draft", "--title", TITLE,
-                   "--verify-tag", "--notes-file", str(notes_path))
-                release = get_release()
-                require(release is not None and release.get("draft") is True, "Draft release creation did not complete")
+                request_path = work / "create-draft.json"
+                request_path.write_text(json.dumps({"tag_name": TAG, "name": TITLE,
+                                                    "body": notes, "draft": True}), encoding="utf-8")
+                # Use the POST response directly: immediately listing drafts can
+                # return an older cached empty page even after successful creation.
+                release = json.loads(gh("api", "--method", "POST", f"repos/{REPOSITORY}/releases",
+                                        "--input", str(request_path)))
+                require(release.get("draft") is True and isinstance(release.get("id"), int),
+                        "Draft creation response did not contain the created draft ID")
                 check_release(release, notes)
             present = check_assets(release, assets, work, complete=not release.get("draft"))
             for path in assets:
                 if path.name not in present:
                     gh("release", "upload", TAG, str(path), "--repo", REPOSITORY)
-            release = api(f"repos/{REPOSITORY}/releases/{release['id']}")
-            check_release(release, notes)
-            check_assets(release, assets, work, complete=True)
+            release = wait_for_release(release["id"], notes, assets, work)
             check_tag(required=not release.get("draft"))
             if release.get("draft"):
                 gh("release", "edit", TAG, "--repo", REPOSITORY, "--draft=false", "--latest")
-            release = api(f"repos/{REPOSITORY}/releases/{release['id']}")
-            require(release.get("draft") is False, "Release is still a draft")
+            release = wait_for_release(release["id"], notes, assets, work, published=True)
             check_tag(required=True)
             check_release(release, notes)
             check_assets(release, assets, work, complete=True)
