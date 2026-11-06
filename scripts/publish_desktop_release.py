@@ -161,7 +161,10 @@ def check_tag(*, required: bool = False) -> None:
 
 
 def check_release(release: dict, notes: str) -> None:
-    require(release.get("tag_name") == TAG and release.get("target_commitish") == SOURCE_COMMIT
+    # With an existing tag, GitHub ignores target_commitish for source binding.
+    # Resolve the real tag every time; descriptive "main" metadata is not a pin.
+    check_tag(required=True)
+    require(release.get("tag_name") == TAG and release.get("target_commitish") in (SOURCE_COMMIT, "main")
             and release.get("name") == TITLE, "Existing release metadata differs from frozen release")
     require((release.get("body") or "").strip() == notes.strip(), "Existing release notes differ; refusing to overwrite")
     require(not release.get("prerelease"), "Existing release prerelease state differs")
@@ -196,7 +199,8 @@ def check_assets(release: dict, assets: list[Path], work: Path, *, complete: boo
 
 def download_native_artifact(destination: Path) -> dict:
     repository = api(f"repos/{REPOSITORY}")
-    require(repository.get("full_name") == REPOSITORY and repository.get("private") is False,
+    require(repository.get("full_name") == REPOSITORY and repository.get("private") is False
+            and repository.get("default_branch") == "main",
             "Publisher target must be the expected public repository")
     run = api(f"repos/{REPOSITORY}/actions/runs/{RUN_ID}")
     require(run.get("head_sha") == SOURCE_COMMIT and run.get("status") == "completed"
@@ -246,7 +250,10 @@ def main(argv: list[str] | None = None) -> int:
                   "validation_scope": "pinned archive only" if args.artifact_zip else "native run, artifact metadata, and pinned archive",
                   "installer_sha256": verified["installer_sha256"]}
         if not args.verify_only:
-            check_tag()
+            # The tag is created separately through the repository's authorized
+            # Git transport. The job token may not create old workflow-bearing
+            # tags. Requiring and resolving it also prevents implicit tag writes.
+            check_tag(required=True)
             release = get_release()
             if release:
                 check_release(release, notes)
@@ -257,7 +264,7 @@ def main(argv: list[str] | None = None) -> int:
                 notes_path = work / "release-notes.md"
                 notes_path.write_text(notes, encoding="utf-8")
                 gh("release", "create", TAG, "--repo", REPOSITORY, "--draft", "--title", TITLE,
-                   "--target", SOURCE_COMMIT, "--notes-file", str(notes_path))
+                   "--verify-tag", "--notes-file", str(notes_path))
                 release = get_release()
                 require(release is not None and release.get("draft") is True, "Draft release creation did not complete")
                 check_release(release, notes)

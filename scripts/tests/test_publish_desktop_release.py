@@ -14,6 +14,7 @@ import struct
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import warnings
 import zipfile
 
@@ -159,6 +160,37 @@ class ValidateReleaseArchiveTests(unittest.TestCase):
         for index in range(3):
             with self.subTest(missing=index):
                 self.assert_rejected(members=lambda rows, index=index: rows[:index] + rows[index + 1:])
+
+
+class ExistingReleaseTagTests(unittest.TestCase):
+    def test_main_metadata_requires_the_actual_frozen_tag(self):
+        release = {"tag_name": publisher.TAG, "target_commitish": "main",
+                   "name": publisher.TITLE, "body": "Controlled notes", "prerelease": False}
+        with patch.object(publisher, "check_tag") as check:
+            publisher.check_release(release, "Controlled notes")
+            check.assert_called_once_with(required=True)
+        with patch.object(publisher, "check_tag", side_effect=publisher.ReleaseError("Wrong tag")):
+            with self.assertRaises(publisher.ReleaseError):
+                publisher.check_release(release, "Controlled notes")
+
+    def test_wrong_or_missing_tags_are_rejected(self):
+        for refs in ([], [{"ref": "refs/tags/" + publisher.TAG,
+                           "object": {"type": "commit", "sha": "0" * 40}}]):
+            with self.subTest(refs=refs), patch.object(publisher, "api", return_value=refs):
+                with self.assertRaises(publisher.ReleaseError):
+                    publisher.check_tag(required=True)
+
+    def test_missing_tag_stops_publication_before_any_remote_write(self):
+        environment = {"GITHUB_ACTIONS": "true", "GITHUB_REPOSITORY": publisher.REPOSITORY,
+                       "GH_TOKEN": "synthetic-unit-token-not-a-credential"}
+        with patch.dict(publisher.os.environ, environment), \
+             patch.object(publisher, "download_native_artifact"), \
+             patch.object(publisher, "validate_archive", return_value={"assets": [], "installer_sha256": "0" * 64}), \
+             patch.object(publisher, "check_tag", side_effect=publisher.ReleaseError("Missing tag")), \
+             patch.object(publisher, "gh") as command:
+            with self.assertRaises(publisher.ReleaseError):
+                publisher.main([])
+            command.assert_not_called()
 
 
 if __name__ == "__main__":
