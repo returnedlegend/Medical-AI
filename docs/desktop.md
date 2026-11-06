@@ -9,6 +9,13 @@ connection on the user's computer.
 
 ## Windows application
 
+[Download the Windows 0.2.0 installer](https://github.com/returnedlegend/Medical-AI/releases/download/desktop-v0.2.0/RetractionLab-0.2.0-windows-x64-Setup.exe)
+and run it. This public Release download works without GitHub sign-in. The
+[release page](https://github.com/returnedlegend/Medical-AI/releases/tag/desktop-v0.2.0)
+also provides its SHA256 sidecar and build manifest. The installer was built from
+`e62f26c44d964a360e057338ad8ce7c6a4e039b1` and passed the
+[native Windows build, installed-application and uninstall checks](https://github.com/returnedlegend/Medical-AI/actions/runs/42085408337).
+
 The Windows build produces `RetractionLab-windows-x64.zip`. Extract the **entire**
 archive to a writable location, then launch `RetractionLab/RetractionLab.exe`.
 Keep the accompanying `_internal` directory beside the executable. Copying just
@@ -37,8 +44,10 @@ Ubuntu job assembles its installer with NSIS 3.11 from exact, SHA256-verified
 Debian packages; this packages the Windows executable without cross-compiling
 it. A fresh Windows job then installs that installer, checks the installed
 models, and verifies that uninstalling preserves saved databases and unrelated
-files. Download the `RetractionLab-windows-x64-Setup` artifact for the installer,
-or `RetractionLab-windows-x64` for the portable archive. Compiler package URLs,
+files. For development builds, download the `RetractionLab-windows-x64-Setup`
+Actions artifact for the installer, or `RetractionLab-windows-x64` for the
+portable archive. Actions artifacts require GitHub sign-in and expire; the public
+Release above is the primary installation download. Compiler package URLs,
 hashes, executable hash, and version are recorded in the installer manifest.
 
 ## First procedure session
